@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>三下乡 · 文化云游</title>
 <style>
   /* ============ 全局重置 ============ */
@@ -274,16 +274,150 @@
   .back-top.show{opacity:1}
   .back-top:hover{transform:translateY(-3px)}
 
-  /* ============ 响应式 ============ */
+  /* ============ 移动端导航栏 ============ */
+  .menu-toggle{
+    display:none;
+    background:none;border:none;color:#fff;
+    font-size:24px;cursor:pointer;padding:6px;
+  }
+  .nav-menu{
+    display:flex;gap:28px;
+  }
+
+  /* ============ 管理员登录模态框 ============ */
+  .admin-modal{
+    position:fixed;inset:0;z-index:2000;
+    background:rgba(0,0,0,.7);
+    display:none;align-items:center;justify-content:center;
+  }
+  .admin-modal.active{display:flex}
+  .admin-login-box{
+    background:#fff;border-radius:12px;padding:30px;
+    width:90%;max-width:340px;
+    box-shadow:0 10px 40px rgba(0,0,0,.3);
+  }
+  .admin-login-box h3{
+    color:#b91c1c;font-size:20px;margin-bottom:20px;
+    text-align:center;letter-spacing:2px;
+  }
+  .admin-login-box input{
+    width:100%;padding:10px 14px;border:2px solid #e0d0c0;
+    border-radius:6px;font-size:14px;margin-bottom:14px;
+    transition:border-color .3s;
+  }
+  .admin-login-box input:focus{outline:none;border-color:#b91c1c}
+  .admin-login-box button{
+    width:100%;padding:10px;background:#b91c1c;color:#fff;
+    border:none;border-radius:6px;font-size:14px;
+    cursor:pointer;transition:background .3s;letter-spacing:2px;
+  }
+  .admin-login-box button:hover{background:#7f1d1d}
+  .admin-login-error{color:#dc2626;font-size:12px;margin-bottom:10px;display:none}
+  .admin-login-error.show{display:block}
+  .admin-close{
+    position:absolute;top:12px;right:16px;background:none;
+    border:none;font-size:24px;color:#999;cursor:pointer;
+  }
+
+  /* 编辑模式下显示的按钮样式 */
+  .edit-only{display:none}
+  body.admin-mode .edit-only{display:inline-block}
+  body.admin-mode .replace-btn{opacity:1}
+  body.admin-mode .img-replace-btn{opacity:1}
+
+  /* 登录状态指示器 */
+  .admin-indicator{
+    display:none;align-items:center;gap:6px;
+    font-size:13px;color:#4ade80;padding:4px 10px;
+    background:rgba(74,222,128,.15);border-radius:14px;
+    cursor:pointer;user-select:none;
+  }
+  body.admin-mode .admin-indicator{display:flex}
+  .admin-indicator .dot{width:8px;height:8px;background:#4ade80;border-radius:50%}
+
+  /* 存储管理模态框 */
+  .storage-modal{
+    position:fixed;inset:0;z-index:2100;
+    background:rgba(0,0,0,.7);
+    display:none;align-items:center;justify-content:center;
+  }
+  .storage-modal.active{display:flex}
+  .storage-box{
+    background:#fff;border-radius:12px;padding:28px;
+    width:90%;max-width:420px;max-height:80vh;overflow-y:auto;
+  }
+  .storage-box h3{color:#b91c1c;font-size:18px;margin-bottom:16px;text-align:center}
+  .storage-btn{
+    display:block;width:100%;padding:12px;margin-bottom:10px;
+    background:#b91c1c;color:#fff;border:none;border-radius:8px;
+    font-size:14px;cursor:pointer;transition:background .3s;
+  }
+  .storage-btn:hover{background:#7f1d1d}
+  .storage-btn.secondary{background:#6b7280}
+  .storage-btn.secondary:hover{background:#4b5563}
+  .storage-btn.danger{background:#dc2626}
+  .storage-btn.danger:hover{background:#991b1b}
+  .storage-info{
+    background:#fdf2f2;border:1px solid #f0e0d0;border-radius:8px;
+    padding:12px;margin-bottom:14px;font-size:13px;color:#5a3a3a;line-height:1.8;
+  }
+  .file-input-wrapper{margin-bottom:10px}
+  .file-input-wrapper input[type=file]{
+    width:100%;padding:10px;border:2px solid #e0d0c0;border-radius:6px;
+    font-size:13px;
+  }
+
+  /* ============ 响应式优化 ============ */
   @media(max-width:860px){
+    .menu-toggle{display:block}
+    .nav-menu{
+      position:absolute;top:100%;left:0;right:0;
+      background:linear-gradient(180deg,#991b1b 0%,#7f1d1d 100%);
+      flex-direction:column;padding:16px 24px;gap:4px;
+      transform:translateY(-10px);opacity:0;pointer-events:none;
+      transition:transform .3s,opacity .3s;
+      box-shadow:0 6px 18px rgba(0,0,0,.3);
+    }
+    .nav-menu.active{
+      transform:translateY(0);opacity:1;pointer-events:auto;
+    }
+    .nav-menu a{
+      padding:12px 8px;border-bottom:1px solid rgba(255,255,255,.15);
+      font-size:15px;letter-spacing:3px;
+    }
+    .nav-menu a:last-child{border-bottom:none}
+    .nav-menu a:hover{background:rgba(255,255,255,.1)}
+
     .building-card,.building-card.reverse{grid-template-columns:1fr;direction:ltr}
-    .card-image{min-height:240px}
-    .card-info{padding:24px 20px}
-    .top-nav{padding:12px 16px}
-    .top-nav nav{gap:14px}
-    .top-nav nav a{font-size:13px;padding:4px 10px}
-    .featured-item{flex:0 0 200px;height:130px}
-    .section-title{font-size:22px}
+    .card-image{min-height:220px}
+    .card-info{padding:20px 18px}
+    .card-info h2{font-size:20px}
+    .card-info .info-content{font-size:14px;line-height:1.8}
+    .top-nav{padding:12px 14px}
+    .top-nav .logo{font-size:18px;letter-spacing:2px}
+    .featured-item{flex:0 0 180px;height:120px}
+    .section-title{font-size:20px;letter-spacing:4px}
+    .featured-title{font-size:20px}
+    .featured-title::before,.featured-title::after{width:20px}
+    .modal-box{width:95%;height:90vh}
+    .back-top{right:14px;bottom:14px;width:42px;height:42px;font-size:18px}
+    .replace-btn,.img-replace-btn{opacity:1 !important}
+    .info-replace-btn{width:100%;text-align:center}
+  }
+
+  @media(max-width:480px){
+    .featured-item{flex:0 0 160px;height:105px}
+    .building-card{margin-bottom:24px}
+    .card-image{min-height:180px}
+    .card-info h2{font-size:18px}
+    .section-title{font-size:18px;letter-spacing:3px}
+    .container{padding-top:60px}
+    .top-nav .logo{font-size:16px}
+    .featured-title{font-size:18px}
+    .featured-title::before,.featured-title::after{display:none}
+    footer{font-size:12px;padding:18px 12px}
+    .modal-header{padding:12px 16px}
+    .modal-header h3{font-size:16px;letter-spacing:1px}
   }
 </style>
 </head>
@@ -292,11 +426,16 @@
 <!-- ============ 顶部导航 ============ -->
 <header class="top-nav">
   <div class="logo">三下乡 <span>·</span> 文化云游</div>
-  <nav>
-    <a href="#featured">特色图片</a>
-    <a href="#buildings">建筑简介</a>
-    <a href="#buildings">360°漫游</a>
-    <a href="#about">关于</a>
+  <button class="menu-toggle" id="menuToggle" aria-label="菜单">☰</button>
+  <nav class="nav-menu" id="navMenu">
+    <a href="#featured" onclick="closeNav()">特色图片</a>
+    <a href="#buildings" onclick="closeNav()">建筑简介</a>
+    <a href="#buildings" onclick="closeNav()">360°漫游</a>
+    <a href="#about" onclick="closeNav()">关于</a>
+    <div class="admin-indicator" id="adminIndicator" onclick="openStorageModal()">
+      <span class="dot"></span>
+      <span>管理员</span>
+    </div>
   </nav>
 </header>
 
@@ -366,8 +505,8 @@
         <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(1)">替换图片</button>
       </div>
       <div class="card-info">
-        <h2 contenteditable="true">建筑名称 1</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
+        <h2>建筑名称 1</h2>
+        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
         <button class="info-replace-btn" onclick="replaceBuildingInfo(1)">编辑介绍</button>
       </div>
     </div>
@@ -383,8 +522,8 @@
         <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(2)">替换图片</button>
       </div>
       <div class="card-info">
-        <h2 contenteditable="true">建筑名称 2</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
+        <h2>建筑名称 2</h2>
+        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
         <button class="info-replace-btn" onclick="replaceBuildingInfo(2)">编辑介绍</button>
       </div>
     </div>
@@ -451,8 +590,8 @@
         <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(6)">替换图片</button>
       </div>
       <div class="card-info">
-        <h2 contenteditable="true">建筑名称 6</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
+        <h2>建筑名称</h2>
+        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
         <button class="info-replace-btn" onclick="replaceBuildingInfo(6)">编辑介绍</button>
       </div>
     </div>
@@ -504,6 +643,34 @@
 <!-- ============ 浮动回到顶部 ============ -->
 <button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+<!-- ============ 管理员登录模态框 ============ -->
+<div class="admin-modal" id="adminModal" onclick="closeAdminModal(event)">
+  <div class="admin-login-box" onclick="event.stopPropagation()">
+    <button class="admin-close" onclick="closeAdminModal()">✕</button>
+    <h3>管理员登录</h3>
+    <div class="admin-login-error" id="adminError">密码错误，请重试</div>
+    <input type="password" id="adminPwd" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+    <button onclick="doAdminLogin()">登 录</button>
+  </div>
+</div>
+
+<!-- ============ 存储管理模态框 ============ -->
+<div class="storage-modal" id="storageModal" onclick="closeStorageModal(event)">
+  <div class="storage-box" onclick="event.stopPropagation()">
+    <h3>数据管理</h3>
+    <div class="storage-info" id="storageInfo">
+      在这里您可以导出或导入您的数据，<br>
+      防止浏览器缓存清理导致数据丢失。
+    </div>
+    <button class="storage-btn" onclick="exportData()">📤 导出所有数据</button>
+    <div class="file-input-wrapper">
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button class="storage-btn secondary" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+    </div>
+    <button class="storage-btn danger" onclick="clearAllData()">🗑️ 清除所有数据</button>
+  </div>
+</div>
+
 <!-- ============ 隐藏文件选择器 ============ -->
 <input type="file" id="filePicker" accept="image/*" style="display:none" onchange="handleFilePick(event)">
 
@@ -512,7 +679,200 @@
 </footer>
 
 <script>
-/* ============ 数据存储 ============ */
+/* ============ 管理员配置 ============ */
+const ADMIN_PASSWORD = 'admin123';
+const STORAGE_KEYS = {
+  AUTH: 'sxx_admin_auth',
+  META: 'sxx_meta_data'
+};
+
+/* ============ IndexedDB 存储管理 ============ */
+const DB_NAME = 'sxx_database';
+const DB_VERSION = 2;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains('images')) {
+        db.createObjectStore('images', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('metadata')) {
+        db.createObjectStore('metadata', { keyPath: 'key' });
+      }
+    };
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      resolve(db);
+    };
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function saveImageToDB(key, dataUrl) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('images', 'readwrite');
+    const store = tx.objectStore('images');
+    store.put({ key, data: dataUrl, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getImageFromDB(key) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('images', 'readonly');
+    const store = tx.objectStore('images');
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result?.data || null);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function deleteImageFromDB(key) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('images', 'readwrite');
+    const store = tx.objectStore('images');
+    store.delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function saveMetaToDB(key, value) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('metadata', 'readwrite');
+    const store = tx.objectStore('metadata');
+    store.put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getMetaFromDB(key) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('metadata', 'readonly');
+    const store = tx.objectStore('metadata');
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result?.value || null);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getAllMetaFromDB() {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject('DB not initialized'); return; }
+    const tx = db.transaction('metadata', 'readonly');
+    const store = tx.objectStore('metadata');
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const result = {};
+      (request.result || []).forEach(item => {
+        result[item.key] = item.value;
+      });
+      resolve(result);
+    };
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/* ============ 管理员认证系统 ============ */
+let isAdmin = false;
+
+function checkAuth(){
+  const auth = localStorage.getItem(STORAGE_KEYS.AUTH);
+  if(auth === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+function openAdminLogin(){
+  if(isAdmin){
+    if(confirm('已退出管理员模式？')){
+      logoutAdmin();
+    }
+    return;
+  }
+  document.getElementById('adminModal').classList.add('active');
+  document.getElementById('adminError').classList.remove('show');
+  document.getElementById('adminPwd').value = '';
+  setTimeout(()=>document.getElementById('adminPwd').focus(), 100);
+}
+
+function closeAdminModal(e){
+  if(e && e.target.id !== 'adminModal' && e.type === 'click') return;
+  document.getElementById('adminModal').classList.remove('active');
+}
+
+function doAdminLogin(){
+  const pwd = document.getElementById('adminPwd').value;
+  if(pwd === ADMIN_PASSWORD){
+    isAdmin = true;
+    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+    document.body.classList.add('admin-mode');
+    document.getElementById('adminModal').classList.remove('active');
+    updateEditable();
+    alert('管理员登录成功！现在可以编辑内容了');
+  } else {
+    document.getElementById('adminError').classList.add('show');
+  }
+}
+
+function logoutAdmin(){
+  isAdmin = false;
+  localStorage.removeItem(STORAGE_KEYS.AUTH);
+  document.body.classList.remove('admin-mode');
+  updateEditable();
+}
+
+function updateEditable(){
+  const editableElements = document.querySelectorAll('.card-info h2, .info-content');
+  editableElements.forEach(el => {
+    el.setAttribute('contenteditable', isAdmin ? 'true' : 'false');
+  });
+}
+
+/* ============ 移动端导航 ============ */
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+menuToggle.addEventListener('click', ()=>{
+  navMenu.classList.toggle('active');
+});
+function closeNav(){
+  navMenu.classList.remove('active');
+}
+
+/* ============ 管理员隐藏通道 ============ */
+// 连续点击 logo 5 次打开管理员登录
+let logoClickCount = 0;
+let logoClickTimer = null;
+document.querySelector('.logo').addEventListener('click', ()=>{
+  logoClickCount++;
+  clearTimeout(logoClickTimer);
+  logoClickTimer = setTimeout(()=>{ logoClickCount = 0; }, 2000);
+  if(logoClickCount >= 5){
+    logoClickCount = 0;
+    openAdminLogin();
+  }
+});
+
+// 快捷键 Ctrl+Shift+E 打开管理员登录
+document.addEventListener('keydown', (e)=>{
+  if(e.ctrlKey && e.shiftKey && e.key === 'E'){
+    e.preventDefault();
+    openAdminLogin();
+  }
+});
+
+/* ============ 数据存储（使用 IndexedDB 持久化） ============ */
 const dataStore = {
   currentTarget: null,
   buildingImages: {},
@@ -521,45 +881,287 @@ const dataStore = {
   featuredImages: {}
 };
 
-/* ============ 特色图片替换 ============ */
-function replaceFeatured(id){
-  dataStore.currentTarget = {type:'featured', id};
-  document.getElementById('filePicker').click();
+async function saveImage(key, dataUrl) {
+  try {
+    await saveImageToDB(key, dataUrl);
+    return true;
+  } catch(e) {
+    console.error('保存图片失败:', e);
+    return false;
+  }
 }
 
-/* ============ 建筑图片替换 ============ */
-function replaceBuildingImg(id){
-  dataStore.currentTarget = {type:'buildingImg', id};
-  document.getElementById('filePicker').click();
+async function loadAllImages() {
+  try {
+    // 加载特色图片
+    const featuredKeys = Object.keys(dataStore.featuredImages);
+    for(let id of featuredKeys) {
+      const url = await getImageFromDB(`featured_${id}`);
+      if(url) dataStore.featuredImages[id] = url;
+    }
+    // 加载建筑图片
+    const buildingKeys = Object.keys(dataStore.buildingImages);
+    for(let id of buildingKeys) {
+      const url = await getImageFromDB(`building_${id}`);
+      if(url) dataStore.buildingImages[id] = url;
+    }
+  } catch(e) {
+    console.error('加载图片失败:', e);
+  }
 }
 
-/* ============ 建筑介绍编辑 ============ */
-function replaceBuildingInfo(id){
-  const card = document.querySelector(`.building-card[data-bid="${id}"]`);
-  const content = card.querySelector('.info-content');
-  content.focus();
-  // 选中所有文本
-  const range = document.createRange();
-  range.selectNodeContents(content);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
+async function saveMetadata() {
+  try {
+    // 保存图片 key 列表（用于刷新后恢复）
+    const metaData = {
+      buildingInfos: dataStore.buildingInfos,
+      panoUrls: dataStore.panoUrls,
+      featuredKeys: Object.keys(dataStore.featuredImages),
+      buildingKeys: Object.keys(dataStore.buildingImages)
+    };
+    await saveMetaToDB('allMetadata', metaData);
+    return true;
+  } catch(e) {
+    console.error('保存元数据失败:', e);
+    return false;
+  }
 }
 
-/* ============ 文件选择处理 ============ */
-function handleFilePick(e){
-  const file = e.target.files[0];
-  if(!file || !dataStore.currentTarget){
-    e.target.value = '';
+async function loadMetadata() {
+  try {
+    const metaData = await getMetaFromDB('allMetadata');
+    if(metaData){
+      if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
+      if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
+      // 恢复图片 key 列表（先用 key 填充，再在 restoreData 中加载实际图片）
+      if(metaData.featuredKeys){
+        metaData.featuredKeys.forEach(key => {
+          dataStore.featuredImages[key] = true; // 占位，表示有这张图片
+        });
+      }
+      if(metaData.buildingKeys){
+        metaData.buildingKeys.forEach(key => {
+          dataStore.buildingImages[key] = true; // 占位
+        });
+      }
+    }
+  } catch(e) {
+    console.error('加载元数据失败:', e);
+  }
+}
+
+function saveToStorage(){
+  saveMetadata();
+}
+
+/* ============ 存储管理功能 ============ */
+function openStorageModal(){
+  if(!isAdmin){
+    alert('数据管理功能仅限管理员使用。');
     return;
   }
-  const target = dataStore.currentTarget;
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    const url = ev.target.result;
-    if(target.type === 'featured'){
-      const item = document.querySelector(`.featured-item[data-fid="${target.id}"]`);
-      if(!item) return;
+  updateStorageInfo();
+  document.getElementById('storageModal').classList.add('active');
+}
+
+function closeStorageModal(e){
+  if(e && e.target.id !== 'storageModal' && e.type === 'click') return;
+  document.getElementById('storageModal').classList.remove('active');
+}
+
+async function updateStorageInfo(){
+  try {
+    const featuredCount = Object.keys(dataStore.featuredImages).length;
+    const buildingCount = Object.keys(dataStore.buildingImages).length;
+    const infoCount = Object.keys(dataStore.buildingInfos).length;
+    const panoCount = Object.keys(dataStore.panoUrls).length;
+    const text = `
+      📊 当前数据统计：<br>
+      • 特色图片：${featuredCount} 张<br>
+      • 建筑图片：${buildingCount} 张<br>
+      • 建筑介绍：${Math.floor(infoCount/2)} 条<br>
+      • 360°全景链接：${panoCount} 个<br><br>
+      💾 所有数据存储在您的浏览器中（IndexedDB）。<br>
+      ⚠️ 清除浏览器缓存会导致数据丢失，建议定期导出备份。
+    `;
+    document.getElementById('storageInfo').innerHTML = text;
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function exportData(){
+  try {
+    // 从 IndexedDB 读取所有图片
+    const allData = {
+      version: 2,
+      exportTime: new Date().toISOString(),
+      metadata: {
+        buildingInfos: dataStore.buildingInfos,
+        panoUrls: dataStore.panoUrls,
+        featuredKeys: Object.keys(dataStore.featuredImages),
+        buildingKeys: Object.keys(dataStore.buildingImages)
+      },
+      images: {}
+    };
+
+    // 收集特色图片
+    allData.images.featured = {};
+    for(let id in dataStore.featuredImages){
+      const url = await getImageFromDB(`featured_${id}`);
+      if(url) allData.images.featured[id] = url;
+    }
+    
+    // 收集建筑图片
+    allData.images.building = {};
+    for(let id in dataStore.buildingImages){
+      const url = await getImageFromDB(`building_${id}`);
+      if(url) allData.images.building[id] = url;
+    }
+
+    // 下载为 JSON 文件
+    const json = JSON.stringify(allData);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `三下乡数据备份_${new Date().toLocaleDateString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ 数据导出成功！');
+  } catch(e) {
+    console.error(e);
+    alert('❌ 导出失败: ' + e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const importFile = document.getElementById('importFile');
+  if(importFile){
+    importFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if(data.version !== 2){
+          alert('⚠️ 文件格式不兼容，期望版本 2');
+          return;
+        }
+
+        // 确认导入
+        if(!confirm('导入将覆盖当前所有数据，是否继续？')){
+          importFile.value = '';
+          return;
+        }
+
+        // 清除现有数据
+        await clearAllData(true);
+
+        // 导入元数据
+        if(data.metadata){
+          if(data.metadata.buildingInfos){
+            dataStore.buildingInfos = data.metadata.buildingInfos;
+          }
+          if(data.metadata.panoUrls){
+            dataStore.panoUrls = data.metadata.panoUrls;
+          }
+          if(data.metadata.featuredKeys){
+            data.metadata.featuredKeys.forEach(key => {
+              dataStore.featuredImages[key] = true;
+            });
+          }
+          if(data.metadata.buildingKeys){
+            data.metadata.buildingKeys.forEach(key => {
+              dataStore.buildingImages[key] = true;
+            });
+          }
+        }
+
+        // 导入图片
+        if(data.images){
+          if(data.images.featured){
+            for(let id in data.images.featured){
+              await saveImage(`featured_${id}`, data.images.featured[id]);
+              dataStore.featuredImages[id] = data.images.featured[id];
+            }
+          }
+          if(data.images.building){
+            for(let id in data.images.building){
+              await saveImage(`building_${id}`, data.images.building[id]);
+              dataStore.buildingImages[id] = data.images.building[id];
+            }
+          }
+        }
+
+        // 保存元数据
+        await saveMetadata();
+
+        alert('✅ 数据导入成功！页面即将刷新...');
+        location.reload();
+      } catch(e) {
+        console.error(e);
+        alert('❌ 导入失败: ' + e.message);
+      }
+      importFile.value = '';
+    });
+  }
+});
+
+async function clearAllData(silent = false){
+  if(!silent){
+    if(!confirm('⚠️ 确定要清除所有数据吗？此操作不可恢复！')){
+      return;
+    }
+  }
+  try {
+    // 删除所有图片
+    for(let id in dataStore.featuredImages){
+      await deleteImageFromDB(`featured_${id}`);
+    }
+    for(let id in dataStore.buildingImages){
+      await deleteImageFromDB(`building_${id}`);
+    }
+    // 删除元数据
+    await deleteImageFromDB('allMetadata');
+
+    // 清空内存数据
+    dataStore.featuredImages = {};
+    dataStore.buildingImages = {};
+    dataStore.buildingInfos = {};
+    dataStore.panoUrls = {};
+
+    if(!silent){
+      alert('✅ 数据已清除！页面即将刷新...');
+      location.reload();
+    }
+  } catch(e) {
+    console.error(e);
+    if(!silent){
+      alert('❌ 清除失败: ' + e.message);
+    }
+  }
+}
+
+// 管理员指示器点击打开存储管理
+document.addEventListener('click', (e) => {
+  if(e.target.closest('.admin-indicator')){
+    openStorageModal();
+  }
+});
+
+/* ============ 恢复已保存的数据 ============ */
+async function restoreData(){
+  // 先加载元数据
+  await loadMetadata();
+
+  // 恢复图片（异步从 IndexedDB 加载）
+  for(let id in dataStore.featuredImages){
+    const url = await getImageFromDB(`featured_${id}`);
+    if(url) dataStore.featuredImages[id] = url;
+    const item = document.querySelector(`.featured-item[data-fid="${id}"]`);
+    if(item){
       const placeholder = item.querySelector('.featured-placeholder');
       if(placeholder) placeholder.remove();
       let img = item.querySelector('img');
@@ -568,10 +1170,14 @@ function handleFilePick(e){
         item.insertBefore(img, item.firstChild);
       }
       img.src = url;
-      dataStore.featuredImages[target.id] = url;
-    } else if(target.type === 'buildingImg'){
-      const card = document.querySelector(`.building-card[data-bid="${target.id}"]`);
-      if(!card) return;
+    }
+  }
+
+  for(let id in dataStore.buildingImages){
+    const url = await getImageFromDB(`building_${id}`);
+    if(url) dataStore.buildingImages[id] = url;
+    const card = document.querySelector(`.building-card[data-bid="${id}"]`);
+    if(card){
       const imgBox = card.querySelector('.card-image');
       const placeholder = imgBox.querySelector('.image-placeholder');
       if(placeholder) placeholder.remove();
@@ -581,10 +1187,155 @@ function handleFilePick(e){
         imgBox.insertBefore(img, imgBox.firstChild);
       }
       img.src = url;
-      dataStore.buildingImages[target.id] = url;
     }
+  }
+
+  // 恢复建筑介绍和名称
+  for(let id in dataStore.buildingInfos){
+    if(id.endsWith('_name')){
+      const realId = id.replace('_name', '');
+      const card = document.querySelector(`.building-card[data-bid="${realId}"]`);
+      if(card){
+        const h2 = card.querySelector('.card-info h2');
+        if(h2 && dataStore.buildingInfos[id]){
+          h2.textContent = dataStore.buildingInfos[id];
+        }
+      }
+    } else {
+      const card = document.querySelector(`.building-card[data-bid="${id}"]`);
+      if(card){
+        const content = card.querySelector('.info-content');
+        if(content && dataStore.buildingInfos[id]){
+          content.textContent = dataStore.buildingInfos[id];
+        }
+      }
+    }
+  }
+
+  // 同步克隆容器
+  if(window.syncCloneFeatured){
+    window.syncCloneFeatured();
+  }
+}
+
+/* ============ 特色图片替换 ============ */
+function replaceFeatured(id){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部"三下乡 · 文化云游"Logo 5次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  dataStore.currentTarget = {type:'featured', id};
+  document.getElementById('filePicker').click();
+}
+
+/* ============ 建筑图片替换 ============ */
+function replaceBuildingImg(id){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部"三下乡 · 文化云游"Logo 5次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  dataStore.currentTarget = {type:'buildingImg', id};
+  document.getElementById('filePicker').click();
+}
+
+/* ============ 建筑介绍编辑 ============ */
+function replaceBuildingInfo(id){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部"三下乡 · 文化云游"Logo 5次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  const card = document.querySelector(`.building-card[data-bid="${id}"]`);
+  const content = card.querySelector('.info-content');
+  content.focus();
+  const range = document.createRange();
+  range.selectNodeContents(content);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  // 监听内容变化自动保存
+  const saveOnChange = ()=>{
+    dataStore.buildingInfos[id] = content.textContent;
+    saveToStorage();
+    content.removeEventListener('blur', saveOnChange);
+  };
+  content.addEventListener('blur', saveOnChange);
+}
+
+/* ============ 文件选择处理（优化版） ============ */
+function handleFilePick(e){
+  const file = e.target.files[0];
+  if(!file || !dataStore.currentTarget){
     e.target.value = '';
-    dataStore.currentTarget = null;
+    return;
+  }
+  const target = dataStore.currentTarget;
+
+  // 读取并压缩图片
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    let url = ev.target.result;
+
+    // 智能压缩：根据图片大小决定压缩策略
+    const compressIfNeeded = (img, maxWidth, quality) => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      
+      if(width > maxWidth || height > maxWidth){
+        if(width > height){
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        } else {
+          width = Math.round(width * (maxWidth / height));
+          height = maxWidth;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+      return canvas.toDataURL('image/jpeg', quality);
+    };
+
+    const processImage = () => {
+      const img = new Image();
+      img.onload = function(){
+        let finalUrl = url;
+        const fileSize = file.size;
+
+        // 根据文件大小选择压缩策略
+        if(fileSize > 5 * 1024 * 1024){
+          // 大于 5MB：压缩到 1600px，质量 0.8
+          finalUrl = compressIfNeeded(img, 1600, 0.8);
+        } else if(fileSize > 2 * 1024 * 1024){
+          // 大于 2MB：压缩到 1200px，质量 0.85
+          finalUrl = compressIfNeeded(img, 1200, 0.85);
+        } else if(fileSize > 1 * 1024 * 1024){
+          // 大于 1MB：压缩到 1600px，质量 0.9
+          finalUrl = compressIfNeeded(img, 1600, 0.9);
+        }
+        // 小于 1MB 保持原样
+
+        applyImageUrl(finalUrl, target);
+      };
+      img.onerror = function(){
+        applyImageUrl(url, target); // 加载失败则使用原图
+      };
+      img.src = url;
+    };
+
+    // 检查是否为图片
+    if(file.type.startsWith('image/')){
+      processImage();
+    } else {
+      alert('请选择图片文件');
+      e.target.value = '';
+      dataStore.currentTarget = null;
+    }
   };
   reader.onerror = function(){
     alert('图片读取失败，请重试');
@@ -592,6 +1343,45 @@ function handleFilePick(e){
     dataStore.currentTarget = null;
   };
   reader.readAsDataURL(file);
+}
+
+function applyImageUrl(url, target){
+  if(target.type === 'featured'){
+    const item = document.querySelector(`.featured-item[data-fid="${target.id}"]`);
+    if(!item) return;
+    const placeholder = item.querySelector('.featured-placeholder');
+    if(placeholder) placeholder.remove();
+    let img = item.querySelector('img');
+    if(!img){
+      img = document.createElement('img');
+      item.insertBefore(img, item.firstChild);
+    }
+    img.src = url;
+    dataStore.featuredImages[target.id] = url;
+    saveImage(`featured_${target.id}`, url);
+    // 同步克隆容器
+    if(window.syncCloneFeatured){
+      window.syncCloneFeatured();
+    }
+  } else if(target.type === 'buildingImg'){
+    const card = document.querySelector(`.building-card[data-bid="${target.id}"]`);
+    if(!card) return;
+    const imgBox = card.querySelector('.card-image');
+    const placeholder = imgBox.querySelector('.image-placeholder');
+    if(placeholder) placeholder.remove();
+    let img = imgBox.querySelector('img');
+    if(!img){
+      img = document.createElement('img');
+      imgBox.insertBefore(img, imgBox.firstChild);
+    }
+    img.src = url;
+    dataStore.buildingImages[target.id] = url;
+    saveImage(`building_${target.id}`, url);
+  }
+  // 保存图片 key 列表到元数据，以便刷新后恢复
+  saveMetadata();
+  document.getElementById('filePicker').value = '';
+  dataStore.currentTarget = null;
 }
 
 /* ============ 360° 全景 ============ */
@@ -602,7 +1392,6 @@ function open360(id){
   const body = document.getElementById('modalBody');
   title.textContent = `360° 全景漫游 - 建筑 ${id}`;
 
-  // 如果之前已加载过全景，直接显示
   if(dataStore.panoUrls[id]){
     body.innerHTML = `<iframe src="${dataStore.panoUrls[id]}" allowfullscreen></iframe>`;
   } else {
@@ -630,19 +1419,18 @@ function loadPano(id){
   const input = document.getElementById(`panoUrlInput${id}`);
   let url = input.value.trim();
   if(!url){alert('请先粘贴全景链接');return}
-  // 处理 720yun 等平台的嵌入地址
   if(url.includes('720yun.com') && !url.includes('/vr/')){
     url = url.replace('720yun.com/','720yun.com/vr/');
   }
   if(!url.startsWith('http')){url = 'https://' + url}
   dataStore.panoUrls[id] = url;
+  saveToStorage();
   const body = document.getElementById('modalBody');
   body.innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
 }
 
 function close360(e){
   if(e && e.target.id !== 'modal360' && e.type === 'click'){
-    // 只允许点击遮罩关闭
     if(e.target.closest('.modal-box')) return;
   }
   document.getElementById('modal360').classList.remove('active');
@@ -655,6 +1443,58 @@ window.addEventListener('scroll', ()=>{
   else backTop.classList.remove('show');
 });
 
+/* ============ 页面初始化 ============ */
+async function initApp(){
+  // 打开 IndexedDB
+  try {
+    await openDB();
+    console.log('数据库已初始化');
+  } catch(e) {
+    console.error('数据库初始化失败:', e);
+    alert('浏览器不支持 IndexedDB，部分功能可能受限');
+  }
+
+  // 检查管理员认证
+  checkAuth();
+
+  // 恢复数据（从 IndexedDB 异步加载）
+  await restoreData();
+
+  // 根据管理员状态设置 contenteditable
+  updateEditable();
+
+  // 建筑介绍保存
+  document.querySelectorAll('.info-content').forEach(el => {
+    el.addEventListener('blur', function(){
+      if(!isAdmin) return;
+      const card = this.closest('.building-card');
+      const id = card.dataset.bid;
+      dataStore.buildingInfos[id] = this.textContent;
+      saveToStorage();
+    });
+  });
+
+  // 建筑名称保存
+  document.querySelectorAll('.card-info h2').forEach(el => {
+    el.addEventListener('blur', function(){
+      if(!isAdmin) return;
+      const card = this.closest('.building-card');
+      const id = card.dataset.bid;
+      dataStore.buildingInfos[id + '_name'] = this.textContent;
+      saveToStorage();
+    });
+  });
+
+  // 同步克隆容器
+  if(window.syncCloneFeatured){
+    window.syncCloneFeatured();
+  }
+
+  console.log('页面初始化完成');
+}
+
+initApp();
+
 /* ============ 特色图片自动无缝滚动 ============ */
 (function(){
   const wrapper = document.getElementById('featuredWrapper');
@@ -662,40 +1502,30 @@ window.addEventListener('scroll', ()=>{
   const origBox = track.querySelector('.scroll-orig');
   const cloneBox= track.querySelector('.scroll-clone');
 
-  // 克隆原始内容到克隆容器（保证完全一致，含替换后的图片）
   function syncClone(){
     cloneBox.innerHTML = origBox.innerHTML;
-    // 两组间距由 CSS 统一控制，这里不再加 margin
   }
+  // 暴露到全局，供 applyImageUrl 调用
+  window.syncCloneFeatured = syncClone;
   syncClone();
 
-  // 当用户替换图片时，同步克隆容器
-  const origReplaceFeatured = window.replaceFeatured;
-  window.replaceFeatured = function(id){
-    origReplaceFeatured(id);
-    setTimeout(syncClone, 50);
-  };
-
   // 无缝滚动核心
-  let currentX = 0;     // 当前平移位移（px）
-  let speed    = 0.5;   // 每帧移动像素（越大越快）
+  let currentX = 0;
+  let speed    = 0.5;
   let paused   = false;
   let rafId    = null;
-  let halfWidth = 0;    // 单组（A）的完整宽度，超过即重置
+  let halfWidth = 0;
 
   function measureHalfWidth(){
-    // 计算一组的总宽度：每 item 宽度 + gap
     const items = origBox.querySelectorAll('.featured-item');
     const totalItem = Array.from(items).reduce((s,it)=>s+it.offsetWidth,0);
     const gaps = (items.length) * 16;
     halfWidth = totalItem + gaps;
-    // 如果视窗宽度 > 单组总宽，需要走多次才到末尾，无需额外调整
   }
 
   function tick(){
     if(!paused){
       currentX -= speed;
-      // 一旦位移超过单组总宽，立即回到 0（此时屏幕上看到的是 A'，无缝衔接回 A）
       if(Math.abs(currentX) >= halfWidth){
         currentX += halfWidth;
       }
@@ -707,12 +1537,15 @@ window.addEventListener('scroll', ()=>{
   window.addEventListener('load', ()=>{
     measureHalfWidth();
     rafId = requestAnimationFrame(tick);
+    // 同步克隆（包含恢复的图片）
+    setTimeout(syncClone, 100);
   });
 
-  // 视窗进入 / 离开重算（防止窗口尺寸变化导致断层）
-  window.addEventListener('resize', measureHalfWidth);
+  window.addEventListener('resize', ()=>{
+    measureHalfWidth();
+    syncClone();
+  });
 
-  // 悬停暂停
   wrapper.addEventListener('mouseenter', ()=>{ paused = true; });
   wrapper.addEventListener('mouseleave', ()=>{ paused = false; });
 
@@ -730,7 +1563,6 @@ window.addEventListener('scroll', ()=>{
     const dx = e.clientX - dragStartX;
     if(Math.abs(dx) > 3) dragMoved = true;
     let next = dragStartOffset + dx;
-    // 允许反向拖拽也不出现断层：做正向循环
     if(next > 0) next -= halfWidth;
     if(Math.abs(next) >= halfWidth) next += halfWidth;
     currentX = next;
@@ -744,7 +1576,6 @@ window.addEventListener('scroll', ()=>{
     }
   });
 
-  // 阻止拖拽后误触发点击
   wrapper.addEventListener('click', (e)=>{
     if(dragMoved && e.target.closest('.replace-btn')){
       e.preventDefault(); e.stopPropagation();
@@ -752,7 +1583,7 @@ window.addEventListener('scroll', ()=>{
     }
   }, true);
 
-  // ===== 触摸支持（移动端） =====
+  // ===== 触摸支持 =====
   wrapper.addEventListener('touchstart', (e)=>{
     if(e.target.closest('button')) return;
     dragging = true; paused = true;
@@ -774,10 +1605,13 @@ window.addEventListener('scroll', ()=>{
 
 })();
 
-/* ============ 特色图片拖拽滚动（旧版已移除，上方新实现已含拖拽） ============ */
 /* ============ ESC 关闭模态框 ============ */
 document.addEventListener('keydown',(e)=>{
-  if(e.key === 'Escape') document.getElementById('modal360').classList.remove('active');
+  if(e.key === 'Escape'){
+    document.getElementById('modal360').classList.remove('active');
+    document.getElementById('adminModal').classList.remove('active');
+    document.getElementById('storageModal').classList.remove('active');
+  }
 });
 </script>
 
