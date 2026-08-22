@@ -97,7 +97,6 @@
     color:#b89878;font-size:13px;text-align:center;
     padding:10px;
   }
-  .featured-placeholder::after{content:"\A（点击替换图片）\A\A";white-space:pre;color:#b91c1c;font-weight:600}
   .scroll-hint{
     text-align:center;font-size:13px;color:#b89878;margin-top:6px;
   }
@@ -136,7 +135,6 @@
   .image-placeholder{
     color:#b89878;font-size:15px;text-align:center;padding:20px;
   }
-  .image-placeholder::after{content:"\A\A（点击下方按钮替换图片）";white-space:pre;color:#b91c1c;font-size:13px}
 
   /* 360° 提示图标：默认隐藏，悬停时显示在右下角（不占中央） */
   .circle-360{
@@ -319,11 +317,28 @@
     border:none;font-size:24px;color:#999;cursor:pointer;
   }
 
-  /* 编辑模式下显示的按钮样式 */
-  .edit-only{display:none}
-  body.admin-mode .edit-only{display:inline-block}
-  body.admin-mode .replace-btn{opacity:1}
-  body.admin-mode .img-replace-btn{opacity:1}
+  /* 编辑模式下显示的按钮和元素样式 */
+  .edit-only{display:none !important}
+  body.admin-mode .edit-only{display:inline-block !important}
+  body.admin-mode .edit-only-block{display:block !important}
+  
+  /* 替换按钮：默认隐藏，管理员模式显示 */
+  .replace-btn{display:none}
+  .img-replace-btn{display:none}
+  .info-replace-btn{display:none}
+  body.admin-mode .replace-btn{display:inline-block;opacity:1}
+  body.admin-mode .img-replace-btn{display:block;opacity:1}
+  body.admin-mode .info-replace-btn{display:block}
+  
+  /* 占位符：默认只显示文字，管理员模式显示替换提示 */
+  .featured-placeholder::after{display:none}
+  .image-placeholder::after{display:none}
+  body.admin-mode .featured-placeholder::after{content:"\A（点击替换图片）\A\A";white-space:pre;color:#b91c1c;font-weight:600;display:block}
+  body.admin-mode .image-placeholder::after{content:"\A\A（点击下方按钮替换图片）";white-space:pre;color:#b91c1c;font-size:13px;display:block}
+  
+  /* 管理员模式下的编辑提示样式 */
+  body.admin-mode .featured-item{border-style:solid;border-color:#b91c1c}
+  body.admin-mode .card-image{border:2px dashed #b91c1c}
 
   /* 登录状态指示器 */
   .admin-indicator{
@@ -451,35 +466,35 @@
         <div class="scroll-orig">
           <div class="featured-item" data-fid="1">
             <div class="featured-placeholder">特色图片 1</div>
-            <button class="replace-btn" onclick="replaceFeatured(1)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(1)">替换</button>
           </div>
           <div class="featured-item" data-fid="2">
             <div class="featured-placeholder">特色图片 2</div>
-            <button class="replace-btn" onclick="replaceFeatured(2)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(2)">替换</button>
           </div>
           <div class="featured-item" data-fid="3">
             <div class="featured-placeholder">特色图片 3</div>
-            <button class="replace-btn" onclick="replaceFeatured(3)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(3)">替换</button>
           </div>
           <div class="featured-item" data-fid="4">
             <div class="featured-placeholder">特色图片 4</div>
-            <button class="replace-btn" onclick="replaceFeatured(4)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(4)">替换</button>
           </div>
           <div class="featured-item" data-fid="5">
             <div class="featured-placeholder">特色图片 5</div>
-            <button class="replace-btn" onclick="replaceFeatured(5)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(5)">替换</button>
           </div>
           <div class="featured-item" data-fid="6">
             <div class="featured-placeholder">特色图片 6</div>
-            <button class="replace-btn" onclick="replaceFeatured(6)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(6)">替换</button>
           </div>
           <div class="featured-item" data-fid="7">
             <div class="featured-placeholder">特色图片 7</div>
-            <button class="replace-btn" onclick="replaceFeatured(7)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(7)">替换</button>
           </div>
           <div class="featured-item" data-fid="8">
             <div class="featured-placeholder">特色图片 8</div>
-            <button class="replace-btn" onclick="replaceFeatured(8)">替换</button>
+            <button class="replace-btn edit-only" onclick="replaceFeatured(8)">替换</button>
           </div>
         </div>
         <!-- ===== 第二组 A'（克隆，保证无缝） ===== -->
@@ -502,12 +517,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(1)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(1)">替换图片</button>
       </div>
       <div class="card-info">
         <h2>建筑名称 1</h2>
         <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(1)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(1)">编辑介绍</button>
       </div>
     </div>
 
@@ -519,12 +534,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(2)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(2)">替换图片</button>
       </div>
       <div class="card-info">
         <h2>建筑名称 2</h2>
         <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(2)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(2)">编辑介绍</button>
       </div>
     </div>
 
@@ -536,12 +551,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(3)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(3)">替换图片</button>
       </div>
       <div class="card-info">
         <h2 contenteditable="true">建筑名称 3</h2>
         <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(3)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(3)">编辑介绍</button>
       </div>
     </div>
 
@@ -553,12 +568,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(4)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(4)">替换图片</button>
       </div>
       <div class="card-info">
         <h2 contenteditable="true">建筑名称 4</h2>
         <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(4)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(4)">编辑介绍</button>
       </div>
     </div>
 
@@ -570,12 +585,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(5)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(5)">替换图片</button>
       </div>
       <div class="card-info">
         <h2 contenteditable="true">建筑名称 5</h2>
         <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(5)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(5)">编辑介绍</button>
       </div>
     </div>
 
@@ -587,12 +602,12 @@
           <span class="circle-tip">点击图片体验 360° 全景漫游</span>
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
         </div>
-        <button class="img-replace-btn" onclick="event.stopPropagation();replaceBuildingImg(6)">替换图片</button>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(6)">替换图片</button>
       </div>
       <div class="card-info">
         <h2>建筑名称</h2>
         <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn" onclick="replaceBuildingInfo(6)">编辑介绍</button>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(6)">编辑介绍</button>
       </div>
     </div>
 
@@ -662,12 +677,36 @@
       在这里您可以导出或导入您的数据，<br>
       防止浏览器缓存清理导致数据丢失。
     </div>
-    <button class="storage-btn" onclick="exportData()">📤 导出所有数据</button>
-    <div class="file-input-wrapper">
-      <input type="file" id="importFile" accept=".json" style="display:none">
-      <button class="storage-btn secondary" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+    
+    <!-- GitHub 多设备同步 -->
+    <div style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
+      <h4 style="color:#b91c1c;font-size:14px;margin-bottom:10px">☁️ GitHub 多设备同步</h4>
+      <div id="githubConfigForm" style="display:none">
+        <div style="margin-bottom:8px">
+          <label style="font-size:12px;color:#666">GitHub Token（需有 repo 权限）</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-top:4px">
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:12px;color:#666">仓库路径（owner/repo）</label>
+          <input type="text" id="ghRepo" value="miao051028/myweb" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-top:4px">
+        </div>
+        <button class="storage-btn" style="background:#10b981" onclick="saveGithubConfig()">💾 保存配置</button>
+        <button class="storage-btn secondary" style="background:#6b7280" onclick="document.getElementById('githubConfigForm').style.display='none';document.getElementById('githubToggle').textContent='⚙️ 配置 GitHub 同步'">取消</button>
+      </div>
+      <button id="githubToggle" class="storage-btn secondary" style="width:100%;font-size:13px;padding:8px" onclick="toggleGithubConfig()">⚙️ 配置 GitHub 同步</button>
+      <div id="githubStatus" style="margin-top:10px;font-size:12px"></div>
+      <button id="syncFromGithubBtn" class="storage-btn" style="background:#3b82f6;font-size:13px;padding:8px;display:none;margin-top:8px" onclick="syncFromGithub()">📥 从 GitHub 同步所有数据</button>
+      <button id="syncToGithubBtn" class="storage-btn" style="background:#8b5cf6;font-size:13px;padding:8px;display:none;margin-top:4px" onclick="syncToGithub()">📤 上传本地数据到 GitHub</button>
     </div>
-    <button class="storage-btn danger" onclick="clearAllData()">🗑️ 清除所有数据</button>
+
+    <div style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
+      <button class="storage-btn" onclick="exportData()">📤 导出所有数据</button>
+      <div class="file-input-wrapper">
+        <input type="file" id="importFile" accept=".json" style="display:none">
+        <button class="storage-btn secondary" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+      </div>
+      <button class="storage-btn danger" onclick="clearAllData()">🗑️ 清除所有数据</button>
+    </div>
   </div>
 </div>
 
@@ -1144,10 +1183,351 @@ async function clearAllData(silent = false){
   }
 }
 
+/* ============ GitHub 多设备同步功能 ============ */
+const GITHUB_CONFIG_KEY = 'sxx_github_config';
+
+function getGithubConfig(){
+  try {
+    const config = localStorage.getItem(GITHUB_CONFIG_KEY);
+    return config ? JSON.parse(config) : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function toggleGithubConfig(){
+  const form = document.getElementById('githubConfigForm');
+  if(form.style.display === 'none'){
+    const config = getGithubConfig();
+    if(config){
+      document.getElementById('ghToken').value = config.token || '';
+      document.getElementById('ghRepo').value = config.repo || 'miao051028/myweb';
+    }
+    form.style.display = 'block';
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+function saveGithubConfig(){
+  const token = document.getElementById('ghToken').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  
+  if(!token){
+    alert('请输入 GitHub Token');
+    return;
+  }
+  if(!repo || !repo.includes('/')){
+    alert('请输入正确的仓库路径（格式：owner/repo）');
+    return;
+  }
+  
+  localStorage.setItem(GITHUB_CONFIG_KEY, JSON.stringify({token, repo}));
+  document.getElementById('githubConfigForm').style.display = 'none';
+  updateGithubStatus();
+  alert('✅ GitHub 配置已保存！');
+}
+
+function updateGithubStatus(){
+  const config = getGithubConfig();
+  const statusEl = document.getElementById('githubStatus');
+  const syncFromBtn = document.getElementById('syncFromGithubBtn');
+  const syncToBtn = document.getElementById('syncToGithubBtn');
+  
+  if(config){
+    statusEl.innerHTML = `✅ 已连接到 GitHub: <b>${config.repo}</b><br><span style="color:#10b981">Token 已保存</span>`;
+    syncFromBtn.style.display = 'block';
+    syncToBtn.style.display = 'block';
+  } else {
+    statusEl.innerHTML = '⚠️ 未配置 GitHub 同步，数据仅保存在本地浏览器';
+    syncFromBtn.style.display = 'none';
+    syncToBtn.style.display = 'none';
+  }
+}
+
+// 将 dataURL 转为 Base64（去除前缀）
+function dataUrlToBase64(dataUrl){
+  return dataUrl.split(',')[1];
+}
+
+// 将 Base64 转为 dataURL
+function base64ToDataUrl(base64, mimeType = 'image/jpeg'){
+  return `data:${mimeType};base64,${base64}`;
+}
+
+// 上传文件到 GitHub 仓库
+async function uploadToGithub(path, content){
+  const config = getGithubConfig();
+  if(!config) throw new Error('未配置 GitHub');
+  
+  const apiUrl = `https://api.github.com/repos/${config.repo}/contents/${path}`;
+  const headers = {
+    'Authorization': `token ${config.token}`,
+    'Accept': 'application/vnd.github.v3+json'
+  };
+  
+  // 检查文件是否存在
+  let sha = null;
+  try {
+    const checkRes = await fetch(apiUrl, {headers});
+    if(checkRes.ok){
+      const data = await checkRes.json();
+      sha = data.sha;
+    }
+  } catch(e) {}
+  
+  const body = {
+    message: `Update ${path} via sync`,
+    content: content
+  };
+  if(sha) body.sha = sha;
+  
+  const res = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {...headers, 'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  
+  if(!res.ok){
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `上传失败: ${res.status}`);
+  }
+  return res.json();
+}
+
+// 从 GitHub 下载文件
+async function downloadFromGithub(path){
+  const config = getGithubConfig();
+  if(!config) throw new Error('未配置 GitHub');
+  
+  const apiUrl = `https://api.github.com/repos/${config.repo}/contents/${path}`;
+  const res = await fetch(apiUrl, {
+    headers: {
+      'Authorization': `token ${config.token}`,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error(`下载失败: ${res.status}`);
+  
+  const data = await res.json();
+  return data.content; // Base64 内容
+}
+
+// 保存元数据到 GitHub
+async function saveMetadataToGithub(){
+  const metaData = {
+    buildingInfos: dataStore.buildingInfos,
+    panoUrls: dataStore.panoUrls,
+    featuredKeys: Object.keys(dataStore.featuredImages),
+    buildingKeys: Object.keys(dataStore.buildingImages),
+    timestamp: Date.now()
+  };
+  const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(metaData))));
+  return uploadToGithub('sxx_metadata.json', base64Content);
+}
+
+// 从 GitHub 加载元数据
+async function loadMetadataFromGithub(){
+  const base64Content = await downloadFromGithub('sxx_metadata.json');
+  if(!base64Content) return null;
+  const jsonStr = decodeURIComponent(escape(atob(base64Content)));
+  return JSON.parse(jsonStr);
+}
+
+// 从 GitHub 同步所有数据到本地
+async function syncFromGithub(){
+  if(!confirm('从 GitHub 同步将用远程数据覆盖本地数据，是否继续？')) return;
+  
+  const statusEl = document.getElementById('githubStatus');
+  statusEl.innerHTML = '⏳ 正在从 GitHub 下载数据...';
+  
+  try {
+    // 下载元数据
+    const metaData = await loadMetadataFromGithub();
+    if(!metaData){
+      statusEl.innerHTML = '⚠️ GitHub 上暂无数据';
+      return;
+    }
+    
+    // 清除现有数据
+    await clearAllData(true);
+    
+    // 恢复元数据
+    if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
+    if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
+    if(metaData.featuredKeys){
+      metaData.featuredKeys.forEach(key => dataStore.featuredImages[key] = true);
+    }
+    if(metaData.buildingKeys){
+      metaData.buildingKeys.forEach(key => dataStore.buildingImages[key] = true);
+    }
+    
+    // 下载特色图片
+    for(let id of metaData.featuredKeys || []){
+      const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
+      if(base64){
+        const dataUrl = base64ToDataUrl(base64);
+        await saveImage(`featured_${id}`, dataUrl);
+        dataStore.featuredImages[id] = dataUrl;
+      }
+    }
+    
+    // 下载建筑图片
+    for(let id of metaData.buildingKeys || []){
+      const base64 = await downloadFromGithub(`images/building_${id}.jpg`);
+      if(base64){
+        const dataUrl = base64ToDataUrl(base64);
+        await saveImage(`building_${id}`, dataUrl);
+        dataStore.buildingImages[id] = dataUrl;
+      }
+    }
+    
+    // 保存元数据到本地
+    await saveMetadata();
+    
+    statusEl.innerHTML = '✅ 同步完成！页面即将刷新...';
+    setTimeout(() => location.reload(), 1000);
+  } catch(e) {
+    console.error(e);
+    statusEl.innerHTML = '❌ 同步失败: ' + e.message;
+    alert('同步失败: ' + e.message);
+  }
+}
+
+// 上传本地数据到 GitHub
+async function syncToGithub(){
+  if(!confirm('将本地所有数据上传到 GitHub，是否继续？')) return;
+  
+  const statusEl = document.getElementById('githubStatus');
+  statusEl.innerHTML = '⏳ 正在上传数据到 GitHub...';
+  
+  try {
+    // 先上传元数据
+    statusEl.innerHTML = '⏳ 正在上传元数据...';
+    await saveMetadataToGithub();
+    
+    // 上传特色图片
+    const featuredKeys = Object.keys(dataStore.featuredImages);
+    for(let i = 0; i < featuredKeys.length; i++){
+      const id = featuredKeys[i];
+      statusEl.innerHTML = `⏳ 正在上传特色图片 ${i+1}/${featuredKeys.length}...`;
+      const dataUrl = await getImageFromDB(`featured_${id}`);
+      if(dataUrl){
+        const base64 = dataUrlToBase64(dataUrl);
+        await uploadToGithub(`images/featured_${id}.jpg`, base64);
+      }
+    }
+    
+    // 上传建筑图片
+    const buildingKeys = Object.keys(dataStore.buildingImages);
+    for(let i = 0; i < buildingKeys.length; i++){
+      const id = buildingKeys[i];
+      statusEl.innerHTML = `⏳ 正在上传建筑图片 ${i+1}/${buildingKeys.length}...`;
+      const dataUrl = await getImageFromDB(`building_${id}`);
+      if(dataUrl){
+        const base64 = dataUrlToBase64(dataUrl);
+        await uploadToGithub(`images/building_${id}.jpg`, base64);
+      }
+    }
+    
+    statusEl.innerHTML = `✅ 上传完成！共上传 ${featuredKeys.length + buildingKeys.length} 张图片`;
+    alert('✅ 数据已上传到 GitHub！现在其他设备也可以同步这些数据了。');
+  } catch(e) {
+    console.error(e);
+    statusEl.innerHTML = '❌ 上传失败: ' + e.message;
+    alert('上传失败: ' + e.message);
+  }
+}
+
+// 自动同步图片到 GitHub（如果配置了）
+let syncTimeout = null;
+function autoSyncToGithub(type, id, dataUrl){
+  const config = getGithubConfig();
+  if(!config) return; // 未配置 GitHub 则跳过
+  
+  // 使用防抖，避免频繁请求
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try {
+      const base64 = dataUrlToBase64(dataUrl);
+      const path = type === 'featured' ? `images/featured_${id}.jpg` : `images/building_${id}.jpg`;
+      await uploadToGithub(path, base64);
+      // 同时更新元数据
+      await saveMetadataToGithub();
+      console.log(`✅ 已同步 ${path} 到 GitHub`);
+    } catch(e) {
+      console.error('❌ 自动同步失败:', e.message);
+    }
+  }, 500); // 延迟 500ms 防抖
+}
+
+// 页面加载时从 GitHub 自动同步（如果配置了）
+async function autoSyncFromGithub(){
+  const config = getGithubConfig();
+  if(!config) return; // 未配置 GitHub 则跳过
+  
+  try {
+    const metaData = await loadMetadataFromGithub();
+    if(!metaData) return; // GitHub 上暂无数据
+    
+    // 检查本地是否已有数据
+    const localFeaturedKeys = Object.keys(dataStore.featuredImages);
+    if(localFeaturedKeys.length > 0){
+      // 本地已有数据，提示用户选择
+      if(!confirm('检测到 GitHub 上有同步数据，是否从 GitHub 下载覆盖本地数据？\n\n点击"确定"：使用 GitHub 数据\n点击"取消"：保留本地数据')){
+        return;
+      }
+    }
+    
+    // 从 GitHub 下载数据
+    if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
+    if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
+    if(metaData.featuredKeys){
+      for(let id of metaData.featuredKeys){
+        const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
+        if(base64){
+          const dataUrl = base64ToDataUrl(base64);
+          await saveImage(`featured_${id}`, dataUrl);
+          dataStore.featuredImages[id] = dataUrl;
+        }
+      }
+    }
+    if(metaData.buildingKeys){
+      for(let id of metaData.buildingKeys){
+        const base64 = await downloadFromGithub(`images/building_${id}.jpg`);
+        if(base64){
+          const dataUrl = base64ToDataUrl(base64);
+          await saveImage(`building_${id}`, dataUrl);
+          dataStore.buildingImages[id] = dataUrl;
+        }
+      }
+    }
+    
+    await saveMetadata();
+    console.log('✅ 已从 GitHub 同步数据');
+  } catch(e) {
+    console.error('自动同步失败:', e.message);
+  }
+}
+
 // 管理员指示器点击打开存储管理
 document.addEventListener('click', (e) => {
   if(e.target.closest('.admin-indicator')){
     openStorageModal();
+    updateGithubStatus();
+  }
+});
+
+// 页面加载时检查 GitHub 配置并自动同步
+window.addEventListener('load', async () => {
+  updateGithubStatus();
+  // 从 GitHub 自动同步数据
+  await autoSyncFromGithub();
+  // 恢复数据后刷新页面显示
+  if(getGithubConfig()){
+    restoreData();
   }
 });
 
@@ -1359,6 +1739,8 @@ function applyImageUrl(url, target){
     img.src = url;
     dataStore.featuredImages[target.id] = url;
     saveImage(`featured_${target.id}`, url);
+    // 自动同步到 GitHub（如果配置了）
+    autoSyncToGithub('featured', target.id, url);
     // 同步克隆容器
     if(window.syncCloneFeatured){
       window.syncCloneFeatured();
@@ -1377,6 +1759,8 @@ function applyImageUrl(url, target){
     img.src = url;
     dataStore.buildingImages[target.id] = url;
     saveImage(`building_${target.id}`, url);
+    // 自动同步到 GitHub（如果配置了）
+    autoSyncToGithub('building', target.id, url);
   }
   // 保存图片 key 列表到元数据，以便刷新后恢复
   saveMetadata();
