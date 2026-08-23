@@ -10,7 +10,13 @@
   html{scroll-behavior:smooth}
   body{
     font-family:"Microsoft YaHei","PingFang SC",sans-serif;
-    background:#fdf6f0;
+    background-color:#fdf6f0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px);
+    background-attachment: fixed;
     color:#3a1f1f;
     line-height:1.6;
     min-height:100vh;
@@ -340,6 +346,148 @@
   body.admin-mode .featured-item{border-style:solid;border-color:#b91c1c}
   body.admin-mode .card-image{border:2px dashed #b91c1c}
 
+  /* ============ 添加/删除按钮样式 ============ */
+  .add-btn{
+    display:none;
+    background:linear-gradient(135deg,#10b981 0%,#059669 100%);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:14px 22px;
+    font-size:14px;
+    cursor:pointer;
+    transition:all .3s;
+    box-shadow:0 4px 14px rgba(16,185,129,.35);
+    letter-spacing:2px;
+    margin:0 auto 24px;
+  }
+  body.admin-mode .add-btn{display:block}
+  .add-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(16,185,129,.45);
+  }
+  .add-btn .plus{font-size:18px;margin-right:6px;font-weight:700}
+
+  .featured-add{
+    margin:18px auto 0;
+    display:none;
+    width:auto;
+    padding:10px 20px;
+    font-size:13px;
+  }
+  body.admin-mode .featured-add{display:inline-block}
+
+  /* 删除按钮 */
+  .delete-btn{
+    display:none;
+    position:absolute;
+    top:8px;
+    left:8px;
+    z-index:20;
+    background:rgba(220,38,38,.85);
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    padding:4px 8px;
+    font-size:12px;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .3s;
+  }
+  body.admin-mode .delete-btn{display:block}
+  .featured-item:hover .delete-btn,
+  .building-card:hover .delete-btn{opacity:1}
+
+  .building-card{position:relative}
+  .building-card .card-image{position:relative}
+
+  /* ============ 分页样式 ============ */
+  .pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    margin-top:32px;
+    padding:20px 0;
+    flex-wrap:wrap;
+  }
+  .page-btn{
+    min-width:42px;
+    height:42px;
+    padding:0 14px;
+    border:2px solid #e0d0c0;
+    background:#fff;
+    color:#7f1d1d;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+    transition:all .25s;
+    font-weight:600;
+  }
+  .page-btn:hover:not(:disabled){
+    border-color:#b91c1c;
+    background:#fdf2f2;
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(185,28,28,.15);
+  }
+  .page-btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .page-btn.active{
+    background:#b91c1c;
+    border-color:#b91c1c;
+    color:#fff;
+    box-shadow:0 4px 14px rgba(185,28,28,.35);
+  }
+  .page-info{
+    font-size:13px;
+    color:#7f1d1d;
+    padding:0 10px;
+    font-weight:600;
+  }
+
+  /* ============ 底纹选择面板 ============ */
+  .bg-preset-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:10px;
+  }
+  .bg-preset-item{
+    height:60px;
+    border-radius:8px;
+    border:2px solid #e0d0c0;
+    cursor:pointer;
+    transition:all .2s;
+    position:relative;
+    overflow:hidden;
+  }
+  .bg-preset-item:hover{border-color:#b91c1c;transform:scale(1.02)}
+  .bg-preset-item.active{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+  .bg-preset-item span{
+    position:absolute;
+    bottom:2px;
+    right:6px;
+    font-size:11px;
+    background:rgba(0,0,0,.5);
+    color:#fff;
+    padding:1px 6px;
+    border-radius:3px;
+  }
+
+  .custom-bg-section{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed #e0d0c0;
+  }
+  .custom-bg-section label{font-size:12px;color:#666;display:block;margin-bottom:6px}
+  .custom-bg-section input[type=color]{
+    width:40px;height:32px;border:2px solid #e0d0c0;border-radius:6px;cursor:pointer;vertical-align:middle;
+  }
+  .custom-bg-section .row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .custom-bg-section .row span{font-size:13px;color:#555}
+
   /* 登录状态指示器 */
   .admin-indicator{
     display:none;align-items:center;gap:6px;
@@ -463,42 +611,53 @@
     <div class="featured-scroll-wrapper" id="featuredWrapper">
       <div class="featured-scroll" id="featuredScroll">
         <!-- ===== 第一组 A ===== -->
-        <div class="scroll-orig">
+        <div class="scroll-orig" id="featuredOrig">
           <div class="featured-item" data-fid="1">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(1)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 1</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(1)">替换</button>
           </div>
           <div class="featured-item" data-fid="2">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(2)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 2</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(2)">替换</button>
           </div>
           <div class="featured-item" data-fid="3">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(3)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 3</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(3)">替换</button>
           </div>
           <div class="featured-item" data-fid="4">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(4)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 4</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(4)">替换</button>
           </div>
           <div class="featured-item" data-fid="5">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(5)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 5</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(5)">替换</button>
           </div>
           <div class="featured-item" data-fid="6">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(6)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 6</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(6)">替换</button>
           </div>
           <div class="featured-item" data-fid="7">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(7)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 7</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(7)">替换</button>
           </div>
           <div class="featured-item" data-fid="8">
+            <button class="delete-btn edit-only" onclick="deleteFeatured(8)">🗑️ 删除</button>
             <div class="featured-placeholder">特色图片 8</div>
             <button class="replace-btn edit-only" onclick="replaceFeatured(8)">替换</button>
           </div>
         </div>
         <!-- ===== 第二组 A'（克隆，保证无缝） ===== -->
         <div class="scroll-clone" aria-hidden="true"></div>
+      </div>
+      <div style="text-align:center">
+        <button class="add-btn featured-add" onclick="addFeaturedItem()"><span class="plus">+</span>添加特色图片</button>
       </div>
       <div class="scroll-hint"></div>
     </div>
@@ -508,108 +667,14 @@
   <section class="buildings-section" id="buildings">
     <div class="section-title">名 胜 古 迹 <span>·</span> 建 筑 巡 礼</div>
 
-    <!-- 建筑卡片 1 -->
-    <div class="building-card" data-bid="1">
-      <div class="card-image" onclick="open360(1)">
-        <div class="image-placeholder">建筑图片 1</div>
-        <!-- 360° 全景入口：整张图就是按钮，中心只保留一个低调小提示图标 -->
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(1)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2>建筑名称 1</h2>
-        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(1)">编辑介绍</button>
-      </div>
-    </div>
+    <!-- 添加建筑按钮 -->
+    <button class="add-btn" onclick="addBuildingCard()"><span class="plus">+</span>添加新建筑</button>
 
-    <!-- 建筑卡片 2（反向布局） -->
-    <div class="building-card reverse" data-bid="2">
-      <div class="card-image" onclick="open360(2)">
-        <div class="image-placeholder">建筑图片 2</div>
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(2)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2>建筑名称 2</h2>
-        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(2)">编辑介绍</button>
-      </div>
-    </div>
+    <!-- 建筑卡片容器（分页渲染） -->
+    <div id="buildingContainer"></div>
 
-    <!-- 建筑卡片 3 -->
-    <div class="building-card" data-bid="3">
-      <div class="card-image" onclick="open360(3)">
-        <div class="image-placeholder">建筑图片 3</div>
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(3)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2 contenteditable="true">建筑名称 3</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(3)">编辑介绍</button>
-      </div>
-    </div>
-
-    <!-- 建筑卡片 4（反向布局） -->
-    <div class="building-card reverse" data-bid="4">
-      <div class="card-image" onclick="open360(4)">
-        <div class="image-placeholder">建筑图片 4</div>
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(4)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2 contenteditable="true">建筑名称 4</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(4)">编辑介绍</button>
-      </div>
-    </div>
-
-    <!-- 建筑卡片 5 -->
-    <div class="building-card" data-bid="5">
-      <div class="card-image" onclick="open360(5)">
-        <div class="image-placeholder">建筑图片 5</div>
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(5)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2 contenteditable="true">建筑名称 5</h2>
-        <div class="info-content" contenteditable="true">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(5)">编辑介绍</button>
-      </div>
-    </div>
-
-    <!-- 建筑卡片 6（反向布局） -->
-    <div class="building-card reverse" data-bid="6">
-      <div class="card-image" onclick="open360(6)">
-        <div class="image-placeholder">建筑图片 6</div>
-        <div class="circle-360" aria-hidden="true">
-          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-        </div>
-        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg(6)">替换图片</button>
-      </div>
-      <div class="card-info">
-        <h2>建筑名称</h2>
-        <div class="info-content">在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……</div>
-        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo(6)">编辑介绍</button>
-      </div>
-    </div>
+    <!-- 分页控件 -->
+    <div class="pagination" id="buildingPagination"></div>
 
   </section>
 
@@ -672,12 +737,40 @@
 <!-- ============ 存储管理模态框 ============ -->
 <div class="storage-modal" id="storageModal" onclick="closeStorageModal(event)">
   <div class="storage-box" onclick="event.stopPropagation()">
-    <h3>数据管理</h3>
+    <h3>数据管理 & 页面设置</h3>
     <div class="storage-info" id="storageInfo">
       在这里您可以导出或导入您的数据，<br>
       防止浏览器缓存清理导致数据丢失。
     </div>
     
+    <!-- 全局底纹设置 -->
+    <div id="bgConfigSection" style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
+      <h4 style="color:#b91c1c;font-size:14px;margin-bottom:10px">🎨 页面底纹样式（全局）</h4>
+      <div class="bg-preset-grid" id="bgPresetGrid">
+        <div class="bg-preset-item" onclick="applyBgPreset(0)" style="background-color:#fdf6f0;background-image:radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)"><span>雅致格纹</span></div>
+        <div class="bg-preset-item" onclick="applyBgPreset(1)" style="background:linear-gradient(135deg,#fff5eb 0%,#fde68a 100%)"><span>暖阳米黄</span></div>
+        <div class="bg-preset-item" onclick="applyBgPreset(2)" style="background-color:#f0fdf4;background-image:radial-gradient(ellipse at top, #dcfce7, transparent 50%),radial-gradient(ellipse at bottom, #bbf7d0, transparent 50%)"><span>清新竹绿</span></div>
+        <div class="bg-preset-item" onclick="applyBgPreset(3)" style="background-color:#eff6ff;background-image:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%),radial-gradient(circle at 50% 0%, rgba(59,130,246,.1) 0%, transparent 60%)"><span>海天蔚蓝</span></div>
+        <div class="bg-preset-item" onclick="applyBgPreset(4)" style="background-color:#fdf2f8;background-image:repeating-linear-gradient(45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px),repeating-linear-gradient(-45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px)"><span>浪漫粉彩</span></div>
+        <div class="bg-preset-item" onclick="applyBgPreset(5)" style="background-color:#fffbeb;background-image:linear-gradient(90deg, rgba(180,83,9,.06) 1px, transparent 1px),linear-gradient(rgba(180,83,9,.06) 1px, transparent 1px);background-size:24px 24px"><span>素雅典籍</span></div>
+      </div>
+      <div class="custom-bg-section">
+        <label>自定义设置</label>
+        <div class="row">
+          <span>背景色：</span>
+          <input type="color" id="customBgColor" value="#fdf6f0" oninput="previewCustomBg()">
+          <span style="font-size:12px;color:#999;margin-left:4px" id="customBgColorVal">#fdf6f0</span>
+        </div>
+        <div class="row">
+          <span>主题色：</span>
+          <input type="color" id="customThemeColor" value="#b91c1c" oninput="previewCustomBg()">
+          <span style="font-size:12px;color:#999;margin-left:4px" id="customThemeColorVal">#b91c1c</span>
+        </div>
+        <button class="storage-btn secondary" style="font-size:12px;padding:8px" onclick="applyCustomBg()">✨ 应用自定义配色</button>
+        <button class="storage-btn secondary" style="font-size:12px;padding:8px;background:#6b7280" onclick="resetBgToDefault()">🔄 恢复默认底纹</button>
+      </div>
+    </div>
+
     <!-- GitHub 多设备同步 -->
     <div style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
       <h4 style="color:#b91c1c;font-size:14px;margin-bottom:10px">☁️ GitHub 多设备同步</h4>
@@ -873,10 +966,18 @@ function logoutAdmin(){
 }
 
 function updateEditable(){
+  // 由于现在建筑是动态渲染的，直接在模板中已按 isAdmin 输出
   const editableElements = document.querySelectorAll('.card-info h2, .info-content');
   editableElements.forEach(el => {
     el.setAttribute('contenteditable', isAdmin ? 'true' : 'false');
   });
+  // 重新渲染建筑（更新 contenteditable 和按钮显示）
+  if (document.getElementById('buildingContainer') && document.getElementById('buildingContainer').innerHTML.trim() !== '') {
+    renderBuildings();
+  }
+  if (document.getElementById('featuredOrig')) {
+    renderFeatured();
+  }
 }
 
 /* ============ 移动端导航 ============ */
@@ -911,13 +1012,61 @@ document.addEventListener('keydown', (e)=>{
   }
 });
 
+/* ============ 底纹预设 ============ */
+const BG_PRESETS = [
+  { // 0 雅致格纹（默认）
+    bgColor:'#fdf6f0',
+    bgImage: 'radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)',
+    themeColor: '#b91c1c'
+  },
+  { // 1 暖阳米黄
+    bgColor:'#fff5eb',
+    bgImage: 'linear-gradient(135deg,#fff5eb 0%,#fde68a 100%)',
+    themeColor: '#b45309'
+  },
+  { // 2 清新竹绿
+    bgColor:'#f0fdf4',
+    bgImage: 'radial-gradient(ellipse at top, #dcfce7, transparent 50%),radial-gradient(ellipse at bottom, #bbf7d0, transparent 50%)',
+    themeColor: '#166534'
+  },
+  { // 3 海天蔚蓝
+    bgColor:'#eff6ff',
+    bgImage: 'linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)',
+    themeColor: '#1e40af'
+  },
+  { // 4 浪漫粉彩
+    bgColor:'#fdf2f8',
+    bgImage: 'repeating-linear-gradient(45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px),repeating-linear-gradient(-45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px)',
+    themeColor: '#be185d'
+  },
+  { // 5 素雅典籍
+    bgColor:'#fffbeb',
+    bgImage: 'linear-gradient(90deg, rgba(180,83,9,.06) 1px, transparent 1px),linear-gradient(rgba(180,83,9,.06) 1px, transparent 1px)',
+    bgSize: '24px 24px',
+    themeColor: '#92400e'
+  }
+];
+
 /* ============ 数据存储（使用 IndexedDB 持久化） ============ */
 const dataStore = {
   currentTarget: null,
   buildingImages: {},
   buildingInfos: {},
   panoUrls: {},
-  featuredImages: {}
+  featuredImages: {},
+  // 新增：动态建筑ID列表（保证顺序）
+  buildingIds: ['1','2','3','4','5','6'],
+  // 新增：特色图片ID列表
+  featuredIds: ['1','2','3','4','5','6','7','8'],
+  // 新增：当前页码
+  currentPage: 1,
+  // 新增：页面底纹配置
+  bgConfig: {
+    type: 'preset', // preset 或 custom
+    presetIndex: 0,
+    customColor: '#fdf6f0',
+    customThemeColor: '#b91c1c'
+  }
 };
 
 async function saveImage(key, dataUrl) {
@@ -956,7 +1105,12 @@ async function saveMetadata() {
       buildingInfos: dataStore.buildingInfos,
       panoUrls: dataStore.panoUrls,
       featuredKeys: Object.keys(dataStore.featuredImages),
-      buildingKeys: Object.keys(dataStore.buildingImages)
+      buildingKeys: Object.keys(dataStore.buildingImages),
+      // 新增字段
+      buildingIds: dataStore.buildingIds,
+      featuredIds: dataStore.featuredIds,
+      currentPage: dataStore.currentPage,
+      bgConfig: dataStore.bgConfig
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -983,6 +1137,11 @@ async function loadMetadata() {
           dataStore.buildingImages[key] = true; // 占位
         });
       }
+      // 新增恢复字段
+      if(metaData.buildingIds && metaData.buildingIds.length) dataStore.buildingIds = metaData.buildingIds;
+      if(metaData.featuredIds && metaData.featuredIds.length) dataStore.featuredIds = metaData.featuredIds;
+      if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
+      if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
     }
   } catch(e) {
     console.error('加载元数据失败:', e);
@@ -993,6 +1152,311 @@ function saveToStorage(){
   saveMetadata();
 }
 
+/* ============ 建筑卡片渲染（分页） ============ */
+const BUILDINGS_PER_PAGE = 6;
+
+function getBuildingTemplate(bid, reverse) {
+  const name = dataStore.buildingInfos[bid + '_name'] || '建筑名称 ' + bid;
+  const intro = dataStore.buildingInfos[bid] || '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
+  const imgUrl = typeof dataStore.buildingImages[bid] === 'string' ? dataStore.buildingImages[bid] : null;
+
+  const imgHtml = imgUrl
+    ? `<img src="${imgUrl}">`
+    : `<div class="image-placeholder">建筑图片 ${bid}</div>`;
+
+  return `
+    <div class="building-card ${reverse ? 'reverse' : ''}" data-bid="${bid}">
+      <button class="delete-btn edit-only" onclick="deleteBuilding('${bid}')">🗑️ 删除</button>
+      <div class="card-image" onclick="open360('${bid}')">
+        ${imgHtml}
+        <div class="circle-360" aria-hidden="true">
+          <span class="circle-tip">点击图片体验 360° 全景漫游</span>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
+        </div>
+        <button class="img-replace-btn edit-only" onclick="event.stopPropagation();replaceBuildingImg('${bid}')">替换图片</button>
+      </div>
+      <div class="card-info">
+        <h2 contenteditable="${isAdmin}">${name}</h2>
+        <div class="info-content" contenteditable="${isAdmin}">${intro}</div>
+        <button class="info-replace-btn edit-only" onclick="replaceBuildingInfo('${bid}')">编辑介绍</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBuildings() {
+  const container = document.getElementById('buildingContainer');
+  if (!container) return;
+
+  const allIds = dataStore.buildingIds;
+  const totalPages = Math.max(1, Math.ceil(allIds.length / BUILDINGS_PER_PAGE));
+  if (dataStore.currentPage > totalPages) dataStore.currentPage = totalPages;
+
+  const start = (dataStore.currentPage - 1) * BUILDINGS_PER_PAGE;
+  const end = start + BUILDINGS_PER_PAGE;
+  const pageIds = allIds.slice(start, end);
+
+  let html = '';
+  pageIds.forEach((bid, idx) => {
+    const reverse = (start + idx) % 2 === 1;
+    html += getBuildingTemplate(bid, reverse);
+  });
+  container.innerHTML = html;
+
+  // 重新绑定 blur 事件保存
+  bindBuildingEvents();
+  renderPagination();
+}
+
+function bindBuildingEvents() {
+  document.querySelectorAll('#buildingContainer .info-content').forEach(el => {
+    el.addEventListener('blur', function(){
+      if(!isAdmin) return;
+      const card = this.closest('.building-card');
+      const id = card.dataset.bid;
+      dataStore.buildingInfos[id] = this.textContent;
+      saveToStorage();
+    });
+  });
+  document.querySelectorAll('#buildingContainer .card-info h2').forEach(el => {
+    el.addEventListener('blur', function(){
+      if(!isAdmin) return;
+      const card = this.closest('.building-card');
+      const id = card.dataset.bid;
+      dataStore.buildingInfos[id + '_name'] = this.textContent;
+      saveToStorage();
+    });
+  });
+}
+
+function renderPagination() {
+  const pag = document.getElementById('buildingPagination');
+  if (!pag) return;
+  const total = dataStore.buildingIds.length;
+  const totalPages = Math.max(1, Math.ceil(total / BUILDINGS_PER_PAGE));
+
+  if (totalPages === 1) { pag.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPrevPage()" ${dataStore.currentPage===1?'disabled':''}>« 上一页</button>`;
+
+  for (let p = 1; p <= totalPages; p++) {
+    html += `<button class="page-btn ${p===dataStore.currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+
+  html += `<button class="page-btn" onclick="goNextPage()" ${dataStore.currentPage===totalPages?'disabled':''}>下一页 »</button>`;
+  html += `<span class="page-info">共 ${total} 个建筑 · 第 ${dataStore.currentPage}/${totalPages} 页</span>`;
+
+  pag.innerHTML = html;
+}
+
+function goPage(p) {
+  dataStore.currentPage = p;
+  saveMetadata();
+  renderBuildings();
+  document.getElementById('buildings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function goPrevPage() { if (dataStore.currentPage > 1) goPage(dataStore.currentPage - 1); }
+function goNextPage() {
+  const totalPages = Math.ceil(dataStore.buildingIds.length / BUILDINGS_PER_PAGE);
+  if (dataStore.currentPage < totalPages) goPage(dataStore.currentPage + 1);
+}
+
+/* ============ 添加 / 删除建筑 ============ */
+function addBuildingCard() {
+  if (!isAdmin) {
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部"三下乡 · 文化云游"Logo 5次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  const maxId = dataStore.buildingIds.reduce((m, id) => {
+    const n = parseInt(id);
+    return n > m ? n : m;
+  }, 0);
+  const newId = String(maxId + 1);
+  dataStore.buildingIds.push(newId);
+  // 设置默认名称和简介
+  dataStore.buildingInfos[newId + '_name'] = '新建筑 ' + newId;
+  dataStore.buildingInfos[newId] = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
+  saveMetadata();
+  // 跳转到最后一页并渲染
+  dataStore.currentPage = Math.ceil(dataStore.buildingIds.length / BUILDINGS_PER_PAGE);
+  renderBuildings();
+  alert('✅ 新建筑模块已添加！请填写名称和介绍，并上传图片。');
+}
+
+function deleteBuilding(bid) {
+  if (!isAdmin) return;
+  if (!confirm('⚠️ 确定要删除这个建筑模块吗？此操作不可恢复！\n（相关图片和介绍都会被删除）')) return;
+  const idx = dataStore.buildingIds.indexOf(bid);
+  if (idx >= 0) dataStore.buildingIds.splice(idx, 1);
+  // 删除关联图片和介绍
+  delete dataStore.buildingImages[bid];
+  delete dataStore.buildingInfos[bid];
+  delete dataStore.buildingInfos[bid + '_name'];
+  delete dataStore.panoUrls[bid];
+  deleteImageFromDB(`building_${bid}`).catch(()=>{});
+  saveMetadata();
+  const totalPages = Math.max(1, Math.ceil(dataStore.buildingIds.length / BUILDINGS_PER_PAGE));
+  if (dataStore.currentPage > totalPages) dataStore.currentPage = totalPages;
+  renderBuildings();
+}
+
+/* ============ 添加 / 删除特色图片 ============ */
+function getFeaturedTemplate(fid) {
+  const imgUrl = typeof dataStore.featuredImages[fid] === 'string' ? dataStore.featuredImages[fid] : null;
+  const imgHtml = imgUrl
+    ? `<img src="${imgUrl}">`
+    : `<div class="featured-placeholder">特色图片 ${fid}</div>`;
+  return `
+    <div class="featured-item" data-fid="${fid}">
+      <button class="delete-btn edit-only" onclick="deleteFeatured('${fid}')">🗑️ 删除</button>
+      ${imgHtml}
+      <button class="replace-btn edit-only" onclick="replaceFeatured('${fid}')">替换</button>
+    </div>
+  `;
+}
+
+function renderFeatured() {
+  const orig = document.getElementById('featuredOrig');
+  if (!orig) return;
+  orig.innerHTML = dataStore.featuredIds.map(fid => getFeaturedTemplate(fid)).join('');
+  if (window.syncCloneFeatured) window.syncCloneFeatured();
+}
+
+function addFeaturedItem() {
+  if (!isAdmin) {
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部"三下乡 · 文化云游"Logo 5次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  const maxId = dataStore.featuredIds.reduce((m, id) => {
+    const n = parseInt(id);
+    return n > m ? n : m;
+  }, 0);
+  const newId = String(maxId + 1);
+  dataStore.featuredIds.push(newId);
+  saveMetadata();
+  renderFeatured();
+  alert('✅ 特色图片位已添加！请点击"替换"上传图片。');
+}
+
+function deleteFeatured(fid) {
+  if (!isAdmin) return;
+  if (!confirm('⚠️ 确定要删除这张特色图片吗？')) return;
+  const idx = dataStore.featuredIds.indexOf(fid);
+  if (idx >= 0) dataStore.featuredIds.splice(idx, 1);
+  delete dataStore.featuredImages[fid];
+  deleteImageFromDB(`featured_${fid}`).catch(()=>{});
+  saveMetadata();
+  renderFeatured();
+}
+
+/* ============ 底纹配置功能 ============ */
+function applyBgConfig(cfg) {
+  const body = document.body;
+  if (cfg.type === 'preset') {
+    const preset = BG_PRESETS[cfg.presetIndex] || BG_PRESETS[0];
+    body.style.backgroundColor = preset.bgColor;
+    body.style.backgroundImage = preset.bgImage;
+    if (preset.bgSize) body.style.backgroundSize = preset.bgSize;
+    else body.style.backgroundSize = '';
+    body.style.backgroundAttachment = 'fixed';
+    applyThemeColor(preset.themeColor);
+  } else {
+    body.style.backgroundColor = cfg.customColor;
+    body.style.backgroundImage = `radial-gradient(circle at 20% 20%, ${hexToRgba(cfg.customThemeColor,.06)} 0%, transparent 50%),radial-gradient(circle at 80% 80%, ${hexToRgba(cfg.customThemeColor,.06)} 0%, transparent 50%)`;
+    body.style.backgroundSize = '';
+    body.style.backgroundAttachment = 'fixed';
+    applyThemeColor(cfg.customThemeColor);
+  }
+}
+
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function applyThemeColor(color) {
+  // 动态修改关键元素主题色（通过CSS变量简单处理）
+  document.documentElement.style.setProperty('--theme-color', color);
+  const nav = document.querySelector('.top-nav');
+  if (nav) {
+    nav.style.background = `linear-gradient(180deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+  }
+  const footer = document.querySelector('footer');
+  if (footer) {
+    footer.style.background = `linear-gradient(180deg, ${adjustColor(color, -20)} 0%, ${adjustColor(color, -40)} 100%)`;
+  }
+}
+function adjustColor(hex, percent) {
+  const h = hex.replace('#','');
+  let r = parseInt(h.substring(0,2),16);
+  let g = parseInt(h.substring(2,4),16);
+  let b = parseInt(h.substring(4,6),16);
+  const amt = Math.round(2.55 * percent);
+  r = Math.max(0, Math.min(255, r + amt));
+  g = Math.max(0, Math.min(255, g + amt));
+  b = Math.max(0, Math.min(255, b + amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+function applyBgPreset(idx) {
+  if (!isAdmin) return;
+  dataStore.bgConfig = { type: 'preset', presetIndex: idx, customColor: BG_PRESETS[idx].bgColor, customThemeColor: BG_PRESETS[idx].themeColor };
+  saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgPresetActive();
+  autoSyncMetaToGithub();
+}
+
+function previewCustomBg() {
+  const c1 = document.getElementById('customBgColor').value;
+  const c2 = document.getElementById('customThemeColor').value;
+  document.getElementById('customBgColorVal').textContent = c1;
+  document.getElementById('customThemeColorVal').textContent = c2;
+}
+
+function applyCustomBg() {
+  if (!isAdmin) return;
+  const c1 = document.getElementById('customBgColor').value;
+  const c2 = document.getElementById('customThemeColor').value;
+  dataStore.bgConfig = { type: 'custom', presetIndex: 0, customColor: c1, customThemeColor: c2 };
+  saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgPresetActive();
+  alert('✅ 自定义配色已应用！');
+  autoSyncMetaToGithub();
+}
+
+function resetBgToDefault() {
+  if (!isAdmin) return;
+  if (!confirm('确定要恢复到默认底纹样式吗？')) return;
+  dataStore.bgConfig = { type: 'preset', presetIndex: 0, customColor: '#fdf6f0', customThemeColor: '#b91c1c' };
+  saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgPresetActive();
+}
+
+function updateBgPresetActive() {
+  const items = document.querySelectorAll('#bgPresetGrid .bg-preset-item');
+  items.forEach((it, i) => {
+    if (dataStore.bgConfig.type === 'preset' && dataStore.bgConfig.presetIndex === i) {
+      it.classList.add('active');
+    } else {
+      it.classList.remove('active');
+    }
+  });
+}
+
+function autoSyncMetaToGithub() {
+  const config = getGithubConfig();
+  if (!config) return;
+  setTimeout(async () => {
+    try { await saveMetadataToGithub(); } catch(e) { console.error(e); }
+  }, 300);
+}
+
 /* ============ 存储管理功能 ============ */
 function openStorageModal(){
   if(!isAdmin){
@@ -1000,6 +1464,12 @@ function openStorageModal(){
     return;
   }
   updateStorageInfo();
+  updateBgPresetActive();
+  // 回填自定义颜色
+  document.getElementById('customBgColor').value = dataStore.bgConfig.customColor;
+  document.getElementById('customThemeColor').value = dataStore.bgConfig.customThemeColor;
+  document.getElementById('customBgColorVal').textContent = dataStore.bgConfig.customColor;
+  document.getElementById('customThemeColorVal').textContent = dataStore.bgConfig.customThemeColor;
   document.getElementById('storageModal').classList.add('active');
 }
 
@@ -1033,13 +1503,17 @@ async function exportData(){
   try {
     // 从 IndexedDB 读取所有图片
     const allData = {
-      version: 2,
+      version: 3,
       exportTime: new Date().toISOString(),
       metadata: {
         buildingInfos: dataStore.buildingInfos,
         panoUrls: dataStore.panoUrls,
         featuredKeys: Object.keys(dataStore.featuredImages),
-        buildingKeys: Object.keys(dataStore.buildingImages)
+        buildingKeys: Object.keys(dataStore.buildingImages),
+        buildingIds: dataStore.buildingIds,
+        featuredIds: dataStore.featuredIds,
+        currentPage: dataStore.currentPage,
+        bgConfig: dataStore.bgConfig
       },
       images: {}
     };
@@ -1084,8 +1558,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = await file.text();
         const data = JSON.parse(text);
         
-        if(data.version !== 2){
-          alert('⚠️ 文件格式不兼容，期望版本 2');
+        if(data.version !== 2 && data.version !== 3){
+          alert('⚠️ 文件格式不兼容（支持版本 2/3）');
           return;
         }
 
@@ -1116,6 +1590,20 @@ document.addEventListener('DOMContentLoaded', () => {
               dataStore.buildingImages[key] = true;
             });
           }
+          // v3 新增字段
+          if(data.metadata.buildingIds && data.metadata.buildingIds.length){
+            dataStore.buildingIds = data.metadata.buildingIds;
+          } else if(data.metadata.buildingKeys){
+            // 兼容 v2：用 buildingKeys 排序
+            dataStore.buildingIds = data.metadata.buildingKeys.slice().sort((a,b) => parseInt(a) - parseInt(b));
+          }
+          if(data.metadata.featuredIds && data.metadata.featuredIds.length){
+            dataStore.featuredIds = data.metadata.featuredIds;
+          } else if(data.metadata.featuredKeys){
+            dataStore.featuredIds = data.metadata.featuredKeys.slice().sort((a,b) => parseInt(a) - parseInt(b));
+          }
+          if(data.metadata.currentPage) dataStore.currentPage = data.metadata.currentPage;
+          if(data.metadata.bgConfig) dataStore.bgConfig = data.metadata.bgConfig;
         }
 
         // 导入图片
@@ -1150,11 +1638,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function clearAllData(silent = false){
   if(!silent){
-    if(!confirm('⚠️ 确定要清除所有数据吗？此操作不可恢复！')){
+    if(!confirm('⚠️ 确定要清除所有数据吗？此操作不可恢复！（除底纹配置外所有内容会被清空）')){
       return;
     }
   }
   try {
+    const keepBgConfig = dataStore.bgConfig;
     // 删除所有图片
     for(let id in dataStore.featuredImages){
       await deleteImageFromDB(`featured_${id}`);
@@ -1170,6 +1659,10 @@ async function clearAllData(silent = false){
     dataStore.buildingImages = {};
     dataStore.buildingInfos = {};
     dataStore.panoUrls = {};
+    dataStore.buildingIds = ['1','2','3','4','5','6'];
+    dataStore.featuredIds = ['1','2','3','4','5','6','7','8'];
+    dataStore.currentPage = 1;
+    dataStore.bgConfig = keepBgConfig;
 
     if(!silent){
       alert('✅ 数据已清除！页面即将刷新...');
@@ -1322,6 +1815,11 @@ async function saveMetadataToGithub(){
     panoUrls: dataStore.panoUrls,
     featuredKeys: Object.keys(dataStore.featuredImages),
     buildingKeys: Object.keys(dataStore.buildingImages),
+    buildingIds: dataStore.buildingIds,
+    featuredIds: dataStore.featuredIds,
+    currentPage: dataStore.currentPage,
+    bgConfig: dataStore.bgConfig,
+    version: 3,
     timestamp: Date.now()
   };
   const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(metaData))));
@@ -1351,8 +1849,10 @@ async function syncFromGithub(){
       return;
     }
     
-    // 清除现有数据
+    // 清除现有数据（保留底纹配置）
+    const keepBg = dataStore.bgConfig;
     await clearAllData(true);
+    dataStore.bgConfig = keepBg;
     
     // 恢复元数据
     if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
@@ -1363,6 +1863,19 @@ async function syncFromGithub(){
     if(metaData.buildingKeys){
       metaData.buildingKeys.forEach(key => dataStore.buildingImages[key] = true);
     }
+    // v3 新字段
+    if(metaData.buildingIds && metaData.buildingIds.length){
+      dataStore.buildingIds = metaData.buildingIds;
+    } else if(metaData.buildingKeys){
+      dataStore.buildingIds = metaData.buildingKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
+    }
+    if(metaData.featuredIds && metaData.featuredIds.length){
+      dataStore.featuredIds = metaData.featuredIds;
+    } else if(metaData.featuredKeys){
+      dataStore.featuredIds = metaData.featuredKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
+    }
+    if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
+    if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
     
     // 下载特色图片
     for(let id of metaData.featuredKeys || []){
@@ -1504,6 +2017,19 @@ async function autoSyncFromGithub(){
         }
       }
     }
+    // v3 新字段
+    if(metaData.buildingIds && metaData.buildingIds.length){
+      dataStore.buildingIds = metaData.buildingIds;
+    } else if(metaData.buildingKeys){
+      dataStore.buildingIds = metaData.buildingKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
+    }
+    if(metaData.featuredIds && metaData.featuredIds.length){
+      dataStore.featuredIds = metaData.featuredIds;
+    } else if(metaData.featuredKeys){
+      dataStore.featuredIds = metaData.featuredKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
+    }
+    if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
+    if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
     
     await saveMetadata();
     console.log('✅ 已从 GitHub 同步数据');
@@ -1536,66 +2062,21 @@ async function restoreData(){
   // 先加载元数据
   await loadMetadata();
 
-  // 恢复图片（异步从 IndexedDB 加载）
+  // 先从 IndexedDB 把所有图片数据真正加载到内存
   for(let id in dataStore.featuredImages){
     const url = await getImageFromDB(`featured_${id}`);
     if(url) dataStore.featuredImages[id] = url;
-    const item = document.querySelector(`.featured-item[data-fid="${id}"]`);
-    if(item){
-      const placeholder = item.querySelector('.featured-placeholder');
-      if(placeholder) placeholder.remove();
-      let img = item.querySelector('img');
-      if(!img){
-        img = document.createElement('img');
-        item.insertBefore(img, item.firstChild);
-      }
-      img.src = url;
-    }
   }
-
   for(let id in dataStore.buildingImages){
     const url = await getImageFromDB(`building_${id}`);
     if(url) dataStore.buildingImages[id] = url;
-    const card = document.querySelector(`.building-card[data-bid="${id}"]`);
-    if(card){
-      const imgBox = card.querySelector('.card-image');
-      const placeholder = imgBox.querySelector('.image-placeholder');
-      if(placeholder) placeholder.remove();
-      let img = imgBox.querySelector('img');
-      if(!img){
-        img = document.createElement('img');
-        imgBox.insertBefore(img, imgBox.firstChild);
-      }
-      img.src = url;
-    }
   }
 
-  // 恢复建筑介绍和名称
-  for(let id in dataStore.buildingInfos){
-    if(id.endsWith('_name')){
-      const realId = id.replace('_name', '');
-      const card = document.querySelector(`.building-card[data-bid="${realId}"]`);
-      if(card){
-        const h2 = card.querySelector('.card-info h2');
-        if(h2 && dataStore.buildingInfos[id]){
-          h2.textContent = dataStore.buildingInfos[id];
-        }
-      }
-    } else {
-      const card = document.querySelector(`.building-card[data-bid="${id}"]`);
-      if(card){
-        const content = card.querySelector('.info-content');
-        if(content && dataStore.buildingInfos[id]){
-          content.textContent = dataStore.buildingInfos[id];
-        }
-      }
-    }
-  }
+  // 使用渲染函数动态渲染建筑（带分页）
+  renderBuildings();
 
-  // 同步克隆容器
-  if(window.syncCloneFeatured){
-    window.syncCloneFeatured();
-  }
+  // 使用渲染函数动态渲染特色图片
+  renderFeatured();
 }
 
 /* ============ 特色图片替换 ============ */
@@ -1838,6 +2319,12 @@ async function initApp(){
     alert('浏览器不支持 IndexedDB，部分功能可能受限');
   }
 
+  // 先加载元数据（含底纹配置）
+  await loadMetadata();
+
+  // 应用底纹（先于渲染）
+  try { applyBgConfig(dataStore.bgConfig); } catch(e){}
+
   // 检查管理员认证
   checkAuth();
 
@@ -1846,28 +2333,6 @@ async function initApp(){
 
   // 根据管理员状态设置 contenteditable
   updateEditable();
-
-  // 建筑介绍保存
-  document.querySelectorAll('.info-content').forEach(el => {
-    el.addEventListener('blur', function(){
-      if(!isAdmin) return;
-      const card = this.closest('.building-card');
-      const id = card.dataset.bid;
-      dataStore.buildingInfos[id] = this.textContent;
-      saveToStorage();
-    });
-  });
-
-  // 建筑名称保存
-  document.querySelectorAll('.card-info h2').forEach(el => {
-    el.addEventListener('blur', function(){
-      if(!isAdmin) return;
-      const card = this.closest('.building-card');
-      const id = card.dataset.bid;
-      dataStore.buildingInfos[id + '_name'] = this.textContent;
-      saveToStorage();
-    });
-  });
 
   // 同步克隆容器
   if(window.syncCloneFeatured){
