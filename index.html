@@ -626,7 +626,7 @@
     border:1px dashed rgba(59,130,246,.4);border-radius:6px;
     padding:6px 10px;margin-top:8px;line-height:1.6;
   }
-  [data-textkey].dragging{opacity:.75;cursor:grabbing!important}
+  [data-textkey].dragging{opacity:.75;cursor:grabbing!important;user-select:none;-webkit-user-select:none}
 
   /* 登录状态指示器 */
   .admin-indicator{
@@ -973,7 +973,7 @@
               <button class="storage-btn secondary" style="font-size:11px;padding:6px 10px;width:auto;margin:0 0 0 auto" onclick="resetTitleStyle('featured_title')">↺ 重置此标题</button>
             </div>
           </div>
-          <div class="drag-hint">✨ 移动标题：在页面上<b>按住 Alt 键并拖动标题</b>即可自由调整位置（电脑端），松开自动保存。</div>
+          <div class="drag-hint">✨ 移动标题：<b>直接按住标题拖动</b>即可自由调整位置（电脑端用鼠标拖 / 手机端用手指拖，拖动时页面不会滚动），松开自动保存；<b>单击</b>标题仍是修改文字。误移了位置？点上方对应「↺ 重置此标题」即可恢复。</div>
         </div>
 
       </div>
@@ -2170,74 +2170,114 @@ function updateTitleStyleUI(){
   });
 }
 
-// Alt + 拖动移动标题（管理员），拖动超过阈值才生效并保存（防输入法 Alt 误触）
+// 直接按住标题即可拖动（管理员，电脑鼠标 + 手机触摸通用），超过阈值才算拖动，点击仍是编辑文字
 function bindTitleDrag(){
   Object.keys(TITLE_STYLE_DEFS).forEach(key => {
     const el = document.querySelector(`[data-textkey="${key}"]`);
     if(!el) return;
-    el.title = isAdmin ? '可点击修改文字；按住 Alt 拖动可移动位置' : '';
-    el.onmousedown = (e) => {
-      if(!isAdmin || !e.altKey) return; // 仅管理员 + Alt 键才触发拖动
-      e.preventDefault();
-      const parent = el.offsetParent || el.parentElement;
-      const pr = parent.getBoundingClientRect();
-      const rect = el.getBoundingClientRect();
-      const offX = e.clientX - rect.left;
-      const offY = e.clientY - rect.top;
-      const startX = e.clientX, startY = e.clientY;
-      // 记录拖动前的内联样式，位移过小时完全还原
-      const prevStyle = {
+    el.title = isAdmin ? '按住拖动可移动位置；点击可修改文字' : '';
+    el.style.cursor = isAdmin ? 'move' : '';
+
+    let dragging = false, moved = false;
+    let startXY = null, offX = 0, offY = 0, parentRect = null, rect = null;
+    let prevStyle = null;
+    let lastTouchEnd = 0; // 防止触摸结束后合成鼠标事件误触发
+
+    const beginDrag = (clientX, clientY) => {
+      dragging = true; moved = false;
+      parentRect = (el.offsetParent || el.parentElement).getBoundingClientRect();
+      rect = el.getBoundingClientRect();
+      offX = clientX - rect.left;
+      offY = clientY - rect.top;
+      startXY = { x: clientX, y: clientY };
+      // 记录拖动前的内联样式，未真正拖动时完全还原
+      prevStyle = {
         position: el.style.position, left: el.style.left, top: el.style.top,
         margin: el.style.margin, zIndex: el.style.zIndex
       };
-      let moved = false;
-      const DRAG_THRESHOLD = 8; // 位移超过 8px 才算真正的拖动
       el.classList.add('dragging');
-      const onMove = (ev) => {
-        if(!moved){
-          if(Math.abs(ev.clientX - startX) < DRAG_THRESHOLD && Math.abs(ev.clientY - startY) < DRAG_THRESHOLD) return;
-          moved = true;
-        }
-        let x = ev.clientX - pr.left - offX;
-        let y = ev.clientY - pr.top - offY;
-        x = Math.max(0, Math.min(pr.width - rect.width, x));
-        y = Math.max(0, Math.min(pr.height - rect.height, y));
-        el.style.position = 'absolute';
-        el.style.left = Math.round(x) + 'px';
-        el.style.top = Math.round(y) + 'px';
-        el.style.margin = '0';
-        el.style.zIndex = '5';
-        el.dataset._dx = Math.round(x);
-        el.dataset._dy = Math.round(y);
-      };
+    };
+
+    const doMove = (clientX, clientY) => {
+      if(!dragging) return;
+      if(!moved){
+        // 位移超过 10px 才算真正的拖动，点击/轻碰不受影响
+        if(Math.abs(clientX - startXY.x) < 10 && Math.abs(clientY - startXY.y) < 10) return;
+        moved = true;
+      }
+      // 拖动时清除文字选区，避免选中文字
+      try { window.getSelection().removeAllRanges(); } catch(e){}
+      let x = clientX - parentRect.left - offX;
+      let y = clientY - parentRect.top - offY;
+      x = Math.max(0, Math.min(parentRect.width - rect.width, x));
+      y = Math.max(0, Math.min(parentRect.height - rect.height, y));
+      el.style.position = 'absolute';
+      el.style.left = Math.round(x) + 'px';
+      el.style.top = Math.round(y) + 'px';
+      el.style.margin = '0';
+      el.style.zIndex = '5';
+      el.dataset._dx = Math.round(x);
+      el.dataset._dy = Math.round(y);
+    };
+
+    const endDrag = (isTouch) => {
+      if(!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      if(isTouch) lastTouchEnd = Date.now();
+      if(!moved){
+        // 位移过小视为点击（编辑文字），完全还原样式
+        el.style.position = prevStyle.position;
+        el.style.left = prevStyle.left;
+        el.style.top = prevStyle.top;
+        el.style.margin = prevStyle.margin;
+        el.style.zIndex = prevStyle.zIndex;
+        return;
+      }
+      if(el.dataset._dx !== undefined){
+        if(!dataStore.textStyles[key]) dataStore.textStyles[key] = {};
+        dataStore.textStyles[key].x = parseInt(el.dataset._dx);
+        dataStore.textStyles[key].y = parseInt(el.dataset._dy);
+        delete el.dataset._dx;
+        delete el.dataset._dy;
+        saveMetadata();
+        updateTitleStyleUI();
+        autoSyncMetaToGithub();
+        if(isTouch) el.blur(); // 手机端收起软键盘
+        alert('✅ 标题位置已保存！恢复原位：「关于 → 页面样式设置 → 标题样式设置 → 重置此标题」');
+      }
+    };
+
+    // ===== 电脑端：鼠标拖动 =====
+    el.onmousedown = (e) => {
+      if(!isAdmin) return;
+      if(Date.now() - lastTouchEnd < 600) return; // 忽略触摸后合成的鼠标事件
+      beginDrag(e.clientX, e.clientY);
+      const onMove = (ev) => doMove(ev.clientX, ev.clientY);
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        el.classList.remove('dragging');
-        if(!moved){
-          // 位移过小视为误触（如切换输入法时按到 Alt），完全还原
-          el.style.position = prevStyle.position;
-          el.style.left = prevStyle.left;
-          el.style.top = prevStyle.top;
-          el.style.margin = prevStyle.margin;
-          el.style.zIndex = prevStyle.zIndex;
-          return;
-        }
-        if(el.dataset._dx !== undefined){
-          if(!dataStore.textStyles[key]) dataStore.textStyles[key] = {};
-          dataStore.textStyles[key].x = parseInt(el.dataset._dx);
-          dataStore.textStyles[key].y = parseInt(el.dataset._dy);
-          delete el.dataset._dx;
-          delete el.dataset._dy;
-          saveMetadata();
-          updateTitleStyleUI();
-          autoSyncMetaToGithub();
-          alert('✅ 标题位置已保存！如需恢复原位，请到「关于 → 页面样式设置 → 标题样式设置」点击"重置此标题"。');
-        }
+        endDrag(false);
       };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     };
+
+    // ===== 手机端：触摸拖动 =====
+    el.ontouchstart = (e) => {
+      if(!isAdmin) return;
+      if(e.touches.length !== 1) return; // 多指不处理
+      const t = e.touches[0];
+      beginDrag(t.clientX, t.clientY);
+    };
+    el.ontouchmove = (e) => {
+      if(!dragging) return;
+      e.preventDefault(); // 拖动标题时阻止页面滚动
+      const t = e.touches[0];
+      doMove(t.clientX, t.clientY);
+    };
+    el.ontouchend = () => endDrag(true);
+    el.ontouchcancel = () => endDrag(true);
   });
 }
 
