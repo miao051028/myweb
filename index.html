@@ -352,30 +352,56 @@
     background:linear-gradient(135deg,#10b981 0%,#059669 100%);
     color:#fff;
     border:none;
-    border-radius:10px;
-    padding:14px 22px;
-    font-size:14px;
+    border-radius:14px;
+    padding:16px 36px;
+    font-size:16px;
     cursor:pointer;
     transition:all .3s;
-    box-shadow:0 4px 14px rgba(16,185,129,.35);
-    letter-spacing:2px;
-    margin:0 auto 24px;
+    box-shadow:0 6px 22px rgba(16,185,129,.45);
+    letter-spacing:3px;
+    margin:20px auto 30px;
+    font-weight:700;
+    min-width:200px;
+    text-align:center;
+    border:3px solid rgba(255,255,255,.5);
   }
   body.admin-mode .add-btn{display:block}
   .add-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 20px rgba(16,185,129,.45);
+    transform:translateY(-3px) scale(1.03);
+    box-shadow:0 10px 28px rgba(16,185,129,.55);
   }
-  .add-btn .plus{font-size:18px;margin-right:6px;font-weight:700}
+  .add-btn .plus{font-size:22px;margin-right:8px;font-weight:700}
 
   .featured-add{
-    margin:18px auto 0;
+    margin:22px auto 6px;
     display:none;
     width:auto;
-    padding:10px 20px;
-    font-size:13px;
+    min-width:180px;
+    padding:12px 28px;
+    font-size:14px;
+    border-radius:12px;
   }
   body.admin-mode .featured-add{display:inline-block}
+
+  /* 管理员可编辑文字样式 */
+  body.admin-mode [data-textkey]{
+    outline:2px dashed rgba(59,130,246,.55);
+    outline-offset:3px;
+    border-radius:4px;
+    padding:2px 4px;
+    cursor:text;
+    transition:all .2s;
+    background-color:rgba(59,130,246,.05);
+  }
+  body.admin-mode [data-textkey]:hover{
+    outline-color:#2563eb;
+    background-color:rgba(59,130,246,.12);
+  }
+  body.admin-mode [data-textkey]:focus{
+    outline:3px solid #2563eb;
+    background-color:#fff;
+    box-shadow:0 0 0 4px rgba(37,99,235,.2);
+  }
 
   /* 删除按钮 */
   .delete-btn{
@@ -447,6 +473,24 @@
     font-weight:600;
   }
 
+  /* ============ 分页翻页动画 ============ */
+  @keyframes cardSlideNext{
+    from{opacity:0;transform:translateX(46px)}
+    to{opacity:1;transform:translateX(0)}
+  }
+  @keyframes cardSlidePrev{
+    from{opacity:0;transform:translateX(-46px)}
+    to{opacity:1;transform:translateX(0)}
+  }
+  .building-card.anim-next{
+    animation:cardSlideNext .5s cubic-bezier(.22,.61,.36,1) both;
+    animation-delay:calc(var(--i,0) * 70ms);
+  }
+  .building-card.anim-prev{
+    animation:cardSlidePrev .5s cubic-bezier(.22,.61,.36,1) both;
+    animation-delay:calc(var(--i,0) * 70ms);
+  }
+
   /* ============ 底纹选择面板 ============ */
   .bg-preset-grid{
     display:grid;
@@ -487,6 +531,102 @@
   }
   .custom-bg-section .row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .custom-bg-section .row span{font-size:13px;color:#555}
+
+  /* RGB 数字输入 */
+  .rgb-input{
+    width:54px;padding:6px 4px;border:1px solid #e0d0c0;border-radius:6px;
+    font-size:12px;text-align:center;
+  }
+  .rgb-input:focus{outline:2px solid #b91c1c;outline-offset:1px}
+  .rgb-label{font-size:11px;color:#888;margin:0 1px}
+
+  /* 提取色板 */
+  .palette-grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 16px;
+  }
+  .palette-swatch{
+    height:34px;border-radius:6px;border:2px solid #e0d0c0;cursor:pointer;
+    transition:transform .15s,border-color .15s;position:relative;
+  }
+  .palette-swatch:hover{transform:scale(1.12);border-color:#b91c1c;z-index:2}
+  .palette-swatch::after{
+    content:attr(data-hex);position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+    font-size:9px;color:#999;opacity:0;transition:opacity .15s;white-space:nowrap;
+  }
+  .palette-swatch:hover::after{opacity:1}
+
+  /* 背景图片控制 */
+  #bgImageLayer{
+    display:none;
+    position:fixed;inset:0;
+    z-index:-1;
+    background-repeat:no-repeat;
+    background-position:center center;
+    pointer-events:none;
+  }
+  .bg-img-preview{
+    width:100%;height:90px;border-radius:8px;border:2px solid #e0d0c0;
+    background-size:cover;background-position:center;margin-bottom:10px;
+    background-color:#faf6f0;display:none;
+  }
+  .bg-mode-select{
+    flex:1;padding:7px 8px;border:1px solid #e0d0c0;border-radius:6px;
+    font-size:12px;background:#fff;cursor:pointer;
+  }
+  .pos-grid{
+    display:grid;grid-template-columns:repeat(3,26px);gap:4px;
+  }
+  .pos-cell{
+    width:26px;height:26px;border:1px solid #e0d0c0;border-radius:5px;
+    background:#faf6f0;cursor:pointer;transition:all .15s;padding:0;
+  }
+  .pos-cell:hover{border-color:#b91c1c;background:#f5e8e8}
+  .pos-cell.active{background:#b91c1c;border-color:#b91c1c;box-shadow:0 0 0 2px rgba(185,28,28,.25)}
+  .opacity-slider{flex:1;accent-color:#b91c1c;cursor:pointer}
+
+  /* ============ 特色封面区 ============ */
+  .cover-section{padding:24px 20px 0}
+  .cover-box{
+    position:relative;max-width:1200px;margin:0 auto;
+    border-radius:14px;overflow:hidden;background:#fff;
+    border:2px solid rgba(185,28,28,.25);
+    box-shadow:0 6px 24px rgba(0,0,0,.08);
+  }
+  .cover-box img{width:100%;max-height:420px;object-fit:cover;display:block}
+  .cover-placeholder{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:240px;color:#b91c1c;font-size:20px;font-weight:700;letter-spacing:3px;
+    background:linear-gradient(135deg,#fdf2f2 0%,#fef3e2 100%);
+  }
+  .cover-hint{font-size:12px;color:#999;font-weight:400;margin-top:8px;letter-spacing:0}
+  .cover-replace-btn{position:absolute;right:12px;bottom:12px}
+
+  /* ============ 关于区管理员样式面板 ============ */
+  .admin-panel{
+    display:none;max-width:720px;margin:16px auto 0;text-align:left;
+    background:#fff;border:2px dashed #b91c1c;border-radius:12px;
+    padding:14px 20px;
+  }
+  body.admin-mode .admin-panel{display:block}
+  .admin-panel summary{
+    cursor:pointer;color:#b91c1c;font-weight:700;font-size:15px;
+    letter-spacing:1px;user-select:none;padding:4px 0;
+  }
+  .admin-panel-body{padding-top:14px;border-top:1px dashed #e0d0c0;margin-top:10px}
+  .admin-panel-body h4{color:#b91c1c;font-size:14px;margin:14px 0 8px}
+  .admin-panel-body h4:first-child{margin-top:0}
+  .style-sub{border-top:1px dashed #e0d0c0;padding-top:12px;margin-top:14px}
+  .font-select{
+    flex:1;padding:7px 8px;border:1px solid #e0d0c0;border-radius:6px;
+    font-size:12px;background:#fff;cursor:pointer;
+  }
+  .size-slider{flex:1;accent-color:#b91c1c;cursor:pointer}
+  .drag-hint{
+    font-size:11px;color:#3b82f6;background:rgba(59,130,246,.08);
+    border:1px dashed rgba(59,130,246,.4);border-radius:6px;
+    padding:6px 10px;margin-top:8px;line-height:1.6;
+  }
+  [data-textkey].dragging{opacity:.75;cursor:grabbing!important}
 
   /* 登录状态指示器 */
   .admin-indicator{
@@ -586,18 +726,21 @@
 </head>
 <body>
 
+<!-- ============ 背景图片层（管理员可配置，全局生效） ============ -->
+<div id="bgImageLayer" aria-hidden="true"></div>
+
 <!-- ============ 顶部导航 ============ -->
 <header class="top-nav">
-  <div class="logo">三下乡 <span>·</span> 文化云游</div>
+  <div class="logo" data-textkey="logo">三下乡 <span>·</span> 文化云游</div>
   <button class="menu-toggle" id="menuToggle" aria-label="菜单">☰</button>
   <nav class="nav-menu" id="navMenu">
-    <a href="#featured" onclick="closeNav()">特色图片</a>
-    <a href="#buildings" onclick="closeNav()">建筑简介</a>
-    <a href="#buildings" onclick="closeNav()">360°漫游</a>
-    <a href="#about" onclick="closeNav()">关于</a>
+    <a href="#featured" onclick="closeNav()" data-textkey="nav1">特色图片</a>
+    <a href="#buildings" onclick="closeNav()" data-textkey="nav2">建筑简介</a>
+    <a href="#buildings" onclick="closeNav()" data-textkey="nav3">360°漫游</a>
+    <a href="#about" onclick="closeNav()" data-textkey="nav4">关于</a>
     <div class="admin-indicator" id="adminIndicator" onclick="openStorageModal()">
       <span class="dot"></span>
-      <span>管理员</span>
+      <span data-textkey="admin_label">管理员</span>
     </div>
   </nav>
 </header>
@@ -605,9 +748,18 @@
 <!-- ============ 主体容器 ============ -->
 <main class="container">
 
+  <!-- ============ 特色封面区 ============ -->
+  <section class="cover-section" id="cover">
+    <div class="cover-box" id="coverBox">
+      <button class="delete-btn edit-only" onclick="removeCoverImage()">🗑️ 移除封面</button>
+      <div id="coverContent"></div>
+      <button class="replace-btn edit-only cover-replace-btn" onclick="replaceCover()">替换封面</button>
+    </div>
+  </section>
+
   <!-- ============ 特色图片滚动区 ============ -->
   <section class="featured-section" id="featured">
-    <div class="featured-title">三下乡 · 特色风貌</div>
+    <div class="featured-title" data-textkey="featured_title">三下乡 · 特色风貌</div>
     <div class="featured-scroll-wrapper" id="featuredWrapper">
       <div class="featured-scroll" id="featuredScroll">
         <!-- ===== 第一组 A ===== -->
@@ -665,7 +817,7 @@
 
   <!-- ============ 建筑模块区 ============ -->
   <section class="buildings-section" id="buildings">
-    <div class="section-title">名 胜 古 迹 <span>·</span> 建 筑 巡 礼</div>
+    <div class="section-title" data-textkey="buildings_title">名 胜 古 迹 <span>·</span> 建 筑 巡 礼</div>
 
     <!-- 添加建筑按钮 -->
     <button class="add-btn" onclick="addBuildingCard()"><span class="plus">+</span>添加新建筑</button>
@@ -681,13 +833,151 @@
   <!-- ============ 关于区域 ============ -->
   <section id="about" style="padding:0 20px 40px;text-align:center">
     <div style="max-width:720px;margin:0 auto;background:#fff;padding:28px 32px;border-radius:12px;border:2px solid #f0e0d0">
-      <h3 style="color:#b91c1c;font-size:22px;margin-bottom:14px;letter-spacing:3px">关 于 三 下 乡</h3>
-      <p style="color:#5a3a3a;font-size:15px;line-height:2">
+      <h3 style="color:#b91c1c;font-size:22px;margin-bottom:14px;letter-spacing:3px" data-textkey="about_title">关 于 三 下 乡</h3>
+      <p style="color:#5a3a3a;font-size:15px;line-height:2" data-textkey="about_desc">
         "三下乡"即文化、科技、卫生"三下乡"，是促进农村文化建设、推动城乡协调发展的重要社会实践活动。
         本网站汇集了三下乡地区的特色风貌与名胜古迹，通过图文介绍与 360° 全景漫游，
         让更多人领略乡村文化的独特魅力。
       </p>
     </div>
+
+    <!-- ============ 管理员样式设置面板（仅管理员可见） ============ -->
+    <details class="admin-panel" id="styleAdminPanel" ontoggle="onStylePanelToggle(this)">
+      <summary>🎨 页面样式设置（仅管理员可见 / 所有修改自动永久保存）</summary>
+      <div class="admin-panel-body">
+
+        <!-- 底纹预设 -->
+        <h4>🖼️ 页面底纹样式（全局）</h4>
+        <div class="bg-preset-grid" id="bgPresetGrid">
+          <div class="bg-preset-item" onclick="applyBgPreset(0)" style="background-color:#fdf6f0;background-image:radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)"><span>雅致格纹</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(1)" style="background:linear-gradient(135deg,#fff5eb 0%,#fde68a 100%)"><span>暖阳米黄</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(2)" style="background-color:#f0fdf4;background-image:radial-gradient(ellipse at top, #dcfce7, transparent 50%),radial-gradient(ellipse at bottom, #bbf7d0, transparent 50%)"><span>清新竹绿</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(3)" style="background-color:#eff6ff;background-image:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%),radial-gradient(circle at 50% 0%, rgba(59,130,246,.1) 0%, transparent 60%)"><span>海天蔚蓝</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(4)" style="background-color:#fdf2f8;background-image:repeating-linear-gradient(45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px),repeating-linear-gradient(-45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px)"><span>浪漫粉彩</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(5)" style="background-color:#fffbeb;background-image:linear-gradient(90deg, rgba(180,83,9,.06) 1px, transparent 1px),linear-gradient(rgba(180,83,9,.06) 1px, transparent 1px);background-size:24px 24px"><span>素雅典籍</span></div>
+        </div>
+
+        <!-- 自定义配色（含 RGB + 图片取色） -->
+        <div class="custom-bg-section style-sub">
+          <label>自定义配色</label>
+          <div class="row">
+            <span>背景色：</span>
+            <input type="color" id="customBgColor" value="#fdf6f0" oninput="previewCustomBg()">
+            <span style="font-size:12px;color:#999;margin-left:4px" id="customBgColorVal">#fdf6f0</span>
+          </div>
+          <div class="row">
+            <span>主题色：</span>
+            <input type="color" id="customThemeColor" value="#b91c1c" oninput="previewCustomBg()">
+            <span style="font-size:12px;color:#999;margin-left:4px" id="customThemeColorVal">#b91c1c</span>
+          </div>
+          <div class="row">
+            <span>背景色 RGB：</span>
+            <span class="rgb-label">R</span><input type="number" class="rgb-input" id="bgR" min="0" max="255" value="253" oninput="onRgbInput('bg')">
+            <span class="rgb-label">G</span><input type="number" class="rgb-input" id="bgG" min="0" max="255" value="246" oninput="onRgbInput('bg')">
+            <span class="rgb-label">B</span><input type="number" class="rgb-input" id="bgB" min="0" max="255" value="240" oninput="onRgbInput('bg')">
+          </div>
+          <div class="row">
+            <span>主题色 RGB：</span>
+            <span class="rgb-label">R</span><input type="number" class="rgb-input" id="themeR" min="0" max="255" value="185" oninput="onRgbInput('theme')">
+            <span class="rgb-label">G</span><input type="number" class="rgb-input" id="themeG" min="0" max="255" value="28" oninput="onRgbInput('theme')">
+            <span class="rgb-label">B</span><input type="number" class="rgb-input" id="themeB" min="0" max="255" value="28" oninput="onRgbInput('theme')">
+          </div>
+          <div class="row">
+            <span>📷 图片取色：</span>
+            <input type="file" id="themePickFile" accept="image/*" style="display:none" onchange="handleThemePick(event)">
+            <button class="storage-btn secondary" style="font-size:12px;padding:8px;flex:1" onclick="document.getElementById('themePickFile').click()">上传图片提取颜色</button>
+          </div>
+          <div id="paletteWrap" style="display:none">
+            <div class="palette-grid" id="extractedPalette"></div>
+            <div class="row">
+              <span>点击色块应用到：</span>
+              <label style="font-size:12px;color:#555;display:flex;align-items:center;gap:3px;margin:0"><input type="radio" name="paletteTarget" value="theme" checked>主题色</label>
+              <label style="font-size:12px;color:#555;display:flex;align-items:center;gap:3px;margin:0"><input type="radio" name="paletteTarget" value="bg">背景色</label>
+            </div>
+          </div>
+          <button class="storage-btn secondary" style="font-size:12px;padding:8px" onclick="applyCustomBg()">✨ 应用自定义配色</button>
+          <button class="storage-btn secondary" style="font-size:12px;padding:8px;background:#6b7280" onclick="resetBgToDefault()">🔄 恢复默认底纹</button>
+        </div>
+
+        <!-- 背景图片 -->
+        <div class="style-sub">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">🖼️ 背景图片（上传后自动压缩适配网页大小，永久保存）</label>
+          <input type="file" id="bgImageFile" accept="image/*" style="display:none" onchange="handleBgImageUpload(event)">
+          <button class="storage-btn secondary" style="font-size:12px;padding:8px;background:#8b5cf6" onclick="document.getElementById('bgImageFile').click()">📤 上传背景图片</button>
+          <div class="bg-img-preview" id="bgImgPreview"></div>
+          <div class="row" id="bgImgCtrls" style="display:none">
+            <span>显示模式：</span>
+            <select class="bg-mode-select" id="bgModeSelect" onchange="setBgImageMode(this.value)">
+              <option value="cover">铺满全屏（自动裁剪）</option>
+              <option value="contain">完整显示（留边）</option>
+              <option value="fill">拉伸铺满（变形）</option>
+              <option value="repeat">平铺重复</option>
+            </select>
+          </div>
+          <div class="row" id="bgImgPosRow" style="display:none;align-items:flex-start">
+            <span style="margin-top:6px">图片位置：</span>
+            <div class="pos-grid" id="bgPosGrid">
+              <button class="pos-cell" data-pos="left top" onclick="setBgImagePos('left top')" title="左上"></button>
+              <button class="pos-cell" data-pos="center top" onclick="setBgImagePos('center top')" title="上"></button>
+              <button class="pos-cell" data-pos="right top" onclick="setBgImagePos('right top')" title="右上"></button>
+              <button class="pos-cell" data-pos="left center" onclick="setBgImagePos('left center')" title="左"></button>
+              <button class="pos-cell" data-pos="center center" onclick="setBgImagePos('center center')" title="中"></button>
+              <button class="pos-cell" data-pos="right center" onclick="setBgImagePos('right center')" title="右"></button>
+              <button class="pos-cell" data-pos="left bottom" onclick="setBgImagePos('left bottom')" title="左下"></button>
+              <button class="pos-cell" data-pos="center bottom" onclick="setBgImagePos('center bottom')" title="下"></button>
+              <button class="pos-cell" data-pos="right bottom" onclick="setBgImagePos('right bottom')" title="右下"></button>
+            </div>
+          </div>
+          <div class="row" id="bgImgOpacityRow" style="display:none">
+            <span>不透明度：</span>
+            <input type="range" class="opacity-slider" id="bgOpacitySlider" min="10" max="100" value="100" oninput="setBgImageOpacity(this.value,false)" onchange="setBgImageOpacity(this.value,true)">
+            <span style="font-size:12px;color:#999;min-width:38px" id="bgOpacityVal">100%</span>
+          </div>
+          <button class="storage-btn danger" id="removeBgImgBtn" style="font-size:12px;padding:8px;display:none" onclick="removeBgImage()">🗑️ 移除背景图片</button>
+        </div>
+
+        <!-- 标题样式（可修改 / 可移动 / 字体 / 颜色） -->
+        <div class="style-sub">
+          <h4>✏️ 标题样式设置（字体 / 颜色 / 字号 / 位置）</h4>
+          <div id="logoStyleRow">
+            <b style="font-size:13px;color:#333">① 顶部大标题「三下乡 · 文化云游」</b>
+            <div class="row" style="margin-top:8px">
+              <span>字体：</span>
+              <select class="font-select" id="logoFont" onchange="setTitleStyle('logo','fontFamily',this.value)"></select>
+            </div>
+            <div class="row">
+              <span>字号：</span>
+              <input type="range" class="size-slider" id="logoSize" min="12" max="36" value="22" oninput="setTitleStyle('logo','fontSize',this.value)">
+              <span style="font-size:12px;color:#999;min-width:38px" id="logoSizeVal">22px</span>
+            </div>
+            <div class="row">
+              <span>颜色：</span>
+              <input type="color" id="logoColor" value="#ffffff" oninput="setTitleStyle('logo','color',this.value)">
+              <button class="storage-btn secondary" style="font-size:11px;padding:6px 10px;width:auto;margin:0 0 0 auto" onclick="resetTitleStyle('logo')">↺ 重置此标题</button>
+            </div>
+          </div>
+          <div id="featuredTitleStyleRow" style="margin-top:14px">
+            <b style="font-size:13px;color:#333">② 「三下乡 · 特色风貌」标题</b>
+            <div class="row" style="margin-top:8px">
+              <span>字体：</span>
+              <select class="font-select" id="ftFont" onchange="setTitleStyle('featured_title','fontFamily',this.value)"></select>
+            </div>
+            <div class="row">
+              <span>字号：</span>
+              <input type="range" class="size-slider" id="ftSize" min="16" max="52" value="24" oninput="setTitleStyle('featured_title','fontSize',this.value)">
+              <span style="font-size:12px;color:#999;min-width:38px" id="ftSizeVal">24px</span>
+            </div>
+            <div class="row">
+              <span>颜色：</span>
+              <input type="color" id="ftColor" value="#b91c1c" oninput="setTitleStyle('featured_title','color',this.value)">
+              <button class="storage-btn secondary" style="font-size:11px;padding:6px 10px;width:auto;margin:0 0 0 auto" onclick="resetTitleStyle('featured_title')">↺ 重置此标题</button>
+            </div>
+          </div>
+          <div class="drag-hint">✨ 移动标题：在页面上<b>按住 Alt 键并拖动标题</b>即可自由调整位置（电脑端），松开自动保存。</div>
+        </div>
+
+      </div>
+    </details>
   </section>
 
 </main>
@@ -737,38 +1027,11 @@
 <!-- ============ 存储管理模态框 ============ -->
 <div class="storage-modal" id="storageModal" onclick="closeStorageModal(event)">
   <div class="storage-box" onclick="event.stopPropagation()">
-    <h3>数据管理 & 页面设置</h3>
+    <h3>数据管理</h3>
     <div class="storage-info" id="storageInfo">
       在这里您可以导出或导入您的数据，<br>
-      防止浏览器缓存清理导致数据丢失。
-    </div>
-    
-    <!-- 全局底纹设置 -->
-    <div id="bgConfigSection" style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
-      <h4 style="color:#b91c1c;font-size:14px;margin-bottom:10px">🎨 页面底纹样式（全局）</h4>
-      <div class="bg-preset-grid" id="bgPresetGrid">
-        <div class="bg-preset-item" onclick="applyBgPreset(0)" style="background-color:#fdf6f0;background-image:radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)"><span>雅致格纹</span></div>
-        <div class="bg-preset-item" onclick="applyBgPreset(1)" style="background:linear-gradient(135deg,#fff5eb 0%,#fde68a 100%)"><span>暖阳米黄</span></div>
-        <div class="bg-preset-item" onclick="applyBgPreset(2)" style="background-color:#f0fdf4;background-image:radial-gradient(ellipse at top, #dcfce7, transparent 50%),radial-gradient(ellipse at bottom, #bbf7d0, transparent 50%)"><span>清新竹绿</span></div>
-        <div class="bg-preset-item" onclick="applyBgPreset(3)" style="background-color:#eff6ff;background-image:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%),radial-gradient(circle at 50% 0%, rgba(59,130,246,.1) 0%, transparent 60%)"><span>海天蔚蓝</span></div>
-        <div class="bg-preset-item" onclick="applyBgPreset(4)" style="background-color:#fdf2f8;background-image:repeating-linear-gradient(45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px),repeating-linear-gradient(-45deg, rgba(236,72,153,.05) 0px, rgba(236,72,153,.05) 2px, transparent 2px, transparent 20px)"><span>浪漫粉彩</span></div>
-        <div class="bg-preset-item" onclick="applyBgPreset(5)" style="background-color:#fffbeb;background-image:linear-gradient(90deg, rgba(180,83,9,.06) 1px, transparent 1px),linear-gradient(rgba(180,83,9,.06) 1px, transparent 1px);background-size:24px 24px"><span>素雅典籍</span></div>
-      </div>
-      <div class="custom-bg-section">
-        <label>自定义设置</label>
-        <div class="row">
-          <span>背景色：</span>
-          <input type="color" id="customBgColor" value="#fdf6f0" oninput="previewCustomBg()">
-          <span style="font-size:12px;color:#999;margin-left:4px" id="customBgColorVal">#fdf6f0</span>
-        </div>
-        <div class="row">
-          <span>主题色：</span>
-          <input type="color" id="customThemeColor" value="#b91c1c" oninput="previewCustomBg()">
-          <span style="font-size:12px;color:#999;margin-left:4px" id="customThemeColorVal">#b91c1c</span>
-        </div>
-        <button class="storage-btn secondary" style="font-size:12px;padding:8px" onclick="applyCustomBg()">✨ 应用自定义配色</button>
-        <button class="storage-btn secondary" style="font-size:12px;padding:8px;background:#6b7280" onclick="resetBgToDefault()">🔄 恢复默认底纹</button>
-      </div>
+      防止浏览器缓存清理导致数据丢失。<br>
+      <span style="color:#b91c1c;font-weight:600">底纹 / 配色 / 标题样式设置已移至页面底部「关于」栏目。</span>
     </div>
 
     <!-- GitHub 多设备同步 -->
@@ -806,7 +1069,7 @@
 <!-- ============ 隐藏文件选择器 ============ -->
 <input type="file" id="filePicker" accept="image/*" style="display:none" onchange="handleFilePick(event)">
 
-<footer>
+<footer data-textkey="footer">
   © 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承
 </footer>
 
@@ -971,6 +1234,8 @@ function updateEditable(){
   editableElements.forEach(el => {
     el.setAttribute('contenteditable', isAdmin ? 'true' : 'false');
   });
+  // 页面文字也切换可编辑状态
+  bindTextEditable();
   // 重新渲染建筑（更新 contenteditable 和按钮显示）
   if (document.getElementById('buildingContainer') && document.getElementById('buildingContainer').innerHTML.trim() !== '') {
     renderBuildings();
@@ -978,6 +1243,9 @@ function updateEditable(){
   if (document.getElementById('featuredOrig')) {
     renderFeatured();
   }
+  // 封面占位框随管理员状态显隐；标题拖动提示更新
+  renderCover();
+  bindTitleDrag();
 }
 
 /* ============ 移动端导航 ============ */
@@ -1065,8 +1333,34 @@ const dataStore = {
     type: 'preset', // preset 或 custom
     presetIndex: 0,
     customColor: '#fdf6f0',
-    customThemeColor: '#b91c1c'
-  }
+    customThemeColor: '#b91c1c',
+    // 背景图片配置（图片数据存 IndexedDB 'bg_image'，此处存开关与排版参数）
+    bgImage: false,
+    bgImageMode: 'cover',       // cover | contain | fill | repeat
+    bgImagePos: 'center center',
+    bgImageOpacity: 1
+  },
+  // 新增：页面文字内容（所有data-textkey对应的值）
+  textData: {},
+  // 新增：标题样式（logo / featured_title 的字体、颜色、字号、位置）
+  textStyles: {},
+  // 新增：特色封面（图片存 IndexedDB 'cover_image'，此处存开关）
+  coverImage: false
+};
+
+// 默认文字值（初始化用）
+const DEFAULT_TEXT_DATA = {
+  logo: '三下乡 · 文化云游',
+  nav1: '特色图片',
+  nav2: '建筑简介',
+  nav3: '360°漫游',
+  nav4: '关于',
+  admin_label: '管理员',
+  featured_title: '三下乡 · 特色风貌',
+  buildings_title: '名 胜 古 迹 · 建 筑 巡 礼',
+  about_title: '关 于 三 下 乡',
+  about_desc: '"三下乡"即文化、科技、卫生"三下乡"，是促进农村文化建设、推动城乡协调发展的重要社会实践活动。本网站汇集了三下乡地区的特色风貌与名胜古迹，通过图文介绍与 360° 全景漫游，让更多人领略乡村文化的独特魅力。',
+  footer: '© 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承'
 };
 
 async function saveImage(key, dataUrl) {
@@ -1110,7 +1404,10 @@ async function saveMetadata() {
       buildingIds: dataStore.buildingIds,
       featuredIds: dataStore.featuredIds,
       currentPage: dataStore.currentPage,
-      bgConfig: dataStore.bgConfig
+      bgConfig: dataStore.bgConfig,
+      textData: dataStore.textData || {},
+      textStyles: dataStore.textStyles || {},
+      coverImage: dataStore.coverImage === true
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -1142,6 +1439,9 @@ async function loadMetadata() {
       if(metaData.featuredIds && metaData.featuredIds.length) dataStore.featuredIds = metaData.featuredIds;
       if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
       if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
+      if(metaData.textData) dataStore.textData = metaData.textData;
+      if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
+      if(metaData.coverImage) dataStore.coverImage = true;
     }
   } catch(e) {
     console.error('加载元数据失败:', e);
@@ -1155,7 +1455,7 @@ function saveToStorage(){
 /* ============ 建筑卡片渲染（分页） ============ */
 const BUILDINGS_PER_PAGE = 6;
 
-function getBuildingTemplate(bid, reverse) {
+function getBuildingTemplate(bid, reverse, animDir, idx) {
   const name = dataStore.buildingInfos[bid + '_name'] || '建筑名称 ' + bid;
   const intro = dataStore.buildingInfos[bid] || '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
   const imgUrl = typeof dataStore.buildingImages[bid] === 'string' ? dataStore.buildingImages[bid] : null;
@@ -1165,7 +1465,7 @@ function getBuildingTemplate(bid, reverse) {
     : `<div class="image-placeholder">建筑图片 ${bid}</div>`;
 
   return `
-    <div class="building-card ${reverse ? 'reverse' : ''}" data-bid="${bid}">
+    <div class="building-card ${reverse ? 'reverse' : ''} ${animDir ? 'anim-' + animDir : ''}" data-bid="${bid}" style="--i:${idx || 0}">
       <button class="delete-btn edit-only" onclick="deleteBuilding('${bid}')">🗑️ 删除</button>
       <div class="card-image" onclick="open360('${bid}')">
         ${imgHtml}
@@ -1196,12 +1496,14 @@ function renderBuildings() {
   const end = start + BUILDINGS_PER_PAGE;
   const pageIds = allIds.slice(start, end);
 
+  const dir = dataStore._pageDir; // 翻页方向动画：next / prev
   let html = '';
   pageIds.forEach((bid, idx) => {
     const reverse = (start + idx) % 2 === 1;
-    html += getBuildingTemplate(bid, reverse);
+    html += getBuildingTemplate(bid, reverse, dir, idx);
   });
   container.innerHTML = html;
+  dataStore._pageDir = null; // 动画只播放一次
 
   // 重新绑定 blur 事件保存
   bindBuildingEvents();
@@ -1250,6 +1552,7 @@ function renderPagination() {
 }
 
 function goPage(p) {
+  dataStore._pageDir = p > dataStore.currentPage ? 'next' : 'prev';
   dataStore.currentPage = p;
   saveMetadata();
   renderBuildings();
@@ -1277,7 +1580,8 @@ function addBuildingCard() {
   dataStore.buildingInfos[newId + '_name'] = '新建筑 ' + newId;
   dataStore.buildingInfos[newId] = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
   saveMetadata();
-  // 跳转到最后一页并渲染
+  // 跳转到最后一页并渲染（带翻页动画）
+  dataStore._pageDir = 'next';
   dataStore.currentPage = Math.ceil(dataStore.buildingIds.length / BUILDINGS_PER_PAGE);
   renderBuildings();
   alert('✅ 新建筑模块已添加！请填写名称和介绍，并上传图片。');
@@ -1367,6 +1671,8 @@ function applyBgConfig(cfg) {
     body.style.backgroundAttachment = 'fixed';
     applyThemeColor(cfg.customThemeColor);
   }
+  // 应用背景图片层
+  applyBgImageLayer();
 }
 
 function hexToRgba(hex, alpha) {
@@ -1403,7 +1709,15 @@ function adjustColor(hex, percent) {
 
 function applyBgPreset(idx) {
   if (!isAdmin) return;
-  dataStore.bgConfig = { type: 'preset', presetIndex: idx, customColor: BG_PRESETS[idx].bgColor, customThemeColor: BG_PRESETS[idx].themeColor };
+  // 保留背景图片相关配置
+  dataStore.bgConfig = {
+    type: 'preset', presetIndex: idx,
+    customColor: BG_PRESETS[idx].bgColor, customThemeColor: BG_PRESETS[idx].themeColor,
+    bgImage: dataStore.bgConfig.bgImage || false,
+    bgImageMode: dataStore.bgConfig.bgImageMode || 'cover',
+    bgImagePos: dataStore.bgConfig.bgImagePos || 'center center',
+    bgImageOpacity: dataStore.bgConfig.bgImageOpacity != null ? dataStore.bgConfig.bgImageOpacity : 1
+  };
   saveMetadata();
   applyBgConfig(dataStore.bgConfig);
   updateBgPresetActive();
@@ -1415,27 +1729,586 @@ function previewCustomBg() {
   const c2 = document.getElementById('customThemeColor').value;
   document.getElementById('customBgColorVal').textContent = c1;
   document.getElementById('customThemeColorVal').textContent = c2;
+  if (typeof syncRgbInputs === 'function') syncRgbInputs();
+  // 实时预览（不保存，关闭面板时恢复为已保存配置）
+  applyBgConfig({
+    type: 'custom', presetIndex: 0,
+    customColor: c1, customThemeColor: c2,
+    bgImage: dataStore.bgConfig.bgImage,
+    bgImageMode: dataStore.bgConfig.bgImageMode,
+    bgImagePos: dataStore.bgConfig.bgImagePos,
+    bgImageOpacity: dataStore.bgConfig.bgImageOpacity
+  });
 }
 
 function applyCustomBg() {
   if (!isAdmin) return;
   const c1 = document.getElementById('customBgColor').value;
   const c2 = document.getElementById('customThemeColor').value;
-  dataStore.bgConfig = { type: 'custom', presetIndex: 0, customColor: c1, customThemeColor: c2 };
+  // 保留背景图片相关配置
+  dataStore.bgConfig = {
+    type: 'custom', presetIndex: 0, customColor: c1, customThemeColor: c2,
+    bgImage: dataStore.bgConfig.bgImage || false,
+    bgImageMode: dataStore.bgConfig.bgImageMode || 'cover',
+    bgImagePos: dataStore.bgConfig.bgImagePos || 'center center',
+    bgImageOpacity: dataStore.bgConfig.bgImageOpacity != null ? dataStore.bgConfig.bgImageOpacity : 1
+  };
   saveMetadata();
   applyBgConfig(dataStore.bgConfig);
   updateBgPresetActive();
-  alert('✅ 自定义配色已应用！');
+  alert('✅ 自定义配色已应用并永久保存！');
   autoSyncMetaToGithub();
 }
 
 function resetBgToDefault() {
   if (!isAdmin) return;
-  if (!confirm('确定要恢复到默认底纹样式吗？')) return;
-  dataStore.bgConfig = { type: 'preset', presetIndex: 0, customColor: '#fdf6f0', customThemeColor: '#b91c1c' };
+  if (!confirm('确定要恢复到默认底纹样式吗？（背景图片保留，可用"移除背景图片"删除）')) return;
+  dataStore.bgConfig = {
+    type: 'preset', presetIndex: 0,
+    customColor: '#fdf6f0', customThemeColor: '#b91c1c',
+    bgImage: dataStore.bgConfig.bgImage || false,
+    bgImageMode: dataStore.bgConfig.bgImageMode || 'cover',
+    bgImagePos: dataStore.bgConfig.bgImagePos || 'center center',
+    bgImageOpacity: dataStore.bgConfig.bgImageOpacity != null ? dataStore.bgConfig.bgImageOpacity : 1
+  };
   saveMetadata();
   applyBgConfig(dataStore.bgConfig);
   updateBgPresetActive();
+}
+
+/* ============ 背景图片功能（仅管理员） ============ */
+// 将背景图片配置渲染到全屏固定层
+function applyBgImageLayer(){
+  const layer = document.getElementById('bgImageLayer');
+  if(!layer) return;
+  const cfg = dataStore.bgConfig;
+  if(cfg.bgImage && window._bgImageDataUrl){
+    layer.style.display = 'block';
+    layer.style.backgroundImage = `url("${window._bgImageDataUrl}")`;
+    layer.style.backgroundPosition = cfg.bgImagePos || 'center center';
+    if(cfg.bgImageMode === 'repeat'){
+      layer.style.backgroundRepeat = 'repeat';
+      layer.style.backgroundSize = 'auto';
+    } else if(cfg.bgImageMode === 'contain'){
+      layer.style.backgroundRepeat = 'no-repeat';
+      layer.style.backgroundSize = 'contain';
+    } else if(cfg.bgImageMode === 'fill'){
+      layer.style.backgroundRepeat = 'no-repeat';
+      layer.style.backgroundSize = '100% 100%';
+    } else { // cover（默认）
+      layer.style.backgroundRepeat = 'no-repeat';
+      layer.style.backgroundSize = 'cover';
+    }
+    layer.style.opacity = (cfg.bgImageOpacity != null) ? cfg.bgImageOpacity : 1;
+  } else {
+    layer.style.display = 'none';
+  }
+}
+
+// 上传背景图片：自动压缩适配网页大小 → 存 IndexedDB 永久保存
+function handleBgImageUpload(e){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用。');
+    e.target.value = '';
+    return;
+  }
+  const file = e.target.files[0];
+  if(!file){ e.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        // 自适应压缩：最长边最大 1920px，jpeg 0.82，适合网页大小
+        let w = img.width, h = img.height;
+        const MAX = 1920;
+        if(w > MAX || h > MAX){
+          if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+
+        // 永久保存到 IndexedDB（刷新不丢失）
+        await saveImage('bg_image', dataUrl);
+        window._bgImageDataUrl = dataUrl;
+        dataStore.bgConfig.bgImage = true;
+        if(!dataStore.bgConfig.bgImageMode) dataStore.bgConfig.bgImageMode = 'cover';
+        if(!dataStore.bgConfig.bgImagePos) dataStore.bgConfig.bgImagePos = 'center center';
+        if(dataStore.bgConfig.bgImageOpacity == null) dataStore.bgConfig.bgImageOpacity = 1;
+        await saveMetadata();
+        applyBgConfig(dataStore.bgConfig);
+        updateBgImageUI();
+        autoSyncMetaToGithub();
+        alert('✅ 背景图片已应用并永久保存！（刷新页面不会丢失）');
+      } catch(err){
+        console.error(err);
+        alert('❌ 背景图片处理失败: ' + err.message);
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// 移除背景图片
+async function removeBgImage(){
+  if(!isAdmin) return;
+  if(!confirm('确定要移除背景图片吗？（移除后恢复纯色/预设底纹）')) return;
+  try { await deleteImageFromDB('bg_image'); } catch(e){}
+  window._bgImageDataUrl = null;
+  dataStore.bgConfig.bgImage = false;
+  await saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgImageUI();
+  autoSyncMetaToGithub();
+}
+
+// 修改显示模式（cover/contain/fill/repeat）
+function setBgImageMode(mode){
+  if(!isAdmin) return;
+  dataStore.bgConfig.bgImageMode = mode;
+  saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgImageUI();
+  autoSyncMetaToGithub();
+}
+
+// 修改图片位置（九宫格）
+function setBgImagePos(pos){
+  if(!isAdmin) return;
+  dataStore.bgConfig.bgImagePos = pos;
+  saveMetadata();
+  applyBgConfig(dataStore.bgConfig);
+  updateBgImageUI();
+  autoSyncMetaToGithub();
+}
+
+// 修改不透明度（persist=false 仅实时预览，true 时持久化）
+function setBgImageOpacity(val, persist){
+  if(!isAdmin) return;
+  const v = Math.max(0.1, Math.min(1, parseFloat(val) / 100));
+  dataStore.bgConfig.bgImageOpacity = v;
+  const label = document.getElementById('bgOpacityVal');
+  if(label) label.textContent = val + '%';
+  applyBgConfig(dataStore.bgConfig);
+  if(persist){
+    saveMetadata();
+    autoSyncMetaToGithub();
+  }
+}
+
+// 同步背景图片控制面板 UI 状态
+function updateBgImageUI(){
+  const has = dataStore.bgConfig.bgImage && window._bgImageDataUrl;
+  const preview = document.getElementById('bgImgPreview');
+  if(!preview) return;
+  const ctrls = document.getElementById('bgImgCtrls');
+  const posRow = document.getElementById('bgImgPosRow');
+  const opRow = document.getElementById('bgImgOpacityRow');
+  const rmBtn = document.getElementById('removeBgImgBtn');
+  if(has){
+    preview.style.display = 'block';
+    preview.style.backgroundImage = `url("${window._bgImageDataUrl}")`;
+    ctrls.style.display = 'flex';
+    posRow.style.display = 'flex';
+    opRow.style.display = 'flex';
+    rmBtn.style.display = 'block';
+    const opa = (dataStore.bgConfig.bgImageOpacity != null) ? dataStore.bgConfig.bgImageOpacity : 1;
+    document.getElementById('bgModeSelect').value = dataStore.bgConfig.bgImageMode || 'cover';
+    document.getElementById('bgOpacitySlider').value = Math.round(opa * 100);
+    document.getElementById('bgOpacityVal').textContent = Math.round(opa * 100) + '%';
+    document.querySelectorAll('#bgPosGrid .pos-cell').forEach(c => {
+      c.classList.toggle('active', c.dataset.pos === (dataStore.bgConfig.bgImagePos || 'center center'));
+    });
+  } else {
+    preview.style.display = 'none';
+    ctrls.style.display = 'none';
+    posRow.style.display = 'none';
+    opRow.style.display = 'none';
+    rmBtn.style.display = 'none';
+  }
+}
+
+/* ============ RGB 配色 + 图片取色（仅管理员） ============ */
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  return {
+    r: parseInt(h.substring(0,2),16) || 0,
+    g: parseInt(h.substring(2,4),16) || 0,
+    b: parseInt(h.substring(4,6),16) || 0
+  };
+}
+function rgbToHex(r,g,b){
+  const to2 = n => Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
+  return '#' + to2(r) + to2(g) + to2(b);
+}
+// 颜色选择器 → RGB 数字输入框
+function syncRgbInputs(){
+  const bg = hexToRgb(document.getElementById('customBgColor').value);
+  const th = hexToRgb(document.getElementById('customThemeColor').value);
+  document.getElementById('bgR').value = bg.r;
+  document.getElementById('bgG').value = bg.g;
+  document.getElementById('bgB').value = bg.b;
+  document.getElementById('themeR').value = th.r;
+  document.getElementById('themeG').value = th.g;
+  document.getElementById('themeB').value = th.b;
+}
+// RGB 数字输入 → 颜色选择器 + 实时预览
+function onRgbInput(target){
+  if(!isAdmin) return;
+  const get = id => Math.max(0, Math.min(255, parseInt(document.getElementById(id).value) || 0));
+  if(target === 'bg'){
+    document.getElementById('customBgColor').value = rgbToHex(get('bgR'), get('bgG'), get('bgB'));
+  } else {
+    document.getElementById('customThemeColor').value = rgbToHex(get('themeR'), get('themeG'), get('themeB'));
+  }
+  previewCustomBg();
+}
+// 上传图片提取主色（canvas 像素量化统计）
+function handleThemePick(e){
+  if(!isAdmin){ e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if(!file){ e.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const colors = extractDominantColors(img, 10);
+        const grid = document.getElementById('extractedPalette');
+        grid.innerHTML = colors.map(c =>
+          `<div class="palette-swatch" data-hex="${c}" style="background:${c}" onclick="applySwatchColor('${c}')" title="点击应用 ${c}"></div>`
+        ).join('');
+        document.getElementById('paletteWrap').style.display = 'block';
+      } catch(err){
+        alert('❌ 取色失败: ' + err.message);
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+function extractDominantColors(img, count){
+  const W = 64;
+  const H = Math.max(1, Math.round(W * img.height / img.width));
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, W, H);
+  const data = ctx.getImageData(0, 0, W, H).data;
+  const buckets = {};
+  for(let i = 0; i < data.length; i += 4){
+    if(data[i+3] < 125) continue; // 跳过透明像素
+    const r = data[i], g = data[i+1], b = data[i+2];
+    const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    if(!buckets[key]) buckets[key] = {r:0,g:0,b:0,n:0};
+    buckets[key].r += r; buckets[key].g += g; buckets[key].b += b; buckets[key].n++;
+  }
+  const arr = Object.values(buckets)
+    .map(b => ({r:Math.round(b.r/b.n), g:Math.round(b.g/b.n), b:Math.round(b.b/b.n), n:b.n}))
+    .sort((x,y) => y.n - x.n);
+  // 去掉过近颜色，保证色板丰富
+  const picked = [];
+  for(const c of arr){
+    if(picked.length >= count) break;
+    const tooClose = picked.some(p => Math.abs(p.r-c.r) + Math.abs(p.g-c.g) + Math.abs(p.b-c.b) < 60);
+    if(!tooClose) picked.push(c);
+  }
+  return picked.map(c => rgbToHex(c.r, c.g, c.b));
+}
+// 点击色块应用到主题色 / 背景色（实时预览，点"应用自定义配色"保存）
+function applySwatchColor(hex){
+  if(!isAdmin) return;
+  const target = document.querySelector('input[name="paletteTarget"]:checked');
+  const t = target ? target.value : 'theme';
+  if(t === 'bg'){
+    document.getElementById('customBgColor').value = hex;
+  } else {
+    document.getElementById('customThemeColor').value = hex;
+  }
+  previewCustomBg();
+}
+
+/* ============ 特色封面功能（仅管理员可上传） ============ */
+function renderCover(){
+  const section = document.getElementById('cover');
+  const content = document.getElementById('coverContent');
+  if(!section || !content) return;
+  if(window._coverImageDataUrl){
+    section.style.display = '';
+    content.innerHTML = `<img src="${window._coverImageDataUrl}" alt="特色封面">`;
+  } else if(isAdmin){
+    section.style.display = '';
+    content.innerHTML = `<div class="cover-placeholder">特色封面<span class="cover-hint">点击右下角"替换封面"上传图片（永久保存）</span></div>`;
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function replaceCover(){
+  if(!isAdmin){
+    alert('封面管理仅限管理员使用。');
+    return;
+  }
+  dataStore.currentTarget = { type: 'cover', id: null };
+  document.getElementById('filePicker').click();
+}
+
+async function removeCoverImage(){
+  if(!isAdmin) return;
+  if(!confirm('确定要移除特色封面吗？')) return;
+  try { await deleteImageFromDB('cover_image'); } catch(e){}
+  window._coverImageDataUrl = null;
+  dataStore.coverImage = false;
+  await saveMetadata();
+  renderCover();
+  autoSyncMetaToGithub();
+}
+
+/* ============ 标题样式功能（可修改 / 可移动 / 字体 / 颜色） ============ */
+const FONT_OPTIONS = [
+  { v: '', label: '默认字体' },
+  { v: '"Microsoft YaHei","PingFang SC",sans-serif', label: '微软雅黑' },
+  { v: '"SimSun",serif', label: '宋体' },
+  { v: '"SimHei",sans-serif', label: '黑体' },
+  { v: '"KaiTi","STKaiti",serif', label: '楷体' },
+  { v: '"LiSu","STLisu"', label: '隶书' },
+  { v: '"STXingkai","KaiTi",cursive', label: '华文行楷' },
+  { v: '"YouYuan","STYuan"', label: '幼圆' },
+  { v: 'Arial,sans-serif', label: 'Arial' },
+  { v: 'Georgia,serif', label: 'Georgia' },
+  { v: '"Comic Sans MS",cursive', label: 'Comic Sans' }
+];
+// 两个可拖动/可设置样式的标题定义
+const TITLE_STYLE_DEFS = {
+  logo: { label: '顶部大标题', defSize: 22, minSize: 12, maxSize: 36, defColor: '#ffffff' },
+  featured_title: { label: '特色风貌标题', defSize: 24, minSize: 16, maxSize: 52, defColor: '#b91c1c' }
+};
+
+// 应用单个标题样式到 DOM
+function applyTextStyle(key){
+  const el = document.querySelector(`[data-textkey="${key}"]`);
+  if(!el) return;
+  const st = dataStore.textStyles && dataStore.textStyles[key];
+  if(!st){
+    el.style.fontFamily = '';
+    el.style.color = '';
+    el.style.fontSize = '';
+    el.style.position = '';
+    el.style.left = '';
+    el.style.top = '';
+    return;
+  }
+  if(st.fontFamily) el.style.fontFamily = st.fontFamily;
+  if(st.color) el.style.color = st.color;
+  if(st.fontSize) el.style.fontSize = st.fontSize + 'px';
+  if(st.x != null && st.y != null){
+    el.style.position = 'absolute';
+    el.style.left = st.x + 'px';
+    el.style.top = st.y + 'px';
+    el.style.margin = '0';
+    el.style.zIndex = '5';
+  }
+}
+function applyAllTextStyles(){
+  Object.keys(TITLE_STYLE_DEFS).forEach(applyTextStyle);
+}
+
+// 修改标题样式（字体 / 字号 / 颜色），实时应用并永久保存
+function setTitleStyle(key, prop, value){
+  if(!isAdmin) return;
+  if(!dataStore.textStyles[key]) dataStore.textStyles[key] = {};
+  if(prop === 'fontSize') value = parseInt(value) || TITLE_STYLE_DEFS[key].defSize;
+  dataStore.textStyles[key][prop] = value;
+  applyTextStyle(key);
+  saveMetadata();
+  updateTitleStyleUI();
+  autoSyncMetaToGithub();
+}
+
+// 重置单个标题的全部样式（含位置）
+function resetTitleStyle(key){
+  if(!isAdmin) return;
+  if(!confirm('确定重置「' + TITLE_STYLE_DEFS[key].label + '」的字体、颜色和位置吗？')) return;
+  delete dataStore.textStyles[key];
+  applyTextStyle(key);
+  saveMetadata();
+  updateTitleStyleUI();
+  autoSyncMetaToGithub();
+}
+
+// 回填样式面板控件状态
+function updateTitleStyleUI(){
+  Object.keys(TITLE_STYLE_DEFS).forEach(key => {
+    const st = (dataStore.textStyles && dataStore.textStyles[key]) || {};
+    const prefix = key === 'logo' ? 'logo' : 'ft';
+    const fontSel = document.getElementById(prefix + 'Font');
+    const sizeInput = document.getElementById(prefix + 'Size');
+    const sizeVal = document.getElementById(prefix + 'SizeVal');
+    const colorInput = document.getElementById(prefix + 'Color');
+    if(fontSel && !fontSel.options.length){
+      FONT_OPTIONS.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.v;
+        opt.textContent = f.label;
+        fontSel.appendChild(opt);
+      });
+    }
+    if(fontSel) fontSel.value = st.fontFamily || '';
+    const size = st.fontSize || TITLE_STYLE_DEFS[key].defSize;
+    if(sizeInput){ sizeInput.value = size; }
+    if(sizeVal){ sizeVal.textContent = size + 'px'; }
+    if(colorInput){ colorInput.value = st.color || TITLE_STYLE_DEFS[key].defColor; }
+  });
+}
+
+// Alt + 拖动移动标题（管理员），拖动超过阈值才生效并保存（防输入法 Alt 误触）
+function bindTitleDrag(){
+  Object.keys(TITLE_STYLE_DEFS).forEach(key => {
+    const el = document.querySelector(`[data-textkey="${key}"]`);
+    if(!el) return;
+    el.title = isAdmin ? '可点击修改文字；按住 Alt 拖动可移动位置' : '';
+    el.onmousedown = (e) => {
+      if(!isAdmin || !e.altKey) return; // 仅管理员 + Alt 键才触发拖动
+      e.preventDefault();
+      const parent = el.offsetParent || el.parentElement;
+      const pr = parent.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      const offX = e.clientX - rect.left;
+      const offY = e.clientY - rect.top;
+      const startX = e.clientX, startY = e.clientY;
+      // 记录拖动前的内联样式，位移过小时完全还原
+      const prevStyle = {
+        position: el.style.position, left: el.style.left, top: el.style.top,
+        margin: el.style.margin, zIndex: el.style.zIndex
+      };
+      let moved = false;
+      const DRAG_THRESHOLD = 8; // 位移超过 8px 才算真正的拖动
+      el.classList.add('dragging');
+      const onMove = (ev) => {
+        if(!moved){
+          if(Math.abs(ev.clientX - startX) < DRAG_THRESHOLD && Math.abs(ev.clientY - startY) < DRAG_THRESHOLD) return;
+          moved = true;
+        }
+        let x = ev.clientX - pr.left - offX;
+        let y = ev.clientY - pr.top - offY;
+        x = Math.max(0, Math.min(pr.width - rect.width, x));
+        y = Math.max(0, Math.min(pr.height - rect.height, y));
+        el.style.position = 'absolute';
+        el.style.left = Math.round(x) + 'px';
+        el.style.top = Math.round(y) + 'px';
+        el.style.margin = '0';
+        el.style.zIndex = '5';
+        el.dataset._dx = Math.round(x);
+        el.dataset._dy = Math.round(y);
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        el.classList.remove('dragging');
+        if(!moved){
+          // 位移过小视为误触（如切换输入法时按到 Alt），完全还原
+          el.style.position = prevStyle.position;
+          el.style.left = prevStyle.left;
+          el.style.top = prevStyle.top;
+          el.style.margin = prevStyle.margin;
+          el.style.zIndex = prevStyle.zIndex;
+          return;
+        }
+        if(el.dataset._dx !== undefined){
+          if(!dataStore.textStyles[key]) dataStore.textStyles[key] = {};
+          dataStore.textStyles[key].x = parseInt(el.dataset._dx);
+          dataStore.textStyles[key].y = parseInt(el.dataset._dy);
+          delete el.dataset._dx;
+          delete el.dataset._dy;
+          saveMetadata();
+          updateTitleStyleUI();
+          autoSyncMetaToGithub();
+          alert('✅ 标题位置已保存！如需恢复原位，请到「关于 → 页面样式设置 → 标题样式设置」点击"重置此标题"。');
+        }
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+  });
+}
+
+// 展开"关于"里的样式面板时刷新控件状态
+function onStylePanelToggle(d){
+  if(d.open && isAdmin){
+    syncRgbInputs();
+    updateBgImageUI();
+    updateBgPresetActive();
+    updateTitleStyleUI();
+  }
+}
+
+/* ============ 页面文字编辑（管理员模式） ============ */
+// 将 textData 中的值渲染到页面
+function renderTextData() {
+  const nodes = document.querySelectorAll('[data-textkey]');
+  nodes.forEach(el => {
+    const key = el.getAttribute('data-textkey');
+    let value = dataStore.textData && dataStore.textData[key];
+    if (value === undefined || value === null || value === '') {
+      value = DEFAULT_TEXT_DATA[key];
+    }
+    if (value !== undefined) {
+      el.textContent = value;
+    }
+  });
+}
+
+// 绑定可编辑事件：管理员模式下方可编辑
+function bindTextEditable() {
+  const nodes = document.querySelectorAll('[data-textkey]');
+  nodes.forEach(el => {
+    // 设置可编辑性
+    if (isAdmin) {
+      el.setAttribute('contenteditable', 'true');
+      el.setAttribute('spellcheck', 'false');
+    } else {
+      el.removeAttribute('contenteditable');
+    }
+
+    // 失焦保存
+    el.onblur = () => {
+      if (!isAdmin) return;
+      const key = el.getAttribute('data-textkey');
+      const val = el.textContent.trim();
+      if (!dataStore.textData) dataStore.textData = {};
+      if (val !== DEFAULT_TEXT_DATA[key]) {
+        dataStore.textData[key] = val;
+      } else {
+        delete dataStore.textData[key]; // 默认值不存，节省空间
+      }
+      saveMetadata();
+      autoSyncMetaToGithub();
+    };
+
+    // 按回车保存并退出编辑（多行元素如about_desc允许换行，用 Ctrl+Enter 保存）
+    el.onkeydown = (e) => {
+      if (!isAdmin) return;
+      const key = el.getAttribute('data-textkey');
+      const isMultiline = (key === 'about_desc' || key === 'footer');
+      if (!isMultiline && e.key === 'Enter') {
+        e.preventDefault();
+        el.blur();
+      }
+      if (isMultiline && (e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        el.blur();
+      }
+    };
+  });
 }
 
 function updateBgPresetActive() {
@@ -1464,12 +2337,6 @@ function openStorageModal(){
     return;
   }
   updateStorageInfo();
-  updateBgPresetActive();
-  // 回填自定义颜色
-  document.getElementById('customBgColor').value = dataStore.bgConfig.customColor;
-  document.getElementById('customThemeColor').value = dataStore.bgConfig.customThemeColor;
-  document.getElementById('customBgColorVal').textContent = dataStore.bgConfig.customColor;
-  document.getElementById('customThemeColorVal').textContent = dataStore.bgConfig.customThemeColor;
   document.getElementById('storageModal').classList.add('active');
 }
 
@@ -1503,7 +2370,7 @@ async function exportData(){
   try {
     // 从 IndexedDB 读取所有图片
     const allData = {
-      version: 3,
+      version: 4,
       exportTime: new Date().toISOString(),
       metadata: {
         buildingInfos: dataStore.buildingInfos,
@@ -1513,7 +2380,10 @@ async function exportData(){
         buildingIds: dataStore.buildingIds,
         featuredIds: dataStore.featuredIds,
         currentPage: dataStore.currentPage,
-        bgConfig: dataStore.bgConfig
+        bgConfig: dataStore.bgConfig,
+        textData: dataStore.textData || {},
+        textStyles: dataStore.textStyles || {},
+        coverImage: dataStore.coverImage === true
       },
       images: {}
     };
@@ -1530,6 +2400,16 @@ async function exportData(){
     for(let id in dataStore.buildingImages){
       const url = await getImageFromDB(`building_${id}`);
       if(url) allData.images.building[id] = url;
+    }
+
+    // 收集背景图片
+    if(window._bgImageDataUrl){
+      allData.images.bgImage = window._bgImageDataUrl;
+    }
+
+    // 收集特色封面
+    if(window._coverImageDataUrl){
+      allData.images.coverImage = window._coverImageDataUrl;
     }
 
     // 下载为 JSON 文件
@@ -1558,8 +2438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = await file.text();
         const data = JSON.parse(text);
         
-        if(data.version !== 2 && data.version !== 3){
-          alert('⚠️ 文件格式不兼容（支持版本 2/3）');
+        if(data.version !== 2 && data.version !== 3 && data.version !== 4){
+          alert('⚠️ 文件格式不兼容（支持版本 2/3/4）');
           return;
         }
 
@@ -1604,6 +2484,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           if(data.metadata.currentPage) dataStore.currentPage = data.metadata.currentPage;
           if(data.metadata.bgConfig) dataStore.bgConfig = data.metadata.bgConfig;
+          // v4 新增：页面文字配置
+          if(data.metadata.textData) dataStore.textData = data.metadata.textData;
+          if(data.metadata.textStyles) dataStore.textStyles = data.metadata.textStyles;
+          if(data.metadata.coverImage) dataStore.coverImage = true;
         }
 
         // 导入图片
@@ -1619,6 +2503,18 @@ document.addEventListener('DOMContentLoaded', () => {
               await saveImage(`building_${id}`, data.images.building[id]);
               dataStore.buildingImages[id] = data.images.building[id];
             }
+          }
+          // 背景图片
+          if(data.images.bgImage){
+            await saveImage('bg_image', data.images.bgImage);
+            window._bgImageDataUrl = data.images.bgImage;
+            if(dataStore.bgConfig) dataStore.bgConfig.bgImage = true;
+          }
+          // 特色封面
+          if(data.images.coverImage){
+            await saveImage('cover_image', data.images.coverImage);
+            window._coverImageDataUrl = data.images.coverImage;
+            dataStore.coverImage = true;
           }
         }
 
@@ -1663,6 +2559,11 @@ async function clearAllData(silent = false){
     dataStore.featuredIds = ['1','2','3','4','5','6','7','8'];
     dataStore.currentPage = 1;
     dataStore.bgConfig = keepBgConfig;
+    dataStore.textData = {};
+    dataStore.textStyles = {};
+    dataStore.coverImage = false;
+    window._coverImageDataUrl = null;
+    try { await deleteImageFromDB('cover_image'); } catch(e){}
 
     if(!silent){
       alert('✅ 数据已清除！页面即将刷新...');
@@ -1819,7 +2720,10 @@ async function saveMetadataToGithub(){
     featuredIds: dataStore.featuredIds,
     currentPage: dataStore.currentPage,
     bgConfig: dataStore.bgConfig,
-    version: 3,
+    textData: dataStore.textData || {},
+    textStyles: dataStore.textStyles || {},
+    coverImage: dataStore.coverImage === true,
+    version: 4,
     timestamp: Date.now()
   };
   const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(metaData))));
@@ -1876,6 +2780,8 @@ async function syncFromGithub(){
     }
     if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
     if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
+    // v4 新增字段
+    if(metaData.textData) dataStore.textData = metaData.textData;
     
     // 下载特色图片
     for(let id of metaData.featuredKeys || []){
@@ -1896,7 +2802,27 @@ async function syncFromGithub(){
         dataStore.buildingImages[id] = dataUrl;
       }
     }
-    
+
+    // 下载背景图片
+    if(metaData.bgConfig && metaData.bgConfig.bgImage){
+      const bgBase64 = await downloadFromGithub('images/bg_image.jpg');
+      if(bgBase64){
+        const bgDataUrl = base64ToDataUrl(bgBase64);
+        await saveImage('bg_image', bgDataUrl);
+        window._bgImageDataUrl = bgDataUrl;
+      }
+    }
+
+    // 下载特色封面
+    if(metaData.coverImage){
+      const coverBase64 = await downloadFromGithub('images/cover_image.jpg');
+      if(coverBase64){
+        const coverDataUrl = base64ToDataUrl(coverBase64);
+        await saveImage('cover_image', coverDataUrl);
+        window._coverImageDataUrl = coverDataUrl;
+      }
+    }
+
     // 保存元数据到本地
     await saveMetadata();
     
@@ -1942,6 +2868,26 @@ async function syncToGithub(){
       if(dataUrl){
         const base64 = dataUrlToBase64(dataUrl);
         await uploadToGithub(`images/building_${id}.jpg`, base64);
+      }
+    }
+
+    // 上传背景图片
+    if(dataStore.bgConfig.bgImage){
+      statusEl.innerHTML = '⏳ 正在上传背景图片...';
+      const bgUrl = await getImageFromDB('bg_image');
+      if(bgUrl){
+        const base64 = dataUrlToBase64(bgUrl);
+        await uploadToGithub('images/bg_image.jpg', base64);
+      }
+    }
+
+    // 上传特色封面
+    if(dataStore.coverImage){
+      statusEl.innerHTML = '⏳ 正在上传特色封面...';
+      const coverUrl = await getImageFromDB('cover_image');
+      if(coverUrl){
+        const base64 = dataUrlToBase64(coverUrl);
+        await uploadToGithub('images/cover_image.jpg', base64);
       }
     }
     
@@ -2030,7 +2976,30 @@ async function autoSyncFromGithub(){
     }
     if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
     if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
-    
+    // v4 新增字段
+    if(metaData.textData) dataStore.textData = metaData.textData;
+    if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
+    if(metaData.coverImage) dataStore.coverImage = true;
+    // 下载背景图片并应用
+    if(metaData.bgConfig && metaData.bgConfig.bgImage){
+      const bgBase64 = await downloadFromGithub('images/bg_image.jpg');
+      if(bgBase64){
+        const bgDataUrl = base64ToDataUrl(bgBase64);
+        await saveImage('bg_image', bgDataUrl);
+        window._bgImageDataUrl = bgDataUrl;
+      }
+    }
+    // 下载特色封面
+    if(metaData.coverImage){
+      const coverBase64 = await downloadFromGithub('images/cover_image.jpg');
+      if(coverBase64){
+        const coverDataUrl = base64ToDataUrl(coverBase64);
+        await saveImage('cover_image', coverDataUrl);
+        window._coverImageDataUrl = coverDataUrl;
+      }
+    }
+    applyBgConfig(dataStore.bgConfig);
+
     await saveMetadata();
     console.log('✅ 已从 GitHub 同步数据');
   } catch(e) {
@@ -2242,6 +3211,15 @@ function applyImageUrl(url, target){
     saveImage(`building_${target.id}`, url);
     // 自动同步到 GitHub（如果配置了）
     autoSyncToGithub('building', target.id, url);
+  } else if(target.type === 'cover'){
+    // 特色封面
+    window._coverImageDataUrl = url;
+    dataStore.coverImage = true;
+    saveImage('cover_image', url);
+    renderCover();
+    saveMetadata();
+    autoSyncMetaToGithub();
+    alert('✅ 特色封面已更新并永久保存！');
   }
   // 保存图片 key 列表到元数据，以便刷新后恢复
   saveMetadata();
@@ -2319,11 +3297,29 @@ async function initApp(){
     alert('浏览器不支持 IndexedDB，部分功能可能受限');
   }
 
-  // 先加载元数据（含底纹配置）
+  // 先加载元数据（含底纹配置 + textData）
   await loadMetadata();
+
+  // 加载背景图片（IndexedDB，永久保存）
+  try {
+    const bgUrl = await getImageFromDB('bg_image');
+    if (bgUrl) window._bgImageDataUrl = bgUrl;
+  } catch(e){}
+
+  // 加载特色封面（IndexedDB，永久保存）
+  try {
+    const coverUrl = await getImageFromDB('cover_image');
+    if (coverUrl) window._coverImageDataUrl = coverUrl;
+  } catch(e){}
 
   // 应用底纹（先于渲染）
   try { applyBgConfig(dataStore.bgConfig); } catch(e){}
+
+  // 渲染页面文字（textData）
+  try { renderTextData(); } catch(e){}
+
+  // 应用标题样式（字体/颜色/字号/位置）
+  try { applyAllTextStyles(); } catch(e){}
 
   // 检查管理员认证
   checkAuth();
@@ -2331,8 +3327,14 @@ async function initApp(){
   // 恢复数据（从 IndexedDB 异步加载）
   await restoreData();
 
-  // 根据管理员状态设置 contenteditable
+  // 根据管理员状态设置 contenteditable（包含 text 元素）
   updateEditable();
+
+  // 渲染特色封面（管理员显示占位框，访客仅在已上传时显示）
+  try { renderCover(); } catch(e){}
+
+  // 绑定标题拖动（Alt+拖动，管理员）
+  try { bindTitleDrag(); } catch(e){}
 
   // 同步克隆容器
   if(window.syncCloneFeatured){
