@@ -7,62 +7,112 @@
 <style>
   /* ============ 全局重置 ============ */
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;background:#FFF5F0}
   body{
     font-family:"Microsoft YaHei","PingFang SC",sans-serif;
-    background-color:#fdf6f0;
+    background-color:#FFF5F0;
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),
-      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px);
+      radial-gradient(circle at 15% 20%, rgba(201,162,74,.05) 0%, transparent 55%),
+      radial-gradient(circle at 85% 75%, rgba(139,26,26,.04) 0%, transparent 55%),
+      repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(201,162,74,.06) 38px, rgba(201,162,74,.06) 39px),
+      repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(201,162,74,.06) 38px, rgba(201,162,74,.06) 39px);
     background-attachment: fixed;
-    color:#3a1f1f;
+    color:#3C2F2F;
     line-height:1.6;
     min-height:100vh;
     overflow-x:hidden;
+    padding-bottom:72px;
   }
-  a{text-decoration:none;color:inherit}
+  a{text-decoration:none;color:inherit;transition:color .25s}
+  a:hover{color:#8B1A1A}
   img{max-width:100%;display:block}
 
   /* ============ 顶部导航栏 ============ */
   .top-nav{
     position:fixed;top:0;left:0;right:0;z-index:100;
-    background:linear-gradient(180deg,#b91c1c 0%,#991b1b 100%);
+    background:linear-gradient(180deg,#9B2828 0%,#6E1414 100%);
     color:#fff;
-    padding:14px 32px;
+    padding:10px 20px;
     display:flex;align-items:center;justify-content:space-between;
-    box-shadow:0 4px 18px rgba(0,0,0,.25);
+    flex-wrap:nowrap;min-height:58px;
+    box-shadow:0 4px 14px rgba(110,20,20,.4);
+    border-bottom:2px solid #C9A24A;
+    gap:14px;
   }
-  .top-nav .logo{font-size:22px;font-weight:700;letter-spacing:3px}
-  .top-nav .logo span{color:#fde68a}
-  .top-nav nav{display:flex;gap:28px}
-  .top-nav nav a{
-    font-size:15px;letter-spacing:2px;padding:6px 14px;border-radius:4px;
-    transition:background .3s,color .3s;
+  /* 重叠避让用的换行占位符 */
+  .nav-row-spacer{display:none;flex-basis:100%;height:0}
+  .top-nav.nav-row-2 .nav-row-spacer{display:block;height:44px}
+  /* ==== Logo：方块金边（左） ==== */
+  .top-nav .logo{
+    font-size:15px;font-weight:700;letter-spacing:1px;flex-shrink:0;
+    background:#7F1515;
+    border:1.5px solid #C9A24A;
+    border-radius:8px;
+    padding:6px 10px;
+    min-width:58px;min-height:32px;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;line-height:1.1;
+    text-shadow:0 1px 2px rgba(0,0,0,.35);
   }
-  .top-nav nav a:hover{background:#fff;color:#b91c1c}
+  .top-nav .logo span{color:#FDE68A;margin:0 2px;font-size:12px}
+  /* ==== 中间站点标题组（默认显示） ==== */
+  .site-title-group{
+    flex:1;text-align:center;min-width:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    line-height:1.2;
+  }
+  .site-title{
+    font-size:clamp(15px,1.8vw,22px);font-weight:700;letter-spacing:5px;
+    color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.35);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .site-subtitle{
+    font-size:10.5px;letter-spacing:3px;color:#FDE68A;
+    margin-top:2px;opacity:.9;
+  }
+  /* ==== nav-menu：桌面端默认隐藏，仅移动端汉堡下拉才显示 ==== */
+  .top-nav nav{display:none} /* PC 默认隐藏 */
+  .top-nav.mobile-open nav{display:flex} /* 汉堡点击后显示（860px 断点内） */
+  /* 左 Logo 被拖走后，站点标题左对齐（避免居中后空一块） */
+  .top-nav.logo-free .site-title-group{align-items:flex-start;text-align:left;padding-left:4px}
+  /* 汉堡按钮 PC 端隐藏 */
+  .menu-toggle{display:none}
+  /* 顶栏右侧图标区（扫码 + 铃铛） */
+  .top-nav .nav-icons{display:flex;gap:10px;align-items:center;flex-shrink:0}
+  .top-nav .nav-icons .icon-btn{
+    width:34px;height:34px;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(201,162,74,.5);
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:18px;cursor:pointer;transition:all .25s;
+  }
+  .top-nav .nav-icons .icon-btn:hover{background:rgba(201,162,74,.3);border-color:#C9A24A}
 
   /* ============ 主体容器 ============ */
-  .container{max-width:1280px;margin:0 auto;padding-top:70px}
+  .container{max-width:1280px;margin:0 auto;padding:0 16px;padding-top:72px}
+
+  /* ============ 主页简化：默认隐藏的区块（Tab 点击时才显示） ============ */
+  .section-hideable{display:none}
+  .section-hideable.section-visible{display:block}
 
   /* ============ 特色图片滚动区 ============ */
   .featured-section{
-    margin-top:20px;
-    padding:28px 0 24px;
-    background:#fff;
-    border-top:3px solid #b91c1c;
-    border-bottom:3px solid #b91c1c;
+    margin-top:16px;
+    padding:20px 0 18px;
+    background:#FFFFFF;
+    border-top:2px solid #C9A24A;
+    border-bottom:2px solid #C9A24A;
     position:relative;
   }
   .featured-title{
     text-align:center;
-    font-size:24px;font-weight:700;color:#b91c1c;
-    margin-bottom:18px;letter-spacing:4px;
+    font-size:22px;font-weight:700;color:#8B1A1A;
+    margin-bottom:16px;letter-spacing:3px;
   }
   .featured-title::before,.featured-title::after{
-    content:"";display:inline-block;width:40px;height:2px;
-    background:#b91c1c;vertical-align:middle;margin:0 14px;
+    content:"";display:inline-block;width:32px;height:1.5px;
+    background:#C9A24A;vertical-align:middle;margin:0 12px;
   }
   .featured-scroll-wrapper{
     position:relative;max-width:1180px;margin:0 auto;
@@ -90,11 +140,11 @@
     transition:transform .3s,box-shadow .3s;
     user-select:none;
   }
-  .featured-item:hover{transform:translateY(-4px);box-shadow:0 8px 22px rgba(185,28,28,.25);border-color:#b91c1c}
+  .featured-item:hover{transform:translateY(-4px);box-shadow:0 8px 22px rgba(139,26,26,.25);border-color:#C9A24A}
   .featured-item img{width:100%;height:100%;object-fit:cover}
   .featured-item .replace-btn{
     position:absolute;bottom:8px;right:8px;z-index:10;
-    background:rgba(185,28,28,.85);color:#fff;
+    background:rgba(139,26,26,.85);color:#fff;
     border:none;border-radius:4px;padding:4px 10px;
     font-size:12px;cursor:pointer;opacity:0;transition:opacity .3s;
   }
@@ -109,21 +159,24 @@
   .scroll-hint::before{content:"← 拖动或滚动查看更多 →"}
 
   /* ============ 建筑盒子模块 ============ */
-  .buildings-section{padding:40px 20px 60px}
+  .buildings-section{padding:28px 16px 60px}
   .section-title{
-    text-align:center;font-size:28px;font-weight:700;color:#b91c1c;
-    margin-bottom:36px;letter-spacing:6px;
+    text-align:center;font-size:24px;font-weight:700;color:#8B1A1A;
+    margin-bottom:28px;letter-spacing:3px;
+    display:flex;align-items:center;justify-content:center;gap:14px;
   }
-  .section-title span{color:#7f1d1d}
+  .section-title::before{content:"";display:inline-block;width:4px;height:22px;background:#8B1A1A;border-radius:2px}
+  .section-title::after{content:"";display:inline-block;width:4px;height:22px;background:#8B1A1A;border-radius:2px}
+  .section-title span{color:#C9A24A;font-weight:400;margin:0 8px}
   .building-card{
     display:grid;grid-template-columns:1fr 1fr;gap:0;
-    background:#fff;border-radius:14px;overflow:hidden;
-    margin-bottom:40px;
-    box-shadow:0 6px 24px rgba(185,28,28,.12);
-    border:1px solid #f0e0d0;
-    transition:box-shadow .3s;
+    background:#FFFFFF;border-radius:14px;overflow:hidden;
+    margin-bottom:24px;
+    box-shadow:0 4px 16px rgba(139,26,26,.08);
+    border:1.5px solid #E8D5B0;
+    transition:all .3s;
   }
-  .building-card:hover{box-shadow:0 10px 36px rgba(185,28,28,.22)}
+  .building-card:hover{box-shadow:0 10px 30px rgba(139,26,26,.16);border-color:#C9A24A;transform:translateY(-2px)}
   .building-card.reverse{direction:rtl}
   .building-card.reverse > *{direction:ltr}
 
@@ -147,7 +200,7 @@
     position:absolute;right:14px;bottom:14px;top:auto;left:auto;
     transform:none;
     width:44px;height:44px;border-radius:50%;
-    background:rgba(185,28,28,.75);
+    background:rgba(139,26,26,.75);
     border:1.5px solid rgba(255,255,255,.8);
     display:flex;align-items:center;justify-content:center;
     pointer-events:none;    /* 图标只作提示，不拦截点击，事件穿透给 .card-image */
@@ -189,8 +242,8 @@
     display:flex;flex-direction:column;justify-content:center;
   }
   .card-info h2{
-    font-size:26px;color:#b91c1c;margin-bottom:16px;
-    padding-bottom:12px;border-bottom:2px solid #b91c1c;
+    font-size:26px;color:#8B1A1A;margin-bottom:16px;
+    padding-bottom:12px;border-bottom:2px solid #8B1A1A;
     letter-spacing:2px;
   }
   .card-info .info-content{
@@ -204,11 +257,11 @@
   }
   .info-replace-btn{
     margin-top:14px;align-self:flex-start;
-    background:#b91c1c;color:#fff;border:none;
+    background:#8B1A1A;color:#fff;border:none;
     padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;
     transition:background .3s;
   }
-  .info-replace-btn:hover{background:#7f1d1d}
+  .info-replace-btn:hover{background:#6E1414}
 
   /* ============ 360° 模态框 ============ */
   .modal-overlay{
@@ -225,7 +278,7 @@
     position:relative;display:flex;flex-direction:column;
   }
   .modal-header{
-    background:#b91c1c;color:#fff;padding:14px 24px;
+    background:#8B1A1A;color:#fff;padding:14px 24px;
     display:flex;justify-content:space-between;align-items:center;
   }
   .modal-header h3{letter-spacing:2px}
@@ -254,24 +307,25 @@
     background:#333;color:#fff;width:360px;font-size:13px;
   }
   .modal-360-placeholder button{
-    padding:8px 18px;background:#b91c1c;color:#fff;border:none;
+    padding:8px 18px;background:#8B1A1A;color:#fff;border:none;
     border-radius:4px;cursor:pointer;font-size:13px;
   }
-  .modal-360-placeholder button:hover{background:#7f1d1d}
+  .modal-360-placeholder button:hover{background:#6E1414}
 
   /* ============ 页面底部 ============ */
   footer{
-    background:linear-gradient(180deg,#991b1b 0%,#7f1d1d 100%);
-    color:#fff;text-align:center;padding:24px 20px;
-    font-size:13px;letter-spacing:2px;
+    background:linear-gradient(180deg,#7F1515 0%,#5D0F0F 100%);
+    border-top:2px solid #C9A24A;
+    color:#FDE68A;text-align:center;padding:20px 16px;
+    font-size:13px;letter-spacing:1.5px;
   }
 
   /* ============ 浮动回到顶部 ============ */
   .back-top{
-    position:fixed;right:24px;bottom:24px;z-index:90;
+    position:fixed;right:24px;bottom:76px;z-index:90; /* bottom 76：避开底部 Tab Bar */
     width:48px;height:48px;border-radius:50%;
-    background:#b91c1c;color:#fff;border:none;cursor:pointer;
-    box-shadow:0 4px 16px rgba(0,0,0,.35);
+    background:#8B1A1A;color:#FDE68A;border:1.5px solid #C9A24A;cursor:pointer;
+    box-shadow:0 4px 16px rgba(110,20,20,.45);
     display:flex;align-items:center;justify-content:center;
     font-size:20px;opacity:0;transition:opacity .3s,transform .3s;
   }
@@ -284,9 +338,7 @@
     background:none;border:none;color:#fff;
     font-size:24px;cursor:pointer;padding:6px;
   }
-  .nav-menu{
-    display:flex;gap:28px;
-  }
+  /* (旧 .nav-menu{display:flex;gap:28px} 已移除，PC 端统一用 .top-nav nav{display:none} 控制) */
 
   /* ============ 管理员登录模态框 ============ */
   .admin-modal{
@@ -301,7 +353,7 @@
     box-shadow:0 10px 40px rgba(0,0,0,.3);
   }
   .admin-login-box h3{
-    color:#b91c1c;font-size:20px;margin-bottom:20px;
+    color:#8B1A1A;font-size:20px;margin-bottom:20px;
     text-align:center;letter-spacing:2px;
   }
   .admin-login-box input{
@@ -309,13 +361,13 @@
     border-radius:6px;font-size:14px;margin-bottom:14px;
     transition:border-color .3s;
   }
-  .admin-login-box input:focus{outline:none;border-color:#b91c1c}
+  .admin-login-box input:focus{outline:none;border-color:#8B1A1A}
   .admin-login-box button{
-    width:100%;padding:10px;background:#b91c1c;color:#fff;
+    width:100%;padding:10px;background:#8B1A1A;color:#fff;
     border:none;border-radius:6px;font-size:14px;
     cursor:pointer;transition:background .3s;letter-spacing:2px;
   }
-  .admin-login-box button:hover{background:#7f1d1d}
+  .admin-login-box button:hover{background:#6E1414}
   .admin-login-error{color:#dc2626;font-size:12px;margin-bottom:10px;display:none}
   .admin-login-error.show{display:block}
   .admin-close{
@@ -327,6 +379,25 @@
   .edit-only{display:none !important}
   body.admin-mode .edit-only{display:inline-block !important}
   body.admin-mode .edit-only-block{display:block !important}
+
+  /* 管理员模式下：所有可编辑文字悬停显示金色虚线框（可点击编辑提示） */
+  body.admin-mode [data-textkey]{cursor:text;outline:1px dashed transparent;outline-offset:3px;transition:outline-color .2s}
+  body.admin-mode [data-textkey]:hover{outline-color:rgba(201,162,74,.85)}
+  body.admin-mode [data-textkey]:focus{outline:2px solid rgba(201,162,74,.95);background:rgba(255,251,235,.75)}
+  body.admin-mode .fbc-tag:hover,body.admin-mode .fbc-title:hover,body.admin-mode .fbc-desc:hover,
+  body.admin-mode .fbc-pill:hover{outline:1px dashed rgba(201,162,74,.85);outline-offset:2px}
+  body.admin-mode .fbc-title[contenteditable="true"]:focus,
+  body.admin-mode .fbc-tag[contenteditable="true"]:focus,
+  body.admin-mode .fbc-desc[contenteditable="true"]:focus,
+  body.admin-mode .fbc-pill[contenteditable="true"]:focus{outline:2px solid rgba(201,162,74,.95);background:rgba(255,251,235,.85);border-radius:4px}
+
+  /* 乡村动态：添加按钮 */
+  .news-add-btn{
+    display:none;width:100%;margin-top:10px;padding:9px;border-radius:10px;
+    border:1.5px dashed #C9A24A;background:#FFFBEB;color:#8B1A1A;
+    font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;
+  }
+  .news-add-btn:hover{background:#F5E6D3}
   
   /* 替换按钮：默认隐藏，管理员模式显示 */
   .replace-btn{display:none}
@@ -339,12 +410,12 @@
   /* 占位符：默认只显示文字，管理员模式显示替换提示 */
   .featured-placeholder::after{display:none}
   .image-placeholder::after{display:none}
-  body.admin-mode .featured-placeholder::after{content:"\A（点击替换图片）\A\A";white-space:pre;color:#b91c1c;font-weight:600;display:block}
-  body.admin-mode .image-placeholder::after{content:"\A\A（点击下方按钮替换图片）";white-space:pre;color:#b91c1c;font-size:13px;display:block}
+  body.admin-mode .featured-placeholder::after{content:"\A（点击替换图片）\A\A";white-space:pre;color:#8B1A1A;font-weight:600;display:block}
+  body.admin-mode .image-placeholder::after{content:"\A\A（点击下方按钮替换图片）";white-space:pre;color:#8B1A1A;font-size:13px;display:block}
   
   /* 管理员模式下的编辑提示样式 */
-  body.admin-mode .featured-item{border-style:solid;border-color:#b91c1c}
-  body.admin-mode .card-image{border:2px dashed #b91c1c}
+  body.admin-mode .featured-item{border-style:solid;border-color:#8B1A1A}
+  body.admin-mode .card-image{border:2px dashed #8B1A1A}
 
   /* ============ 添加/删除按钮样式 ============ */
   .add-btn{
@@ -438,39 +509,28 @@
     flex-wrap:wrap;
   }
   .page-btn{
-    min-width:42px;
-    height:42px;
-    padding:0 14px;
-    border:2px solid #e0d0c0;
-    background:#fff;
-    color:#7f1d1d;
-    border-radius:8px;
-    font-size:14px;
-    cursor:pointer;
-    transition:all .25s;
-    font-weight:600;
+    min-width:42px;height:42px;padding:0 14px;
+    border:1.5px solid #E8D5B0;
+    background:#FFFFFF;
+    color:#8B1A1A;
+    border-radius:10px;
+    font-size:14px;cursor:pointer;transition:all .25s;font-weight:600;
   }
   .page-btn:hover:not(:disabled){
-    border-color:#b91c1c;
-    background:#fdf2f2;
+    border-color:#C9A24A;
+    background:#FDE68A;
     transform:translateY(-2px);
-    box-shadow:0 4px 12px rgba(185,28,28,.15);
+    box-shadow:0 4px 12px rgba(201,162,74,.25);
   }
-  .page-btn:disabled{
-    opacity:.4;
-    cursor:not-allowed;
-  }
+  .page-btn:disabled{opacity:.4;cursor:not-allowed}
   .page-btn.active{
-    background:#b91c1c;
-    border-color:#b91c1c;
-    color:#fff;
-    box-shadow:0 4px 14px rgba(185,28,28,.35);
+    background:#8B1A1A;
+    border-color:#C9A24A;
+    color:#FDE68A;
+    box-shadow:0 4px 14px rgba(139,26,26,.35);
   }
   .page-info{
-    font-size:13px;
-    color:#7f1d1d;
-    padding:0 10px;
-    font-weight:600;
+    font-size:13px;color:#8B1A1A;padding:0 10px;font-weight:600;
   }
 
   /* ============ 分页翻页动画 ============ */
@@ -507,7 +567,7 @@
     position:relative;
     overflow:hidden;
   }
-  .bg-preset-item:hover{border-color:#b91c1c;transform:scale(1.02)}
+  .bg-preset-item:hover{border-color:#8B1A1A;transform:scale(1.02)}
   .bg-preset-item.active{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
   .bg-preset-item span{
     position:absolute;
@@ -537,7 +597,7 @@
     width:54px;padding:6px 4px;border:1px solid #e0d0c0;border-radius:6px;
     font-size:12px;text-align:center;
   }
-  .rgb-input:focus{outline:2px solid #b91c1c;outline-offset:1px}
+  .rgb-input:focus{outline:2px solid #8B1A1A;outline-offset:1px}
   .rgb-label{font-size:11px;color:#888;margin:0 1px}
 
   /* 提取色板 */
@@ -548,7 +608,7 @@
     height:34px;border-radius:6px;border:2px solid #e0d0c0;cursor:pointer;
     transition:transform .15s,border-color .15s;position:relative;
   }
-  .palette-swatch:hover{transform:scale(1.12);border-color:#b91c1c;z-index:2}
+  .palette-swatch:hover{transform:scale(1.12);border-color:#8B1A1A;z-index:2}
   .palette-swatch::after{
     content:attr(data-hex);position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
     font-size:9px;color:#999;opacity:0;transition:opacity .15s;white-space:nowrap;
@@ -580,53 +640,72 @@
     width:26px;height:26px;border:1px solid #e0d0c0;border-radius:5px;
     background:#faf6f0;cursor:pointer;transition:all .15s;padding:0;
   }
-  .pos-cell:hover{border-color:#b91c1c;background:#f5e8e8}
-  .pos-cell.active{background:#b91c1c;border-color:#b91c1c;box-shadow:0 0 0 2px rgba(185,28,28,.25)}
-  .opacity-slider{flex:1;accent-color:#b91c1c;cursor:pointer}
+  .pos-cell:hover{border-color:#8B1A1A;background:#f5e8e8}
+  .pos-cell.active{background:#8B1A1A;border-color:#8B1A1A;box-shadow:0 0 0 2px rgba(139,26,26,.25)}
+  .opacity-slider{flex:1;accent-color:#8B1A1A;cursor:pointer}
 
   /* ============ 特色封面区 ============ */
-  .cover-section{padding:24px 20px 0}
+  .cover-section{padding:0} /* 在 hero-banner 模式下去掉内边距 */
   .cover-box{
-    position:relative;max-width:1200px;margin:0 auto;
-    border-radius:14px;overflow:hidden;background:#fff;
-    border:2px solid rgba(185,28,28,.25);
-    box-shadow:0 6px 24px rgba(0,0,0,.08);
+    position:relative;width:100%;height:100%;
+    background:#6E1414;overflow:hidden;border-radius:0;
+    border:none;box-shadow:none;margin:0 auto;max-width:none;z-index:1;
   }
-  .cover-box img{width:100%;max-height:420px;object-fit:cover;display:block}
+  .cover-box img{width:100%;height:100%;object-fit:cover;display:block;max-height:none}
+  /* 封面内容容器必须有确定高度，img 的 height:100% 才能生效 */
+  #coverContent{width:100%;height:100%}
+  /* 桌面端管理员浮动入口（顶栏 nav 隐藏后管理员仍可打开存储管理） */
+  .admin-fab{
+    display:none;position:fixed;right:84px;bottom:76px;z-index:96; /* right 84：避开右侧回到顶部按钮 */
+    align-items:center;gap:6px;padding:8px 14px;border-radius:20px;
+    background:#8B1A1A;color:#FDE68A;border:1.5px solid #C9A24A;
+    font-size:12px;letter-spacing:1px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(110,20,20,.45);
+  }
+  body.admin-mode .admin-fab{display:flex}
+  @media(max-width:860px){.admin-fab{display:none !important}} /* 手机端用汉堡菜单里的管理员入口 */
   .cover-placeholder{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    height:240px;color:#b91c1c;font-size:20px;font-weight:700;letter-spacing:3px;
-    background:linear-gradient(135deg,#fdf2f2 0%,#fef3e2 100%);
+    height:100%;color:#FDE68A;font-size:16px;font-weight:700;letter-spacing:2px;
+    background:linear-gradient(135deg,#7F1515 0%,#6E1414 100%);
+    border:1.5px dashed rgba(201,162,74,.5);border-radius:10px;
   }
-  .cover-hint{font-size:12px;color:#999;font-weight:400;margin-top:8px;letter-spacing:0}
-  .cover-replace-btn{position:absolute;right:12px;bottom:12px}
+  .cover-hint{font-size:12px;color:#C9A24A;font-weight:400;margin-top:8px;letter-spacing:0}
+  .cover-replace-btn{
+    position:absolute;right:14px;bottom:14px;z-index:10;
+    background:rgba(139,26,26,.9);color:#FDE68A;border:1px solid #C9A24A;
+    border-radius:20px;padding:6px 14px;font-size:12px;
+  }
 
   /* ============ 关于区管理员样式面板 ============ */
   .admin-panel{
     display:none;max-width:720px;margin:16px auto 0;text-align:left;
-    background:#fff;border:2px dashed #b91c1c;border-radius:12px;
+    background:#fff;border:2px dashed #8B1A1A;border-radius:12px;
     padding:14px 20px;
   }
   body.admin-mode .admin-panel{display:block}
   .admin-panel summary{
-    cursor:pointer;color:#b91c1c;font-weight:700;font-size:15px;
+    cursor:pointer;color:#8B1A1A;font-weight:700;font-size:15px;
     letter-spacing:1px;user-select:none;padding:4px 0;
   }
   .admin-panel-body{padding-top:14px;border-top:1px dashed #e0d0c0;margin-top:10px}
-  .admin-panel-body h4{color:#b91c1c;font-size:14px;margin:14px 0 8px}
+  .admin-panel-body h4{color:#8B1A1A;font-size:14px;margin:14px 0 8px}
   .admin-panel-body h4:first-child{margin-top:0}
   .style-sub{border-top:1px dashed #e0d0c0;padding-top:12px;margin-top:14px}
   .font-select{
     flex:1;padding:7px 8px;border:1px solid #e0d0c0;border-radius:6px;
     font-size:12px;background:#fff;cursor:pointer;
   }
-  .size-slider{flex:1;accent-color:#b91c1c;cursor:pointer}
+  .size-slider{flex:1;accent-color:#8B1A1A;cursor:pointer}
   .drag-hint{
     font-size:11px;color:#3b82f6;background:rgba(59,130,246,.08);
     border:1px dashed rgba(59,130,246,.4);border-radius:6px;
     padding:6px 10px;margin-top:8px;line-height:1.6;
   }
   [data-textkey].dragging{opacity:.75;cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+  /* 管理员模式下禁止拖选可移动标题的文字，保证直接拖动生效 */
+  body.admin-mode [data-textkey="logo"],
+  body.admin-mode [data-textkey="featured_title"]{user-select:none;-webkit-user-select:none}
 
   /* 登录状态指示器 */
   .admin-indicator{
@@ -649,17 +728,17 @@
     background:#fff;border-radius:12px;padding:28px;
     width:90%;max-width:420px;max-height:80vh;overflow-y:auto;
   }
-  .storage-box h3{color:#b91c1c;font-size:18px;margin-bottom:16px;text-align:center}
+  .storage-box h3{color:#8B1A1A;font-size:18px;margin-bottom:16px;text-align:center}
   .storage-btn{
     display:block;width:100%;padding:12px;margin-bottom:10px;
-    background:#b91c1c;color:#fff;border:none;border-radius:8px;
+    background:#8B1A1A;color:#fff;border:none;border-radius:8px;
     font-size:14px;cursor:pointer;transition:background .3s;
   }
-  .storage-btn:hover{background:#7f1d1d}
+  .storage-btn:hover{background:#6E1414}
   .storage-btn.secondary{background:#6b7280}
   .storage-btn.secondary:hover{background:#4b5563}
   .storage-btn.danger{background:#dc2626}
-  .storage-btn.danger:hover{background:#991b1b}
+  .storage-btn.danger:hover{background:#801616}
   .storage-info{
     background:#fdf2f2;border:1px solid #f0e0d0;border-radius:8px;
     padding:12px;margin-bottom:14px;font-size:13px;color:#5a3a3a;line-height:1.8;
@@ -670,12 +749,276 @@
     font-size:13px;
   }
 
+  /* ============================================================
+     ============ 新设计：Hero Banner（特色封面区升级） ============
+     ============================================================ */
+  .hero-banner{
+    position:relative;width:100%;
+    margin-top:12px; /* container 已有 72px 顶部内边距，这里只需少量间隙 */
+    aspect-ratio:16/8;
+    max-height:460px;min-height:220px;
+    overflow:hidden;border-radius:0 0 18px 18px;
+  }
+  .hero-banner .hero-img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    filter:saturate(1.05);
+  }
+  .hero-banner::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(139,26,26,.72) 0%,rgba(139,26,26,.25) 55%,rgba(0,0,0,.15) 100%);
+    pointer-events:none;z-index:2;
+  }
+  /* 四角金色 L 框装饰 */
+  .hero-banner .corner-l{
+    position:absolute;width:38px;height:38px;z-index:4;pointer-events:none;
+    border:2px solid #C9A24A;
+  }
+  .hero-banner .corner-l.tl{top:14px;left:14px;border-right:none;border-bottom:none;border-top-left-radius:6px}
+  .hero-banner .corner-l.tr{top:14px;right:14px;border-left:none;border-bottom:none;border-top-right-radius:6px}
+  .hero-banner .corner-l.bl{bottom:14px;left:14px;border-right:none;border-top:none;border-bottom-left-radius:6px}
+  .hero-banner .corner-l.br{bottom:14px;right:14px;border-left:none;border-top:none;border-bottom-right-radius:6px}
+  .hero-text-overlay{
+    position:absolute;left:0;top:0;right:0;bottom:0;z-index:3;
+    padding:28px 28px 32px;
+    display:flex;flex-direction:column;justify-content:flex-end;
+  }
+  .hero-location{
+    display:inline-flex;align-items:center;gap:6px;
+    color:#FDE68A;font-size:13px;letter-spacing:1px;
+    margin-bottom:10px;background:rgba(139,26,26,.4);
+    border:1px solid rgba(201,162,74,.5);border-radius:20px;
+    padding:4px 12px;align-self:flex-start;
+  }
+  .hero-title{
+    color:#fff;font-size:clamp(22px,2.8vw,32px);font-weight:700;letter-spacing:4px;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);margin-bottom:8px;
+  }
+  .hero-subtitle{
+    color:rgba(255,255,255,.85);font-size:14px;letter-spacing:2px;
+    margin-bottom:18px;text-shadow:0 1px 6px rgba(0,0,0,.3);
+  }
+  .hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+  .hero-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:12px 28px;border-radius:30px;font-size:15px;font-weight:600;
+    letter-spacing:2px;cursor:pointer;border:1.5px solid #C9A24A;
+    transition:all .25s;text-decoration:none;
+  }
+  .hero-btn-primary{background:#8B1A1A;color:#FDE68A;box-shadow:0 4px 14px rgba(139,26,26,.4)}
+  .hero-btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(139,26,26,.55);background:#6E1414}
+  .hero-btn-secondary{background:rgba(255,255,255,.12);color:#fff;backdrop-filter:blur(6px)}
+  .hero-btn-secondary:hover{background:rgba(255,255,255,.22);transform:translateY(-2px)}
+  /* Hero 封面管理员替换按钮 */
+  .hero-cover-replace{
+    position:absolute;top:50%;right:16px;transform:translateY(-50%);z-index:10;
+    background:rgba(139,26,26,.9);color:#FDE68A;border:1px solid #C9A24A;
+    border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;
+    display:none; /* 默认隐藏，仅管理员显示 */
+  }
+  body.admin-mode .hero-cover-replace{display:inline-block}
+  .hero-cover-replace:hover{background:#6E1414}
+  /* Hero 无封面时的占位样式 */
+  .hero-banner.hero-empty{
+    background:linear-gradient(135deg,#7F1515 0%,#6E1414 100%);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hero-banner.hero-empty .hero-empty-text{
+    color:#FDE68A;font-size:15px;letter-spacing:2px;
+    border:1.5px dashed rgba(201,162,74,.5);border-radius:10px;
+    padding:14px 28px;
+  }
+
+  /* ============================================================
+     ============ 快速入口（4 个米色圆角卡片） =================
+     ============================================================ */
+  .quick-entry{
+    background:#FFFFFF;margin:-18px 16px 0;border-radius:16px;
+    border:1.5px solid #E8D5B0;
+    padding:22px 14px 18px;
+    box-shadow:0 6px 22px rgba(139,26,26,.08);
+    position:relative;z-index:5;
+  }
+  .quick-entry-title{
+    display:flex;align-items:center;gap:10px;
+    font-size:17px;font-weight:700;color:#8B1A1A;margin-bottom:16px;
+  }
+  .quick-entry-title::before{
+    content:"";width:4px;height:18px;background:#8B1A1A;border-radius:2px;
+  }
+  .quick-entry-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  }
+  .quick-entry-item{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    background:#FDF6EC;border:1.5px solid #E8D5B0;border-radius:12px;
+    padding:16px 8px 14px;cursor:pointer;transition:all .25s;
+    text-decoration:none;color:#3C2F2F;
+  }
+  .quick-entry-item:hover{
+    transform:translateY(-3px);border-color:#C9A24A;
+    box-shadow:0 6px 18px rgba(201,162,74,.18);background:#FFFFFF;
+  }
+  .quick-entry-icon{
+    width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    background:rgba(201,162,74,.15);color:#8B1A1A;
+  }
+  .quick-entry-label{font-size:13px;font-weight:500;letter-spacing:1px}
+
+  /* ============================================================
+     ============ 精选景点（特色图片大卡片样式） =================
+     ============================================================ */
+  .featured-big-card{
+    position:relative;border-radius:16px;overflow:hidden;
+    box-shadow:0 8px 28px rgba(139,26,26,.14);
+    border:1.5px solid #E8D5B0;background:#FFFFFF;
+    margin-bottom:24px;
+  }
+  .featured-big-card .fbc-image{
+    width:100%;aspect-ratio:16/8;object-fit:cover;display:block;
+  }
+  .featured-big-card .fbc-tag{
+    position:absolute;top:14px;left:14px;
+    background:#8B1A1A;color:#FDE68A;font-size:12px;font-weight:600;
+    padding:5px 14px;border-radius:16px;border:1px solid #C9A24A;
+    letter-spacing:1px;z-index:3;
+  }
+  .featured-big-card .fbc-overlay{
+    position:absolute;left:0;right:0;bottom:0;
+    background:linear-gradient(to top,rgba(60,47,47,.92) 0%,rgba(60,47,47,.55) 55%,transparent 100%);
+    padding:32px 22px 20px;z-index:2;
+  }
+  .featured-big-card .fbc-title-row{
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  }
+  .featured-big-card .fbc-loc-icon{
+    color:#FDE68A;font-size:15px;
+  }
+  .featured-big-card .fbc-title{
+    color:#fff;font-size:20px;font-weight:700;letter-spacing:2px;
+    text-shadow:0 1px 6px rgba(0,0,0,.4);
+  }
+  .featured-big-card .fbc-desc{
+    color:rgba(255,255,255,.85);font-size:13px;letter-spacing:1px;
+    line-height:1.6;margin-bottom:10px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .featured-big-card .fbc-tags{display:flex;gap:8px;flex-wrap:wrap}
+  .featured-big-card .fbc-pill{
+    background:rgba(253,230,138,.18);color:#FDE68A;border:1px solid rgba(201,162,74,.5);
+    font-size:11px;padding:3px 10px;border-radius:12px;letter-spacing:1px;
+  }
+  .featured-big-card .fbc-arrow{
+    position:absolute;right:18px;bottom:26px;
+    width:34px;height:34px;border-radius:50%;
+    background:#8B1A1A;color:#FDE68A;border:1.5px solid #C9A24A;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    z-index:3;cursor:pointer;transition:transform .25s;
+  }
+  .featured-big-card .fbc-arrow:hover{transform:translateX(4px);background:#6E1414}
+  /* 精选景点：换图按钮（管理员模式） */
+  .fbc-replace-btn{
+    position:absolute;top:12px;right:12px;z-index:5;
+    display:none;padding:5px 10px;border-radius:8px;border:none;
+    background:#8B1A1A;color:#FDE68A;font-size:11px;cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+  }
+  /* 圆点指示器 */
+  .featured-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  .featured-dots .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#D5C4A8;transition:all .25s;cursor:pointer;
+    border:1px solid rgba(201,162,74,.3);
+  }
+  .featured-dots .dot.active{width:22px;border-radius:5px;background:#8B1A1A;border-color:#C9A24A}
+
+  /* ============================================================
+     ============ 乡村动态（新增列表） =========================
+     ============================================================ */
+  .news-section{
+    background:#FFFFFF;margin:20px 16px 0;border-radius:16px;
+    border:1.5px solid #E8D5B0;padding:20px;margin-top:24px;
+    box-shadow:0 4px 18px rgba(139,26,26,.06);
+  }
+  .news-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .news-title{
+    display:flex;align-items:center;gap:10px;
+    font-size:17px;font-weight:700;color:#8B1A1A;
+  }
+  .news-title::before{
+    content:"";width:4px;height:18px;background:#8B1A1A;border-radius:2px;
+  }
+  .news-more{
+    font-size:13px;color:#C9A24A;cursor:pointer;letter-spacing:1px;
+    text-decoration:none;border-bottom:1px dotted #C9A24A;
+  }
+  .news-item{
+    display:flex;gap:14px;padding:12px 0;border-bottom:1px dashed #E8D5B0;
+    position:relative;
+  }
+  /* 乡村动态：换图按钮（管理员模式） */
+  .news-replace-btn{
+    position:absolute;top:12px;right:0;z-index:2;
+    display:none;padding:4px 9px;border-radius:8px;border:none;
+    background:#8B1A1A;color:#FDE68A;font-size:11px;cursor:pointer;
+  }
+  body.admin-mode .news-replace-btn{display:inline-block}
+  .news-item:last-child{border-bottom:none}
+  .news-item .news-thumb{
+    width:82px;height:62px;border-radius:10px;object-fit:cover;flex-shrink:0;
+    background:#FFF5F0;border:1px solid #E8D5B0;
+  }
+  .news-item .news-badge{
+    position:absolute;left:-2px;top:12px;
+    width:22px;height:22px;border-radius:6px;
+    background:#8B1A1A;color:#FDE68A;font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid #C9A24A;z-index:2;
+  }
+  .news-item .news-body{flex:1;min-width:0}
+  .news-item .news-title-text{
+    font-size:15px;font-weight:600;color:#3C2F2F;margin-bottom:4px;
+    letter-spacing:1px;
+  }
+  .news-item .news-desc{
+    font-size:12.5px;color:#8B7355;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    margin-bottom:6px;
+  }
+  .news-item .news-date{font-size:12px;color:#B89878;letter-spacing:1px}
+  .news-empty{
+    text-align:center;padding:30px;color:#B89878;font-size:13px;letter-spacing:1px;
+  }
+
+  /* ============================================================
+     ============ 底部 Tab Bar（固定底部） =====================
+     ============================================================ */
+  .bottom-tab{
+    position:fixed;left:0;right:0;bottom:0;z-index:95;
+    background:#FFFFFF;border-top:2px solid #C9A24A;
+    display:flex;justify-content:space-around;align-items:stretch;
+    height:56px;padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -4px 18px rgba(139,26,26,.1);
+  }
+  .bottom-tab .bt-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;color:#8B7355;font-size:10px;letter-spacing:1px;
+    cursor:pointer;text-decoration:none;transition:color .2s;
+  }
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A}
+  .bottom-tab .bt-item.active .bt-icon{font-weight:700}
+
   /* ============ 响应式优化 ============ */
   @media(max-width:860px){
     .menu-toggle{display:block}
+    .top-nav nav{display:flex} /* 移动端允许 nav-menu 下拉显示 */
     .nav-menu{
       position:absolute;top:100%;left:0;right:0;
-      background:linear-gradient(180deg,#991b1b 0%,#7f1d1d 100%);
+      background:linear-gradient(180deg,#801616 0%,#6E1414 100%);
       flex-direction:column;padding:16px 24px;gap:4px;
       transform:translateY(-10px);opacity:0;pointer-events:none;
       transition:transform .3s,opacity .3s;
@@ -696,8 +1039,10 @@
     .card-info{padding:20px 18px}
     .card-info h2{font-size:20px}
     .card-info .info-content{font-size:14px;line-height:1.8}
-    .top-nav{padding:12px 14px}
-    .top-nav .logo{font-size:18px;letter-spacing:2px}
+    .top-nav{padding:10px 14px;gap:10px}
+    .top-nav .logo{font-size:13px;letter-spacing:0;padding:5px 8px;min-width:auto;min-height:auto}
+    .site-title{font-size:17px;letter-spacing:3px}
+    .site-subtitle{font-size:9px;letter-spacing:2px;margin-top:1px}
     .featured-item{flex:0 0 180px;height:120px}
     .section-title{font-size:20px;letter-spacing:4px}
     .featured-title{font-size:20px}
@@ -706,6 +1051,25 @@
     .back-top{right:14px;bottom:14px;width:42px;height:42px;font-size:18px}
     .replace-btn,.img-replace-btn{opacity:1 !important}
     .info-replace-btn{width:100%;text-align:center}
+    /* === 新设计移动端适配 === */
+    .top-nav .nav-icons{display:none} /* 手机端隐藏顶栏右图标，用底部Tab */
+    .hero-banner{aspect-ratio:16/10;max-height:320px;margin-top:10px;border-radius:0 0 12px 12px}
+    .hero-text-overlay{padding:20px 18px 22px}
+    .hero-title{font-size:22px;letter-spacing:3px}
+    .hero-subtitle{font-size:12px;letter-spacing:1.5px}
+    .hero-btn{padding:9px 18px;font-size:13px;letter-spacing:1.5px}
+    .hero-banner .corner-l{width:26px;height:26px}
+    .quick-entry{margin:-12px 12px 0;padding:16px 10px 14px}
+    .quick-entry-grid{grid-template-columns:repeat(4,1fr);gap:8px}
+    .quick-entry-icon{width:36px;height:36px;font-size:18px;border-radius:10px}
+    .quick-entry-label{font-size:11px}
+    .bottom-tab{height:52px}
+    .bottom-tab .bt-icon{font-size:18px}
+    .bottom-tab .bt-item{font-size:9px}
+    .news-thumb{width:68px;height:52px}
+    .news-badge{width:18px;height:18px;font-size:11px}
+    .news-item .news-title-text{font-size:14px}
+    .news-item .news-desc{font-size:12px}
   }
 
   @media(max-width:480px){
@@ -721,6 +1085,44 @@
     footer{font-size:12px;padding:18px 12px}
     .modal-header{padding:12px 16px}
     .modal-header h3{font-size:16px;letter-spacing:1px}
+    /* === 新模块超小屏适配（顶栏/Hero/快速入口/精选景点/乡村动态/Tab Bar） === */
+    .top-nav{padding:8px 10px;gap:8px}
+    .top-nav .logo{font-size:11px;padding:4px 6px}
+    .site-title{font-size:15px;letter-spacing:2px}
+    .site-subtitle{font-size:8px;letter-spacing:1.5px}
+    .hero-banner{max-height:260px;border-radius:0 0 10px 10px}
+    .hero-text-overlay{padding:16px 14px 18px}
+    .hero-location{font-size:11px;padding:3px 10px;margin-bottom:8px}
+    .hero-title{font-size:20px;letter-spacing:2px;margin-bottom:6px}
+    .hero-subtitle{font-size:11px;letter-spacing:1px;margin-bottom:12px}
+    .hero-btns{gap:10px}
+    .hero-btn{padding:8px 16px;font-size:12px;letter-spacing:1px}
+    .hero-banner .corner-l{width:20px;height:20px;border-width:1.5px}
+    .quick-entry{margin:-10px 10px 0;padding:14px 8px 12px;border-radius:14px}
+    .quick-entry-title{font-size:15px;margin-bottom:12px}
+    .quick-entry-grid{gap:6px}
+    .quick-entry-item{padding:12px 4px 10px;border-radius:10px}
+    .quick-entry-icon{width:32px;height:32px;font-size:16px;border-radius:9px}
+    .quick-entry-label{font-size:10.5px;letter-spacing:0}
+    .spotlight-section{margin:18px 10px 10px !important} /* 覆盖内联 margin */
+    .featured-big-card{border-radius:14px}
+    .featured-big-card .fbc-image{aspect-ratio:16/10}
+    .featured-big-card .fbc-tag{font-size:11px;padding:4px 10px;top:10px;left:10px}
+    .featured-big-card .fbc-overlay{padding:24px 14px 14px}
+    .featured-big-card .fbc-title{font-size:17px}
+    .featured-big-card .fbc-desc{font-size:12px}
+    .featured-big-card .fbc-pill{font-size:10px;padding:2px 8px}
+    .featured-big-card .fbc-arrow{width:30px;height:30px;font-size:14px;right:12px;bottom:18px}
+    .featured-dots{margin-top:10px}
+    .news-section{margin:16px 10px 0;padding:16px 12px;border-radius:14px}
+    .news-title{font-size:15px}
+    .news-item .news-thumb{width:64px;height:48px}
+    .news-item .news-title-text{font-size:13.5px}
+    .news-item .news-desc{font-size:12px}
+    .bottom-tab{height:50px}
+    .bottom-tab .bt-icon{font-size:17px}
+    .bottom-tab .bt-item{font-size:8.5px}
+    body{padding-bottom:62px}
   }
 </style>
 </head>
@@ -731,34 +1133,98 @@
 
 <!-- ============ 顶部导航 ============ -->
 <header class="top-nav">
+  <!-- 左：方块金边 Logo -->
   <div class="logo" data-textkey="logo">三下乡 <span>·</span> 文化云游</div>
+  <!-- 中间：站点大标题（参考原图「云游马踏 + MATAWN TOURISM」） -->
+  <div class="site-title-group">
+    <div class="site-title" data-textkey="logo_brand">云游三下乡</div>
+    <div class="site-subtitle" data-textkey="site_subtitle">✦  SXX  CULTURE  TOURISM  ✦</div>
+  </div>
+  <!-- 汉堡按钮（移动端才显示） -->
   <button class="menu-toggle" id="menuToggle" aria-label="菜单">☰</button>
+  <!-- 移动端才显示的下拉 nav-menu（桌面端隐藏，不再占用顶栏空间） -->
+  <span class="nav-row-spacer" id="navRowSpacer" aria-hidden="true"></span>
   <nav class="nav-menu" id="navMenu">
     <a href="#featured" onclick="closeNav()" data-textkey="nav1">特色图片</a>
-    <a href="#buildings" onclick="closeNav()" data-textkey="nav2">建筑简介</a>
-    <a href="#buildings" onclick="closeNav()" data-textkey="nav3">360°漫游</a>
-    <a href="#about" onclick="closeNav()" data-textkey="nav4">关于</a>
+    <a href="tour.html" onclick="closeNav()" data-textkey="nav2">建筑简介</a>
+    <a href="tour.html" onclick="closeNav()" data-textkey="nav3">360°漫游</a>
+    <a href="me.html" onclick="closeNav()" data-textkey="nav4">关于</a>
     <div class="admin-indicator" id="adminIndicator" onclick="openStorageModal()">
       <span class="dot"></span>
       <span data-textkey="admin_label">管理员</span>
     </div>
   </nav>
+  <!-- 右：扫码 + 铃铛 -->
+  <div class="nav-icons">
+    <button class="icon-btn" title="扫码" aria-label="扫码">⌖</button>
+    <button class="icon-btn" title="消息" aria-label="消息">🔔</button>
+  </div>
 </header>
 
 <!-- ============ 主体容器 ============ -->
 <main class="container">
 
-  <!-- ============ 特色封面区 ============ -->
-  <section class="cover-section" id="cover">
-    <div class="cover-box" id="coverBox">
-      <button class="delete-btn edit-only" onclick="removeCoverImage()">🗑️ 移除封面</button>
+  <!-- ============ Hero Banner（特色封面区升级） ============ -->
+  <section class="hero-banner cover-section" id="cover">
+    <div class="cover-box hero-img-wrapper" id="coverBox">
+      <button class="delete-btn edit-only hero-cover-replace" onclick="removeCoverImage()">🗑️ 移除封面</button>
       <div id="coverContent"></div>
-      <button class="replace-btn edit-only cover-replace-btn" onclick="replaceCover()">替换封面</button>
+      <button class="replace-btn edit-only hero-cover-replace-btn" onclick="replaceCover()">替换封面</button>
+    </div>
+    <!-- 四角金色 L 框装饰 -->
+    <div class="corner-l tl"></div><div class="corner-l tr"></div>
+    <div class="corner-l bl"></div><div class="corner-l br"></div>
+    <!-- 文字叠层 -->
+    <div class="hero-text-overlay">
+    <div class="hero-location" data-textkey="hero_location">📍 广东 · 茂名 · 马踏镇</div>
+    <div class="hero-title" data-textkey="hero_title">探寻三下乡</div>
+    <div class="hero-subtitle" data-textkey="hero_subtitle">感受千年岭南乡韵 · 传承红色革命精神</div>
+    <div class="hero-btns">
+      <a href="tour.html" class="hero-btn hero-btn-primary" onclick="if(event.target.isContentEditable){event.preventDefault();return}closeNav()"><span data-textkey="hero_btn1">开启云游 →</span></a>
+      <a href="products.html" class="hero-btn hero-btn-secondary" onclick="if(event.target.isContentEditable){event.preventDefault();return}closeNav()"><span data-textkey="hero_btn2">文创商城</span></a>
+    </div>
+  </div>
+  </section>
+
+  <!-- ============ 快速入口 ============ -->
+  <section class="quick-entry" aria-label="快速入口">
+    <div class="quick-entry-title" data-textkey="quick_title">快速入口</div>
+    <div class="quick-entry-grid">
+      <a href="tour.html" class="quick-entry-item"><div class="quick-entry-icon">📖</div><div class="quick-entry-label" data-textkey="quick_label1">云游导览</div></a>
+      <a href="red.html" class="quick-entry-item"><div class="quick-entry-icon">🚩</div><div class="quick-entry-label" data-textkey="quick_label2">红色足迹</div></a>
+      <a href="products.html" class="quick-entry-item"><div class="quick-entry-icon">🍎</div><div class="quick-entry-label" data-textkey="quick_label3">农特产品</div></a>
+      <a href="custom.html" class="quick-entry-item"><div class="quick-entry-icon">🎋</div><div class="quick-entry-label" data-textkey="quick_label4">乡土风物</div></a>
     </div>
   </section>
 
-  <!-- ============ 特色图片滚动区 ============ -->
-  <section class="featured-section" id="featured">
+  <!-- ============ 精选景点（大图卡轮播） ============ -->
+  <section id="spotlight" class="spotlight-section" style="margin:24px 16px 12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="quick-entry-title" style="margin:0" data-textkey="spotlight_heading">精选景点</div>
+      <div id="spotlightPage" style="font-size:13px;color:#8B1A1A;font-weight:600;letter-spacing:1px">1 / 6</div>
+    </div>
+    <div class="featured-big-card" id="spotlightCard">
+      <div class="fbc-tag">特色文化</div>
+      <img class="fbc-image" id="spotlightImage" alt="精选景点" src="" onerror="this.src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=马踏镇革命遗址古建筑&image_size=landscape_16_9'">
+      <div class="fbc-overlay">
+        <div class="fbc-title-row">
+          <span class="fbc-loc-icon">📍</span>
+          <span class="fbc-title" id="spotlightTitle">马踏革命遗址</span>
+        </div>
+        <div class="fbc-desc" id="spotlightDesc">见证革命历史的红色教育基地，保存有大量珍贵革命文物和史料，是开展爱国主义教育的重要场所。</div>
+        <div class="fbc-tags" id="spotlightTags">
+          <span class="fbc-pill">红色教育</span>
+          <span class="fbc-pill">历史遗址</span>
+          <span class="fbc-pill">免费参观</span>
+        </div>
+      </div>
+      <div class="fbc-arrow" title="下一个">›</div>
+    </div>
+    <div class="featured-dots" id="spotlightDots"></div>
+  </section>
+
+  <!-- ============ 特色图片滚动区（默认隐藏，保留功能） ============ -->
+  <section class="featured-section section-hideable" id="featured">
     <div class="featured-title" data-textkey="featured_title">三下乡 · 特色风貌</div>
     <div class="featured-scroll-wrapper" id="featuredWrapper">
       <div class="featured-scroll" id="featuredScroll">
@@ -815,8 +1281,8 @@
     </div>
   </section>
 
-  <!-- ============ 建筑模块区 ============ -->
-  <section class="buildings-section" id="buildings">
+  <!-- ============ 建筑模块区（默认隐藏，「云游」Tab 激活显示） ============ -->
+  <section class="buildings-section section-hideable" id="buildings">
     <div class="section-title" data-textkey="buildings_title">名 胜 古 迹 <span>·</span> 建 筑 巡 礼</div>
 
     <!-- 添加建筑按钮 -->
@@ -831,9 +1297,9 @@
   </section>
 
   <!-- ============ 关于区域 ============ -->
-  <section id="about" style="padding:0 20px 40px;text-align:center">
+  <section id="about" class="section-hideable" style="padding:0 20px 40px;text-align:center">
     <div style="max-width:720px;margin:0 auto;background:#fff;padding:28px 32px;border-radius:12px;border:2px solid #f0e0d0">
-      <h3 style="color:#b91c1c;font-size:22px;margin-bottom:14px;letter-spacing:3px" data-textkey="about_title">关 于 三 下 乡</h3>
+      <h3 style="color:#8B1A1A;font-size:22px;margin-bottom:14px;letter-spacing:3px" data-textkey="about_title">关 于 三 下 乡</h3>
       <p style="color:#5a3a3a;font-size:15px;line-height:2" data-textkey="about_desc">
         "三下乡"即文化、科技、卫生"三下乡"，是促进农村文化建设、推动城乡协调发展的重要社会实践活动。
         本网站汇集了三下乡地区的特色风貌与名胜古迹，通过图文介绍与 360° 全景漫游，
@@ -849,7 +1315,7 @@
         <!-- 底纹预设 -->
         <h4>🖼️ 页面底纹样式（全局）</h4>
         <div class="bg-preset-grid" id="bgPresetGrid">
-          <div class="bg-preset-item" onclick="applyBgPreset(0)" style="background-color:#fdf6f0;background-image:radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)"><span>雅致格纹</span></div>
+          <div class="bg-preset-item" onclick="applyBgPreset(0)" style="background-color:#FFF5F0;background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(139,26,26,.02) 40px, rgba(139,26,26,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139,26,26,.02) 40px, rgba(139,26,26,.02) 41px)"><span>雅致格纹</span></div>
           <div class="bg-preset-item" onclick="applyBgPreset(1)" style="background:linear-gradient(135deg,#fff5eb 0%,#fde68a 100%)"><span>暖阳米黄</span></div>
           <div class="bg-preset-item" onclick="applyBgPreset(2)" style="background-color:#f0fdf4;background-image:radial-gradient(ellipse at top, #dcfce7, transparent 50%),radial-gradient(ellipse at bottom, #bbf7d0, transparent 50%)"><span>清新竹绿</span></div>
           <div class="bg-preset-item" onclick="applyBgPreset(3)" style="background-color:#eff6ff;background-image:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%),radial-gradient(circle at 50% 0%, rgba(59,130,246,.1) 0%, transparent 60%)"><span>海天蔚蓝</span></div>
@@ -862,13 +1328,13 @@
           <label>自定义配色</label>
           <div class="row">
             <span>背景色：</span>
-            <input type="color" id="customBgColor" value="#fdf6f0" oninput="previewCustomBg()">
-            <span style="font-size:12px;color:#999;margin-left:4px" id="customBgColorVal">#fdf6f0</span>
+            <input type="color" id="customBgColor" value="#FFF5F0" oninput="previewCustomBg()">
+            <span style="font-size:12px;color:#999;margin-left:4px" id="customBgColorVal">#FFF5F0</span>
           </div>
           <div class="row">
             <span>主题色：</span>
-            <input type="color" id="customThemeColor" value="#b91c1c" oninput="previewCustomBg()">
-            <span style="font-size:12px;color:#999;margin-left:4px" id="customThemeColorVal">#b91c1c</span>
+            <input type="color" id="customThemeColor" value="#8B1A1A" oninput="previewCustomBg()">
+            <span style="font-size:12px;color:#999;margin-left:4px" id="customThemeColorVal">#8B1A1A</span>
           </div>
           <div class="row">
             <span>背景色 RGB：</span>
@@ -969,15 +1435,30 @@
             </div>
             <div class="row">
               <span>颜色：</span>
-              <input type="color" id="ftColor" value="#b91c1c" oninput="setTitleStyle('featured_title','color',this.value)">
+              <input type="color" id="ftColor" value="#8B1A1A" oninput="setTitleStyle('featured_title','color',this.value)">
               <button class="storage-btn secondary" style="font-size:11px;padding:6px 10px;width:auto;margin:0 0 0 auto" onclick="resetTitleStyle('featured_title')">↺ 重置此标题</button>
             </div>
           </div>
-          <div class="drag-hint">✨ 移动标题：<b>直接按住标题拖动</b>即可自由调整位置（电脑端用鼠标拖 / 手机端用手指拖，拖动时页面不会滚动），松开自动保存；<b>单击</b>标题仍是修改文字。误移了位置？点上方对应「↺ 重置此标题」即可恢复。</div>
+          <div id="navStyleRow" style="margin-top:14px">
+            <b style="font-size:13px;color:#333">③ 导航栏目（特色图片 / 建筑简介 / 360°漫游 / 关于）</b>
+            <div style="font-size:12px;color:#888;margin-top:6px">电脑端可直接<b>按住整组导航拖动</b>位置；拖动时导航内的链接不会误触跳转。与其他标题重叠时会<b>自动换行让位</b>。</div>
+            <button class="storage-btn secondary" style="font-size:11px;padding:6px 10px;width:auto;margin-top:8px" onclick="resetNavMenuPos()">↺ 重置导航位置</button>
+          </div>
+          <div class="drag-hint">✨ 移动标题：<b>直接按住标题拖动</b>即可自由调整位置（电脑端用鼠标拖 / 手机端用手指拖，拖动时页面不会滚动），松开自动保存；<b>单击</b>标题仍是修改文字。每个标题相互独立，拖动其中一个其他不会动；重叠时导航会自动换行让位。误移了位置？点上方对应「↺ 重置」即可恢复。</div>
         </div>
 
       </div>
     </details>
+  </section>
+
+  <!-- ============ 乡村动态 ============ -->
+  <section class="news-section" aria-label="乡村动态">
+    <div class="news-header">
+      <div class="news-title" data-textkey="news_heading">乡村动态</div>
+      <a class="news-more" href="#about" data-textkey="news_more" onclick="if(event.target.isContentEditable){event.preventDefault();return}">更多 ›</a>
+    </div>
+    <div id="newsList"><!-- 由 renderNews() 动态渲染（管理员可编辑/增删/换图） --></div>
+    <button class="edit-only news-add-btn" onclick="addNews()">➕ 添加动态</button>
   </section>
 
 </main>
@@ -1031,12 +1512,12 @@
     <div class="storage-info" id="storageInfo">
       在这里您可以导出或导入您的数据，<br>
       防止浏览器缓存清理导致数据丢失。<br>
-      <span style="color:#b91c1c;font-weight:600">底纹 / 配色 / 标题样式设置已移至页面底部「关于」栏目。</span>
+      <span style="color:#8B1A1A;font-weight:600">底纹 / 配色 / 标题样式设置已移至页面底部「关于」栏目。</span>
     </div>
 
     <!-- GitHub 多设备同步 -->
     <div style="border-top:1px solid #e0d0c0;padding-top:16px;margin-top:16px">
-      <h4 style="color:#b91c1c;font-size:14px;margin-bottom:10px">☁️ GitHub 多设备同步</h4>
+      <h4 style="color:#8B1A1A;font-size:14px;margin-bottom:10px">☁️ GitHub 多设备同步</h4>
       <div id="githubConfigForm" style="display:none">
         <div style="margin-bottom:8px">
           <label style="font-size:12px;color:#666">GitHub Token（需有 repo 权限）</label>
@@ -1246,6 +1727,9 @@ function updateEditable(){
   // 封面占位框随管理员状态显隐；标题拖动提示更新
   renderCover();
   bindTitleDrag();
+  // 乡村动态 / 精选景点：重渲染以同步管理员编辑态
+  if(typeof renderNews === 'function') renderNews();
+  if(window._renderSpotlight) window._renderSpotlight();
 }
 
 /* ============ 移动端导航 ============ */
@@ -1283,9 +1767,9 @@ document.addEventListener('keydown', (e)=>{
 /* ============ 底纹预设 ============ */
 const BG_PRESETS = [
   { // 0 雅致格纹（默认）
-    bgColor:'#fdf6f0',
-    bgImage: 'radial-gradient(circle at 20% 20%, rgba(185,28,28,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(185,28,28,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(185,28,28,.02) 40px, rgba(185,28,28,.02) 41px)',
-    themeColor: '#b91c1c'
+    bgColor:'#FFF5F0',
+    bgImage: 'radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%),repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(139,26,26,.02) 40px, rgba(139,26,26,.02) 41px),repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139,26,26,.02) 40px, rgba(139,26,26,.02) 41px)',
+    themeColor: '#8B1A1A'
   },
   { // 1 暖阳米黄
     bgColor:'#fff5eb',
@@ -1326,14 +1810,20 @@ const dataStore = {
   buildingIds: ['1','2','3','4','5','6'],
   // 新增：特色图片ID列表
   featuredIds: ['1','2','3','4','5','6','7','8'],
+  // 新增：精选景点文案（null=用默认 DEFAULT_SPOTS）+ 独立景点图片
+  spots: null,
+  spotImages: {},
+  // 新增：乡村动态列表（null=用默认 DEFAULT_NEWS）+ 动态缩略图
+  newsList: null,
+  newsImages: {},
   // 新增：当前页码
   currentPage: 1,
   // 新增：页面底纹配置
   bgConfig: {
     type: 'preset', // preset 或 custom
     presetIndex: 0,
-    customColor: '#fdf6f0',
-    customThemeColor: '#b91c1c',
+    customColor: '#FFF5F0',
+    customThemeColor: '#8B1A1A',
     // 背景图片配置（图片数据存 IndexedDB 'bg_image'，此处存开关与排版参数）
     bgImage: false,
     bgImageMode: 'cover',       // cover | contain | fill | repeat
@@ -1351,6 +1841,8 @@ const dataStore = {
 // 默认文字值（初始化用）
 const DEFAULT_TEXT_DATA = {
   logo: '三下乡 · 文化云游',
+  logo_brand: '云游三下乡',
+  site_subtitle: '✦  SXX  CULTURE  TOURISM  ✦',
   nav1: '特色图片',
   nav2: '建筑简介',
   nav3: '360°漫游',
@@ -1360,8 +1852,46 @@ const DEFAULT_TEXT_DATA = {
   buildings_title: '名 胜 古 迹 · 建 筑 巡 礼',
   about_title: '关 于 三 下 乡',
   about_desc: '"三下乡"即文化、科技、卫生"三下乡"，是促进农村文化建设、推动城乡协调发展的重要社会实践活动。本网站汇集了三下乡地区的特色风貌与名胜古迹，通过图文介绍与 360° 全景漫游，让更多人领略乡村文化的独特魅力。',
-  footer: '© 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承'
+  footer: '© 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承',
+  /* === Hero Banner === */
+  hero_location: '📍 广东 · 茂名 · 马踏镇',
+  hero_title: '探寻三下乡',
+  hero_subtitle: '感受千年岭南乡韵 · 传承红色革命精神',
+  hero_btn1: '开启云游 →',
+  hero_btn2: '文创商城',
+  /* === 快速入口 === */
+  quick_title: '快速入口',
+  quick_label1: '云游导览',
+  quick_label2: '红色足迹',
+  quick_label3: '农特产品',
+  quick_label4: '乡土风物',
+  /* === 精选景点 / 乡村动态 === */
+  spotlight_heading: '精选景点',
+  news_heading: '乡村动态',
+  news_more: '更多 ›',
+  /* === 底部 Tab Bar === */
+  tab_home: '首页',
+  tab_tour: '云游',
+  tab_shop: '商城',
+  tab_me: '我的'
 };
+
+/* 乡村动态默认数据 */
+const DEFAULT_NEWS = [
+  { title:'三下乡活动走进马踏镇', desc:'大学生志愿者团队深入马踏镇开展文化、科技、卫生下乡服务活动。', date:'📅 2026-08-18' },
+  { title:'乡村文化振兴调研启动', desc:'团队对马踏镇红色文化资源进行系统性整理与数字化建档工作。', date:'📅 2026-07-25' },
+  { title:'农特产品电商培训开营', desc:'针对本地农户开展直播带货、短视频运营等电商技能培训，助力乡村产业振兴。', date:'📅 2026-07-08' }
+];
+
+/* 精选景点默认数据（与轮播 IIFE 内保持一致，编辑后存入 dataStore.spots） */
+const DEFAULT_SPOTS = [
+  { tag:'特色文化', title:'马踏革命遗址', desc:'见证革命历史的红色教育基地，保存有大量珍贵革命文物和史料，是开展爱国主义教育的重要场所。', tags:['红色教育','历史遗址','免费参观'] },
+  { tag:'自然风光', title:'龙湾森林公园', desc:'集自然风光、森林探险、休闲度假于一体的综合性公园，空气清新、四季如画。', tags:['自然生态','户外探险','亲子游'] },
+  { tag:'民俗文化', title:'岭南古村落', desc:'保存完好的明清古建筑群，展现了岭南乡村的独特风貌和深厚文化底蕴。', tags:['古建筑','民俗体验','摄影圣地'] },
+  { tag:'农业观光', title:'特色农产品基地', desc:'集种植、采摘、加工、销售于一体的现代化农业示范基地。', tags:['农业体验','土特产','休闲观光'] },
+  { tag:'红色教育', title:'革命烈士纪念馆', desc:'纪念为革命事业牺牲的烈士们，是重要的爱国主义教育阵地。', tags:['红色教育','历史纪念','免费参观'] },
+  { tag:'文化遗迹', title:'古井老街', desc:'历经百年沧桑的古老街道，青石板路、老店铺、传统手工艺，再现往昔繁华。', tags:['古街古巷','传统工艺','美食小吃'] }
+];
 
 async function saveImage(key, dataUrl) {
   try {
@@ -1387,6 +1917,18 @@ async function loadAllImages() {
       const url = await getImageFromDB(`building_${id}`);
       if(url) dataStore.buildingImages[id] = url;
     }
+    // 加载乡村动态缩略图
+    const newsKeys = Object.keys(dataStore.newsImages || {});
+    for(let id of newsKeys) {
+      const url = await getImageFromDB(`news_${id}`);
+      if(url) dataStore.newsImages[id] = url;
+    }
+    // 加载精选景点图片
+    const spotKeys = Object.keys(dataStore.spotImages || {});
+    for(let id of spotKeys) {
+      const url = await getImageFromDB(`spot_${id}`);
+      if(url) dataStore.spotImages[id] = url;
+    }
   } catch(e) {
     console.error('加载图片失败:', e);
   }
@@ -1407,7 +1949,11 @@ async function saveMetadata() {
       bgConfig: dataStore.bgConfig,
       textData: dataStore.textData || {},
       textStyles: dataStore.textStyles || {},
-      coverImage: dataStore.coverImage === true
+      coverImage: dataStore.coverImage === true,
+      spots: dataStore.spots || null,
+      spotKeys: Object.keys(dataStore.spotImages || {}),
+      newsList: dataStore.newsList || null,
+      newsKeys: Object.keys(dataStore.newsImages || {})
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -1433,6 +1979,15 @@ async function loadMetadata() {
         metaData.buildingKeys.forEach(key => {
           dataStore.buildingImages[key] = true; // 占位
         });
+      }
+      // 精选景点 / 乡村动态（新板块数据）
+      if(metaData.spots) dataStore.spots = metaData.spots;
+      if(metaData.spotKeys){
+        metaData.spotKeys.forEach(key => { dataStore.spotImages[key] = true; });
+      }
+      if(metaData.newsList) dataStore.newsList = metaData.newsList;
+      if(metaData.newsKeys){
+        metaData.newsKeys.forEach(key => { dataStore.newsImages[key] = true; });
       }
       // 新增恢复字段
       if(metaData.buildingIds && metaData.buildingIds.length) dataStore.buildingIds = metaData.buildingIds;
@@ -1765,7 +2320,7 @@ function resetBgToDefault() {
   if (!confirm('确定要恢复到默认底纹样式吗？（背景图片保留，可用"移除背景图片"删除）')) return;
   dataStore.bgConfig = {
     type: 'preset', presetIndex: 0,
-    customColor: '#fdf6f0', customThemeColor: '#b91c1c',
+    customColor: '#FFF5F0', customThemeColor: '#8B1A1A',
     bgImage: dataStore.bgConfig.bgImage || false,
     bgImageMode: dataStore.bgConfig.bgImageMode || 'cover',
     bgImagePos: dataStore.bgConfig.bgImagePos || 'center center',
@@ -2037,20 +2592,14 @@ function applySwatchColor(hex){
   previewCustomBg();
 }
 
-/* ============ 特色封面功能（仅管理员可上传） ============ */
+/* ============ Hero Banner 封面（永远显示，无图时用默认占位图） ============ */
+const HERO_DEFAULT_IMG = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=岭南乡村古建筑群青瓦白墙木檐飞檐&image_size=landscape_16_9';
 function renderCover(){
   const section = document.getElementById('cover');
   const content = document.getElementById('coverContent');
   if(!section || !content) return;
-  if(window._coverImageDataUrl){
-    section.style.display = '';
-    content.innerHTML = `<img src="${window._coverImageDataUrl}" alt="特色封面">`;
-  } else if(isAdmin){
-    section.style.display = '';
-    content.innerHTML = `<div class="cover-placeholder">特色封面<span class="cover-hint">点击右下角"替换封面"上传图片（永久保存）</span></div>`;
-  } else {
-    section.style.display = 'none';
-  }
+  const imgSrc = window._coverImageDataUrl || HERO_DEFAULT_IMG;
+  content.innerHTML = `<img src="${imgSrc}" class="hero-img" alt="特色封面" onerror="this.src='${HERO_DEFAULT_IMG}'">`;
 }
 
 function replaceCover(){
@@ -2087,17 +2636,25 @@ const FONT_OPTIONS = [
   { v: 'Georgia,serif', label: 'Georgia' },
   { v: '"Comic Sans MS",cursive', label: 'Comic Sans' }
 ];
-// 两个可拖动/可设置样式的标题定义
+// 可拖动对象定义（selector 定位元素；styleable=false 表示仅可拖动，无字体/颜色面板）
 const TITLE_STYLE_DEFS = {
-  logo: { label: '顶部大标题', defSize: 22, minSize: 12, maxSize: 36, defColor: '#ffffff' },
-  featured_title: { label: '特色风貌标题', defSize: 24, minSize: 16, maxSize: 52, defColor: '#b91c1c' }
+  logo: { label: '顶部大标题', defSize: 22, minSize: 12, maxSize: 36, defColor: '#ffffff', selector: '[data-textkey="logo"]' },
+  featured_title: { label: '特色风貌标题', defSize: 24, minSize: 16, maxSize: 52, defColor: '#8B1A1A', selector: '[data-textkey="featured_title"]' },
+  nav_menu: { label: '导航栏目', selector: '#navMenu', styleable: false }
 };
+// 移动端断点（与CSS媒体查询一致）：窄屏下导航是汉堡下拉菜单，不可拖动/定位
+function isMobileNav(){ return window.innerWidth <= 860; }
 
-// 应用单个标题样式到 DOM
+// 应用单个标题样式到 DOM（各元素相互独立，拖动一个不影响其他）
 function applyTextStyle(key){
-  const el = document.querySelector(`[data-textkey="${key}"]`);
+  const def = TITLE_STYLE_DEFS[key] || {};
+  const el = document.querySelector(def.selector || `[data-textkey="${key}"]`);
   if(!el) return;
+  const header = document.querySelector('.top-nav');
   const st = dataStore.textStyles && dataStore.textStyles[key];
+  // nav_menu 在移动端是汉堡下拉菜单，不应用自定义位置
+  let applyPos = !!(st && st.x != null && st.y != null);
+  if(key === 'nav_menu' && isMobileNav()) applyPos = false;
   if(!st){
     el.style.fontFamily = '';
     el.style.color = '';
@@ -2105,21 +2662,74 @@ function applyTextStyle(key){
     el.style.position = '';
     el.style.left = '';
     el.style.top = '';
-    return;
+    el.style.margin = '';
+    el.style.zIndex = '';
+  } else {
+    if(st.fontFamily) el.style.fontFamily = st.fontFamily;
+    if(st.color) el.style.color = st.color;
+    if(st.fontSize) el.style.fontSize = st.fontSize + 'px';
+    if(applyPos){
+      el.style.position = 'absolute';
+      el.style.left = st.x + 'px';
+      el.style.top = st.y + 'px';
+      el.style.margin = '0';
+      el.style.zIndex = '5';
+    } else {
+      el.style.position = '';
+      el.style.left = '';
+      el.style.top = '';
+      el.style.margin = '';
+      el.style.zIndex = '';
+    }
   }
-  if(st.fontFamily) el.style.fontFamily = st.fontFamily;
-  if(st.color) el.style.color = st.color;
-  if(st.fontSize) el.style.fontSize = st.fontSize + 'px';
-  if(st.x != null && st.y != null){
-    el.style.position = 'absolute';
-    el.style.left = st.x + 'px';
-    el.style.top = st.y + 'px';
-    el.style.margin = '0';
-    el.style.zIndex = '5';
+  // 同步 header 布局状态：logo 被拖走后导航保持靠右
+  if(key === 'logo' && header){
+    header.classList.toggle('logo-free', !!(st && st.x != null && st.y != null));
+  }
+  if(key === 'nav_menu' && header){
+    header.classList.toggle('nav-free', applyPos);
   }
 }
 function applyAllTextStyles(){
   Object.keys(TITLE_STYLE_DEFS).forEach(applyTextStyle);
+  resolveHeaderOverlap();
+}
+
+// 重叠检测：logo 与导航重叠时，导航自动换行让位到第二行
+function resolveHeaderOverlap(){
+  const header = document.querySelector('.top-nav');
+  const logo = document.querySelector('[data-textkey="logo"]');
+  const nav = document.getElementById('navMenu');
+  if(!header || !logo || !nav || isMobileNav()) return;
+  const lr = logo.getBoundingClientRect();
+  const nr = nav.getBoundingClientRect();
+  const overlap = !(lr.right <= nr.left || nr.right <= lr.left || lr.bottom <= nr.top || nr.bottom <= lr.top);
+  if(overlap && !header.classList.contains('nav-row-2')){
+    // 导航让位：取消其自定义位置，通过换行占位符掉到第二行
+    if(dataStore.textStyles.nav_menu){
+      delete dataStore.textStyles.nav_menu.x;
+      delete dataStore.textStyles.nav_menu.y;
+    }
+    nav.style.position = '';
+    nav.style.left = '';
+    nav.style.top = '';
+    nav.style.margin = '';
+    header.classList.remove('nav-free');
+    header.classList.add('nav-row-2');
+    saveMetadata();
+  } else if(!overlap){
+    header.classList.remove('nav-row-2');
+  }
+}
+
+// 重置导航位置
+function resetNavMenuPos(){
+  if(!isAdmin) return;
+  delete dataStore.textStyles.nav_menu;
+  applyTextStyle('nav_menu');
+  saveMetadata();
+  resolveHeaderOverlap();
+  autoSyncMetaToGithub();
 }
 
 // 修改标题样式（字体 / 字号 / 颜色），实时应用并永久保存
@@ -2148,6 +2758,7 @@ function resetTitleStyle(key){
 // 回填样式面板控件状态
 function updateTitleStyleUI(){
   Object.keys(TITLE_STYLE_DEFS).forEach(key => {
+    if(TITLE_STYLE_DEFS[key].styleable === false) return; // 导航栏目无字体/颜色面板
     const st = (dataStore.textStyles && dataStore.textStyles[key]) || {};
     const prefix = key === 'logo' ? 'logo' : 'ft';
     const fontSel = document.getElementById(prefix + 'Font');
@@ -2170,18 +2781,35 @@ function updateTitleStyleUI(){
   });
 }
 
-// 直接按住标题即可拖动（管理员，电脑鼠标 + 手机触摸通用），超过阈值才算拖动，点击仍是编辑文字
+// 直接按住即可拖动（管理员，电脑鼠标 + 手机触摸通用），超过阈值才算拖动，点击仍是编辑文字
 function bindTitleDrag(){
   Object.keys(TITLE_STYLE_DEFS).forEach(key => {
-    const el = document.querySelector(`[data-textkey="${key}"]`);
+    const def = TITLE_STYLE_DEFS[key] || {};
+    const el = document.querySelector(def.selector || `[data-textkey="${key}"]`);
     if(!el) return;
-    el.title = isAdmin ? '按住拖动可移动位置；点击可修改文字' : '';
+    // 导航栏目在移动端是汉堡下拉菜单，不绑定拖动
+    if(key === 'nav_menu' && isMobileNav()){
+      el.style.cursor = '';
+      return;
+    }
+    el.title = isAdmin ? (key === 'nav_menu' ? '按住拖动可移动导航位置' : '按住拖动可移动位置；点击可修改文字') : '';
     el.style.cursor = isAdmin ? 'move' : '';
 
     let dragging = false, moved = false;
     let startXY = null, offX = 0, offY = 0, parentRect = null, rect = null;
     let prevStyle = null;
     let lastTouchEnd = 0; // 防止触摸结束后合成鼠标事件误触发
+
+    // 拖动过导航时拦截下一次链接点击，避免误跳转
+    if(key === 'nav_menu'){
+      el.addEventListener('click', (e) => {
+        if(el.dataset._suppress === '1'){
+          e.preventDefault();
+          e.stopPropagation();
+          el.dataset._suppress = '';
+        }
+      }, true);
+    }
 
     const beginDrag = (clientX, clientY) => {
       dragging = true; moved = false;
@@ -2204,6 +2832,7 @@ function bindTitleDrag(){
         // 位移超过 10px 才算真正的拖动，点击/轻碰不受影响
         if(Math.abs(clientX - startXY.x) < 10 && Math.abs(clientY - startXY.y) < 10) return;
         moved = true;
+        el.dataset._suppress = '1';
       }
       // 拖动时清除文字选区，避免选中文字
       try { window.getSelection().removeAllRanges(); } catch(e){}
@@ -2220,18 +2849,37 @@ function bindTitleDrag(){
       el.dataset._dy = Math.round(y);
     };
 
-    const endDrag = (isTouch) => {
+    const endDrag = (isTouch, endEvent) => {
       if(!dragging) return;
       dragging = false;
       el.classList.remove('dragging');
       if(isTouch) lastTouchEnd = Date.now();
       if(!moved){
-        // 位移过小视为点击（编辑文字），完全还原样式
+        // 位移过小视为点击（编辑文字）：还原样式并手动放置光标
         el.style.position = prevStyle.position;
         el.style.left = prevStyle.left;
         el.style.top = prevStyle.top;
         el.style.margin = prevStyle.margin;
         el.style.zIndex = prevStyle.zIndex;
+        if(key !== 'nav_menu'){
+          el.focus();
+          if(!isTouch && endEvent){
+            try {
+              let range = null;
+              if(document.caretRangeFromPoint){
+                range = document.caretRangeFromPoint(endEvent.clientX, endEvent.clientY);
+              } else if(document.caretPositionFromPoint){
+                const p = document.caretPositionFromPoint(endEvent.clientX, endEvent.clientY);
+                if(p){ range = document.createRange(); range.setStart(p.offsetNode, p.offset); }
+              }
+              if(range && el.contains(range.startContainer)){
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            } catch(e){}
+          }
+        }
         return;
       }
       if(el.dataset._dx !== undefined){
@@ -2241,29 +2889,36 @@ function bindTitleDrag(){
         delete el.dataset._dx;
         delete el.dataset._dy;
         saveMetadata();
+        applyTextStyle(key);
         updateTitleStyleUI();
+        resolveHeaderOverlap(); // 重叠时自动让位/换行
         autoSyncMetaToGithub();
         if(isTouch) el.blur(); // 手机端收起软键盘
-        alert('✅ 标题位置已保存！恢复原位：「关于 → 页面样式设置 → 标题样式设置 → 重置此标题」');
+        if(key !== 'nav_menu'){
+          alert('✅ 标题位置已保存！恢复原位：「关于 → 页面样式设置 → 标题样式设置 → 重置此标题」');
+        }
       }
     };
 
-    // ===== 电脑端：鼠标拖动 =====
+    // ===== 电脑端：鼠标直接按住拖动 =====
     el.onmousedown = (e) => {
       if(!isAdmin) return;
       if(Date.now() - lastTouchEnd < 600) return; // 忽略触摸后合成的鼠标事件
+      e.preventDefault(); // 阻止浏览器进入文字选择/原生拖放，保证拖动标题生效
       beginDrag(e.clientX, e.clientY);
       const onMove = (ev) => doMove(ev.clientX, ev.clientY);
-      const onUp = () => {
+      const onUp = (ev) => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        endDrag(false);
+        endDrag(false, ev);
       };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     };
+    // 阻止文字被原生拖放
+    el.ondragstart = (e) => { if(isAdmin) e.preventDefault(); };
 
-    // ===== 手机端：触摸拖动 =====
+    // ===== 手机端：触摸直接按住拖动 =====
     el.ontouchstart = (e) => {
       if(!isAdmin) return;
       if(e.touches.length !== 1) return; // 多指不处理
@@ -2272,14 +2927,24 @@ function bindTitleDrag(){
     };
     el.ontouchmove = (e) => {
       if(!dragging) return;
-      e.preventDefault(); // 拖动标题时阻止页面滚动
+      e.preventDefault(); // 拖动标题时阻止页面滚动和文字选择放大镜
       const t = e.touches[0];
       doMove(t.clientX, t.clientY);
     };
-    el.ontouchend = () => endDrag(true);
-    el.ontouchcancel = () => endDrag(true);
+    el.ontouchend = () => endDrag(true, null);
+    el.ontouchcancel = () => endDrag(true, null);
   });
 }
+
+// 窗口尺寸变化时重新适配导航（跨过860px断点时切换拖动/下拉模式）
+let _rzTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_rzTimer);
+  _rzTimer = setTimeout(() => {
+    applyTextStyle('nav_menu');
+    resolveHeaderOverlap();
+  }, 200);
+});
 
 // 展开"关于"里的样式面板时刷新控件状态
 function onStylePanelToggle(d){
@@ -2822,7 +3487,11 @@ async function syncFromGithub(){
     if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
     // v4 新增字段
     if(metaData.textData) dataStore.textData = metaData.textData;
-    
+    // v5 新增字段：精选景点 / 乡村动态
+    if(metaData.spots) dataStore.spots = metaData.spots;
+    if(metaData.newsList) dataStore.newsList = metaData.newsList;
+    if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
+
     // 下载特色图片
     for(let id of metaData.featuredKeys || []){
       const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
@@ -2840,6 +3509,24 @@ async function syncFromGithub(){
         const dataUrl = base64ToDataUrl(base64);
         await saveImage(`building_${id}`, dataUrl);
         dataStore.buildingImages[id] = dataUrl;
+      }
+    }
+
+    // 下载乡村动态缩略图 / 精选景点图
+    for(let id of metaData.newsKeys || []){
+      const base64 = await downloadFromGithub(`images/news_${id}.jpg`);
+      if(base64){
+        const dataUrl = base64ToDataUrl(base64);
+        await saveImage(`news_${id}`, dataUrl);
+        dataStore.newsImages[id] = dataUrl;
+      }
+    }
+    for(let id of metaData.spotKeys || []){
+      const base64 = await downloadFromGithub(`images/spot_${id}.jpg`);
+      if(base64){
+        const dataUrl = base64ToDataUrl(base64);
+        await saveImage(`spot_${id}`, dataUrl);
+        dataStore.spotImages[id] = dataUrl;
       }
     }
 
@@ -2951,7 +3638,10 @@ function autoSyncToGithub(type, id, dataUrl){
   syncTimeout = setTimeout(async () => {
     try {
       const base64 = dataUrlToBase64(dataUrl);
-      const path = type === 'featured' ? `images/featured_${id}.jpg` : `images/building_${id}.jpg`;
+      const path = type === 'featured' ? `images/featured_${id}.jpg`
+                 : type === 'news' ? `images/news_${id}.jpg`
+                 : type === 'spot' ? `images/spot_${id}.jpg`
+                 : `images/building_${id}.jpg`;
       await uploadToGithub(path, base64);
       // 同时更新元数据
       await saveMetadataToGithub();
@@ -3260,12 +3950,123 @@ function applyImageUrl(url, target){
     saveMetadata();
     autoSyncMetaToGithub();
     alert('✅ 特色封面已更新并永久保存！');
+  } else if(target.type === 'news'){
+    // 乡村动态缩略图
+    dataStore.newsImages[target.id] = url;
+    saveImage(`news_${target.id}`, url);
+    renderNews();
+    autoSyncToGithub('news', target.id, url);
+  } else if(target.type === 'spotlight'){
+    // 精选景点封面图
+    dataStore.spotImages[target.id] = url;
+    saveImage(`spot_${target.id}`, url);
+    if(window._renderSpotlight) window._renderSpotlight();
+    autoSyncToGithub('spot', target.id, url);
   }
   // 保存图片 key 列表到元数据，以便刷新后恢复
   saveMetadata();
   document.getElementById('filePicker').value = '';
   dataStore.currentTarget = null;
 }
+
+/* ============ 乡村动态（管理员可编辑 / 可增删 / 可换图，永久保存） ============ */
+function getNewsList(){
+  if(!Array.isArray(dataStore.newsList) || !dataStore.newsList.length){
+    dataStore.newsList = JSON.parse(JSON.stringify(DEFAULT_NEWS));
+  }
+  return dataStore.newsList;
+}
+
+function renderNews(){
+  const wrap = document.getElementById('newsList');
+  if(!wrap) return;
+  const list = getNewsList();
+  wrap.innerHTML = list.map((n, i) => {
+    const thumbUrl = dataStore.newsImages[i] ||
+      `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(n.title)}&image_size=portrait_4_3`;
+    const ce = isAdmin ? ' contenteditable="true" spellcheck="false"' : '';
+    return `
+    <div class="news-item" data-news-idx="${i}">
+      <button class="delete-btn edit-only" onclick="deleteNews(${i})">🗑️ 删除</button>
+      <button class="news-replace-btn edit-only" onclick="replaceNewsImage(${i})">🖼️ 换图</button>
+      <div class="news-badge">${i + 1}</div>
+      <img class="news-thumb" alt="动态图" src="${thumbUrl}" onerror="this.style.visibility='hidden'">
+      <div class="news-body">
+        <div class="news-title-text"${ce} data-field="title">${n.title}</div>
+        <div class="news-desc"${ce} data-field="desc">${n.desc}</div>
+        <div class="news-date"${ce} data-field="date">${n.date}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addNews(){
+  getNewsList().push({ title:'新动态标题', desc:'在此填写动态描述内容……', date:'📅 ' + new Date().toISOString().slice(0,10) });
+  renderNews();
+  saveMetadata();
+  autoSyncMetaToGithub();
+}
+
+function deleteNews(i){
+  if(!confirm('确定删除这条动态吗？')) return;
+  const list = getNewsList();
+  list.splice(i, 1);
+  // 缩略图 key 顺移
+  const imgs = {};
+  Object.keys(dataStore.newsImages).forEach(k => {
+    const idx = parseInt(k);
+    if(idx < i) imgs[idx] = dataStore.newsImages[k];
+    else if(idx > i) imgs[idx - 1] = dataStore.newsImages[k];
+  });
+  dataStore.newsImages = imgs;
+  renderNews();
+  saveMetadata();
+  autoSyncMetaToGithub();
+}
+
+function replaceNewsImage(i){
+  dataStore.currentTarget = { type:'news', id:i };
+  document.getElementById('filePicker').click();
+}
+
+// 动态文字编辑：事件委托（列表会重渲染，避免重复绑定）
+// focusout：失焦立即保存
+document.getElementById('newsList').addEventListener('focusout', (e) => {
+  if(!isAdmin) return;
+  const field = e.target.dataset && e.target.dataset.field;
+  if(!field) return;
+  const item = e.target.closest('.news-item');
+  if(!item) return;
+  const idx = parseInt(item.dataset.newsIdx);
+  const val = e.target.textContent.trim();
+  const list = getNewsList();
+  if(list[idx] && list[idx][field] !== undefined && list[idx][field] !== val){
+    list[idx][field] = val;
+    saveMetadata();
+    autoSyncMetaToGithub();
+  }
+});
+
+// input：真实键入防抖保存（双保险，不依赖失焦）
+let _newsInputTimer = null;
+document.getElementById('newsList').addEventListener('input', (e) => {
+  if(!isAdmin) return;
+  const field = e.target.dataset && e.target.dataset.field;
+  if(!field) return;
+  const item = e.target.closest('.news-item');
+  if(!item) return;
+  const idx = parseInt(item.dataset.newsIdx);
+  const val = e.target.textContent.trim();
+  clearTimeout(_newsInputTimer);
+  _newsInputTimer = setTimeout(() => {
+    const list = getNewsList();
+    if(list[idx] && list[idx][field] !== undefined && list[idx][field] !== val){
+      list[idx][field] = val;
+      saveMetadata();
+      autoSyncMetaToGithub();
+    }
+  }, 600);
+});
 
 /* ============ 360° 全景 ============ */
 function open360(id){
@@ -3380,6 +4181,9 @@ async function initApp(){
   if(window.syncCloneFeatured){
     window.syncCloneFeatured();
   }
+
+  // 初始化精选景点大卡片轮播（数据恢复完成后）
+  if(typeof initSpotlight === 'function') initSpotlight();
 
   console.log('页面初始化完成');
 }
@@ -3504,6 +4308,193 @@ document.addEventListener('keydown',(e)=>{
     document.getElementById('storageModal').classList.remove('active');
   }
 });
+</script>
+
+<!-- ============ 底部 Tab Bar（固定底部，移动端和PC端都显示） ============ -->
+<!-- 桌面端管理员浮动入口（仅管理员模式显示） -->
+<button class="admin-fab" onclick="openStorageModal()">⚙️ 存储管理</button>
+
+<nav class="bottom-tab" id="bottomTab" aria-label="底部导航">
+  <a href="index.html" class="bt-item active" data-tab="home">
+    <span class="bt-icon">🏠</span><span data-textkey="tab_home">首页</span>
+  </a>
+  <a href="tour.html" class="bt-item" data-tab="tour">
+    <span class="bt-icon">📖</span><span data-textkey="tab_tour">云游</span>
+  </a>
+  <a href="products.html" class="bt-item" data-tab="shop">
+    <span class="bt-icon">🛍️</span><span data-textkey="tab_shop">商城</span>
+  </a>
+  <a href="me.html" class="bt-item" data-tab="me">
+    <span class="bt-icon">👤</span><span data-textkey="tab_me">我的</span>
+  </a>
+</nav>
+
+<!-- Tab Bar：真实页面跳转（管理员编辑标签文字时不跳转） -->
+<script>
+(function(){
+  const tabs = document.querySelectorAll('.bottom-tab .bt-item');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      // 管理员正在编辑 Tab 文字时不跳转
+      if(e.target.isContentEditable){
+        e.preventDefault();
+      }
+    });
+  });
+})();
+</script>
+
+<script>
+// ============ 精选景点大卡片轮播（管理员可编辑文案/换图，永久保存） ============
+(function(){
+  let currentIdx = 0;
+  let totalSpots = 6;
+  let isEditingSpot = false; // 编辑中暂停自动轮播
+
+  function getSpots(){
+    if(!Array.isArray(dataStore.spots) || !dataStore.spots.length){
+      dataStore.spots = JSON.parse(JSON.stringify(DEFAULT_SPOTS));
+    }
+    return dataStore.spots;
+  }
+
+  /* 管理员：绑定/解绑当前卡片的 contenteditable */
+  function bindSpotEditable(){
+    const spots = getSpots();
+    const idx = currentIdx % spots.length;
+    const spot = spots[idx];
+    const fields = [
+      ['tag',   document.querySelector('.fbc-tag')],
+      ['title', document.getElementById('spotlightTitle')],
+      ['desc',  document.getElementById('spotlightDesc')]
+    ];
+    fields.forEach(([key, el]) => {
+      if(!el) return;
+      if(isAdmin){
+        el.setAttribute('contenteditable', 'true');
+        el.setAttribute('spellcheck', 'false');
+        el.onfocus = () => { isEditingSpot = true; };
+        el.onblur = () => {
+          isEditingSpot = false;
+          const val = el.textContent.trim();
+          if(spot[key] !== undefined && spot[key] !== val){
+            spot[key] = val;
+            saveMetadata();
+            autoSyncMetaToGithub();
+          }
+        };
+      } else {
+        el.removeAttribute('contenteditable');
+        el.onfocus = null; el.onblur = null;
+      }
+    });
+    const tagsEl = document.getElementById('spotlightTags');
+    if(tagsEl){
+      tagsEl.querySelectorAll('.fbc-pill').forEach((pill, i) => {
+        if(isAdmin){
+          pill.setAttribute('contenteditable', 'true');
+          pill.setAttribute('spellcheck', 'false');
+          pill.onfocus = () => { isEditingSpot = true; };
+          pill.onblur = () => {
+            isEditingSpot = false;
+            const val = pill.textContent.trim();
+            if(spot.tags && spot.tags[i] !== undefined && spot.tags[i] !== val){
+              spot.tags[i] = val;
+              saveMetadata();
+              autoSyncMetaToGithub();
+            }
+          };
+        } else {
+          pill.removeAttribute('contenteditable');
+          pill.onfocus = null; pill.onblur = null;
+        }
+      });
+    }
+  }
+
+  function renderSpotlight(idx){
+    if(typeof dataStore === 'undefined') return;
+    const spots = getSpots();
+    totalSpots = Math.min(Math.max(3, spots.length), 8);
+    idx = ((idx % totalSpots) + totalSpots) % totalSpots;
+    currentIdx = idx;
+
+    const image = document.getElementById('spotlightImage');
+    const title = document.getElementById('spotlightTitle');
+    const desc = document.getElementById('spotlightDesc');
+    const tag = document.querySelector('.fbc-tag');
+    const tagsEl = document.getElementById('spotlightTags');
+    const dots = document.querySelectorAll('.featured-dots .dot');
+    const pageNum = document.getElementById('spotlightPage');
+    const spot = spots[idx % spots.length];
+
+    if(image){
+      // 图片优先级：独立景点图 > 特色图片对应图 > onerror 占位
+      const spotImg = dataStore.spotImages && dataStore.spotImages[idx];
+      const fid = (dataStore.featuredIds && dataStore.featuredIds[idx]) || null;
+      const storedImg = spotImg || (fid ? dataStore.featuredImages[fid] : null);
+      if(storedImg) image.src = storedImg;
+      else image.src = '';
+    }
+    if(title) title.textContent = spot.title;
+    if(desc) desc.textContent = spot.desc;
+    if(tag) tag.textContent = spot.tag;
+    if(tagsEl) tagsEl.innerHTML = (spot.tags || []).map(t => `<span class="fbc-pill">${t}</span>`).join('');
+
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    if(pageNum) pageNum.textContent = `${idx + 1} / ${totalSpots}`;
+    bindSpotEditable();
+  }
+
+  function initSpotlight(){
+    const dotsContainer = document.getElementById('spotlightDots');
+    const pageNum = document.getElementById('spotlightPage');
+    const arrow = document.querySelector('.fbc-arrow');
+    if(!dotsContainer) return;
+
+    const spots = getSpots();
+    totalSpots = Math.min(Math.max(3, spots.length), 8);
+
+    let dotsHTML = '';
+    for(let i = 0; i < totalSpots; i++){
+      dotsHTML += `<div class="dot ${i === 0 ? 'active' : ''}" data-spot="${i}"></div>`;
+    }
+    dotsContainer.innerHTML = dotsHTML;
+    if(pageNum) pageNum.textContent = `1 / ${totalSpots}`;
+
+    dotsContainer.querySelectorAll('.dot').forEach(d => {
+      d.addEventListener('click', () => renderSpotlight(parseInt(d.dataset.spot)));
+    });
+
+    if(arrow){
+      arrow.addEventListener('click', () => renderSpotlight(currentIdx + 1));
+    }
+
+    // 管理员换图按钮（挂在卡片右上角）
+    let replaceBtn = document.querySelector('.fbc-replace-btn');
+    if(!replaceBtn){
+      replaceBtn = document.createElement('button');
+      replaceBtn.className = 'fbc-replace-btn edit-only';
+      replaceBtn.textContent = '🖼️ 换图';
+      replaceBtn.onclick = () => {
+        dataStore.currentTarget = { type:'spotlight', id: currentIdx % getSpots().length };
+        document.getElementById('filePicker').click();
+      };
+      const card = document.getElementById('spotlightCard');
+      if(card) card.appendChild(replaceBtn);
+    }
+
+    renderSpotlight(0);
+    // 4 秒自动切换（编辑文字时暂停）
+    setInterval(() => {
+      if(document.hidden || isEditingSpot) return;
+      renderSpotlight(currentIdx + 1);
+    }, 4000);
+  }
+
+  window.initSpotlight = initSpotlight;
+  window._renderSpotlight = () => renderSpotlight(currentIdx);
+})();
 </script>
 
 </body>

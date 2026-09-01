@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>乡土风物 · 民俗与四季 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;padding-bottom:64px;
+  }
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  .page-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#5a7247 0%,#6e8a54 55%,#5a7247 100%);
+    color:#fff;text-align:center;padding:44px 18px 52px;
+  }
+  .page-banner::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;background:#F5E6D3;border-radius:22px 22px 0 0}
+  .page-banner .pb-icon{font-size:40px;margin-bottom:8px}
+  .page-banner h1{font-size:28px;letter-spacing:6px;margin-bottom:10px;color:#FDF3D8}
+  .page-banner p{font-size:13.5px;letter-spacing:2px;opacity:.92}
+
+  .page-main{max-width:1080px;margin:0 auto;padding:20px 16px 50px}
+  .page-title{text-align:center;font-size:22px;font-weight:700;color:#8B1A1A;letter-spacing:3px;margin:10px 0 6px;display:flex;align-items:center;justify-content:center;gap:14px}
+  .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
+  .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:24px}
+
+  /* 风物卡片 */
+  .custom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+  .c-card{
+    background:#fff;border-radius:14px;overflow:hidden;border:1px solid #f0dcc4;
+    box-shadow:0 3px 12px rgba(90,60,30,.08);transition:transform .3s,box-shadow .3s;position:relative;
+  }
+  .c-card:hover{transform:translateY(-5px);box-shadow:0 10px 26px rgba(90,60,30,.18)}
+  .c-card .cc-head{
+    background:linear-gradient(135deg,#6e8a54,#8aa66b);color:#fff;
+    padding:14px 18px;display:flex;align-items:center;gap:10px;
+  }
+  .c-card .cc-icon{font-size:24px}
+  .c-card .cc-title{font-size:16.5px;font-weight:700;letter-spacing:2px;outline:none;flex:1}
+  .c-card .cc-body{padding:16px 18px}
+  .c-card .cc-desc{font-size:13.5px;color:#5a4a3a;line-height:1.9;outline:none;white-space:pre-wrap}
+  .c-card .edit-only{position:absolute;top:10px;right:10px;display:none;gap:6px;z-index:5}
+  body.admin-mode .edit-only{display:flex}
+  .mini-btn{background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;transition:.2s}
+  .mini-btn:hover{background:#6E1414}
+  .mini-btn.danger{background:#a33}
+  .add-wrap{text-align:center;margin-top:26px}
+  .add-btn{background:#fff;color:#8B1A1A;border:2px dashed #C9A24A;border-radius:24px;padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:none}
+  body.admin-mode .add-btn{display:inline-block}
+  .add-btn:hover{background:#F5E6D3}
+
+  /* 四季风物诗 */
+  .season-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:8px}
+  .season-card{
+    background:#fff;border-radius:14px;border:1px solid #f0dcc4;text-align:center;
+    padding:18px 12px;box-shadow:0 3px 12px rgba(90,60,30,.08);position:relative;
+  }
+  .season-card .se-icon{font-size:30px;margin-bottom:6px}
+  .season-card .se-name{font-size:15px;font-weight:700;color:#5a7247;letter-spacing:2px;margin-bottom:6px;outline:none}
+  .season-card .se-desc{font-size:11.5px;color:#8a7a66;line-height:1.7;outline:none}
+
+  .admin-tip{display:none;position:fixed;top:56px;right:14px;z-index:160;background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.2);letter-spacing:1px}
+  body.admin-mode .admin-tip{display:block}
+
+  .bottom-tab{position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;background:#fff;border-top:2px solid #C9A24A;display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1)}
+  .bottom-tab .bt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#9a8f85;font-size:10.5px;letter-spacing:1px}
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  @media(max-width:640px){
+    .page-banner h1{font-size:22px;letter-spacing:4px}
+    .custom-grid{grid-template-columns:1fr;gap:14px}
+    .page-main{padding:14px 12px 40px}
+  }
+</style>
+</head>
+<body data-page="custom">
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式：点击文字可编辑，修改自动保存</div>
+
+<section class="page-banner">
+  <div class="pb-icon">🎋</div>
+  <h1>乡 土 风 物</h1>
+  <p>民俗风情 · 四季物语 · 烟火人间</p>
+</section>
+
+<main class="page-main">
+  <div class="page-title">民 俗 风 情</div>
+  <div class="page-subtitle">一方水土养一方人，一方风物藏一方情</div>
+
+  <div class="custom-grid" id="customGrid"><!-- JS 渲染 --></div>
+
+  <div class="add-wrap">
+    <button class="add-btn" onclick="addCustom()">＋ 添加风物志</button>
+  </div>
+
+  <div class="page-title" style="margin-top:38px">四 季 风 物 诗</div>
+  <div class="page-subtitle">春耕 · 夏耘 · 秋收 · 冬藏</div>
+  <div class="season-band" id="seasonBand">
+    <div class="season-card"><div class="se-icon">🌸</div><div class="se-name" contenteditable="false">春 · 耕</div><div class="se-desc" contenteditable="false">烟雨润田畴，秧歌起阡陌</div></div>
+    <div class="season-card"><div class="se-icon">☀️</div><div class="se-name" contenteditable="false">夏 · 耘</div><div class="se-desc" contenteditable="false">荷风送香气，竹露滴清响</div></div>
+    <div class="season-card"><div class="se-icon">🍂</div><div class="se-name" contenteditable="false">秋 · 收</div><div class="se-desc" contenteditable="false">稻浪翻金穗，晒场满谷香</div></div>
+    <div class="season-card"><div class="se-icon">❄️</div><div class="se-name" contenteditable="false">冬 · 藏</div><div class="se-desc" contenteditable="false">围炉话丰年，腊味挂檐前</div></div>
+  </div>
+</main>
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ 乡土风物数据 ============ */
+const DEFAULT_CUSTOMS = [
+  { id:'c1', icon:'🎊', title:'年例大巡游', desc:'粤西独有的年例民俗，游神、飘色、醒狮、花龙船齐上阵，家家设宴待客，"年例大过年"的热闹延续千年。' },
+  { id:'c2', icon:'🦁', title:'醒狮采青', desc:'逢年过节或新铺开张，锣鼓声中醒狮腾跃采青，祈愿风调雨顺、生意兴隆，是乡土节庆的灵魂表演。' },
+  { id:'c3', icon:'🧵', title:'竹编手艺', desc:'老篾匠指尖翻飞，篾条化作箩筐、箕筛与灯彩。一件件竹编器物，盛着山乡生活的质朴与智慧。' },
+  { id:'c4', icon:'🍵', title:'擂茶待客', desc:'茶叶、芝麻、花生入钵擂碎，沸水冲泡，一碗擂茶敬远客，浓香里满是乡音乡情。' },
+  { id:'c5', icon:'🏮', title:'庙会社戏', desc:'社日搭台演大戏，粤韵悠扬，台上台下皆是乡愁。老人们说，有戏听的村子就有生气。' },
+  { id:'c6', icon:'🌾', title:'晒秋人家', desc:'秋收时节，屋檐下、晒场上挂满晾晒的稻谷、腊肉与菜干，五彩斑斓，是乡村最治愈的丰收画卷。' }
+];
+let customs = [];
+
+async function loadCustoms(){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  customs = Array.isArray(meta.customs) && meta.customs.length
+    ? JSON.parse(JSON.stringify(meta.customs))
+    : JSON.parse(JSON.stringify(DEFAULT_CUSTOMS));
+}
+
+function renderGrid(){
+  const grid = document.getElementById('customGrid');
+  grid.innerHTML = customs.map(c => `
+    <div class="c-card" data-cid="${c.id}">
+      <div class="edit-only">
+        <button class="mini-btn danger" onclick="deleteCustom('${c.id}')" title="删除">🗑️</button>
+      </div>
+      <div class="cc-head">
+        <span class="cc-icon" data-field="icon" data-cid="${c.id}">${c.icon}</span>
+        <span class="cc-title" data-field="title" data-cid="${c.id}">${c.title}</span>
+      </div>
+      <div class="cc-body">
+        <div class="cc-desc" data-field="desc" data-cid="${c.id}">${c.desc}</div>
+      </div>
+    </div>
+  `).join('');
+  bindEditable();
+}
+
+function persist(){
+  return saveAllMeta(m => { m.customs = customs; });
+}
+
+function bindEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('#customGrid [data-field]').forEach(el => {
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    el.onblur = async () => {
+      const cid = el.dataset.cid, field = el.dataset.field;
+      const item = customs.find(x => x.id === cid);
+      const val = el.textContent.trim();
+      if(!item || item[field] === val) return;
+      item[field] = val;
+      await persist();
+      if(field === 'title') el.textContent = val; // 保持单行
+    };
+  });
+}
+
+async function addCustom(){
+  const id = 'c' + Date.now();
+  customs.push({ id, icon:'🌾', title:'新风物', desc:'在此填写这方风物的故事……' });
+  await persist();
+  renderGrid();
+}
+async function deleteCustom(id){
+  if(!confirm('确定删除该风物志吗？')) return;
+  customs = customs.filter(c => c.id !== id);
+  await persist();
+  renderGrid();
+}
+
+/* 四季诗卡编辑 */
+function bindSeasonEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('#seasonBand .se-name,#seasonBand .se-desc').forEach(el => {
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    el.onblur = async () => {
+      await saveAllMeta(m => {
+        m.seasonPoems = [...document.querySelectorAll('#seasonBand .season-card')].map(card => ({
+          name: card.querySelector('.se-name').textContent.trim(),
+          desc: card.querySelector('.se-desc').textContent.trim()
+        }));
+      });
+    };
+  });
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  try{
+    await openDB();
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    if(Array.isArray(meta.seasonPoems) && meta.seasonPoems.length === 4){
+      const cards = document.querySelectorAll('#seasonBand .season-card');
+      meta.seasonPoems.forEach((sp, i) => {
+        if(cards[i]){
+          cards[i].querySelector('.se-name').textContent = sp.name;
+          cards[i].querySelector('.se-desc').textContent = sp.desc;
+        }
+      });
+    }
+    await loadCustoms();
+    renderGrid();
+    bindSeasonEditable();
+  }catch(e){
+    document.getElementById('customGrid').innerHTML =
+      '<div style="text-align:center;color:#a0764f;padding:40px 0">数据加载失败，请刷新重试</div>';
+  }
+})();
+</script>
+</body>
+</html>

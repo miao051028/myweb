@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的 · 个人中心 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;padding-bottom:64px;
+  }
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  .page-main{max-width:760px;margin:0 auto;padding:22px 16px 50px}
+
+  /* 用户卡片 */
+  .user-card{
+    background:linear-gradient(135deg,#8B1A1A,#a63426);color:#fff;border-radius:18px;
+    padding:26px 24px;display:flex;align-items:center;gap:18px;
+    box-shadow:0 8px 24px rgba(139,26,26,.3);margin-bottom:22px;position:relative;overflow:hidden;
+  }
+  .user-card::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+  .avatar{
+    width:64px;height:64px;border-radius:50%;background:#FDE68A;color:#8B1A1A;
+    display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;
+    border:3px solid rgba(255,255,255,.5);
+  }
+  .user-info .u-name{font-size:19px;font-weight:700;letter-spacing:2px;margin-bottom:5px}
+  .user-info .u-desc{font-size:12.5px;opacity:.85;letter-spacing:1px}
+  .admin-badge{
+    margin-left:auto;background:#FDE68A;color:#8B1A1A;font-size:12px;font-weight:700;
+    padding:5px 14px;border-radius:16px;letter-spacing:1px;display:none;
+  }
+  body.admin-mode .admin-badge{display:block}
+
+  /* 数据统计 */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .stat-card{
+    background:#fff;border-radius:14px;border:1px solid #f0dcc4;text-align:center;
+    padding:16px 8px;box-shadow:0 3px 12px rgba(139,26,26,.08);
+  }
+  .stat-card .st-num{font-size:24px;font-weight:700;color:#8B1A1A}
+  .stat-card .st-label{font-size:11.5px;color:#a0764f;margin-top:4px;letter-spacing:1px}
+
+  /* 功能列表 */
+  .func-list{background:#fff;border-radius:16px;border:1px solid #f0dcc4;overflow:hidden;box-shadow:0 3px 12px rgba(139,26,26,.08);margin-bottom:22px}
+  .func-item{
+    display:flex;align-items:center;gap:14px;padding:16px 20px;
+    border-bottom:1px solid #f6ead8;cursor:pointer;transition:background .2s;
+    text-decoration:none;color:#4a2c2c;
+  }
+  .func-item:last-child{border-bottom:none}
+  .func-item:hover{background:#FFF9F0}
+  .func-item .fi-icon{width:40px;height:40px;border-radius:12px;background:#F5E6D3;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .func-item .fi-body{flex:1}
+  .func-item .fi-title{font-size:15px;font-weight:700;color:#5a3a3a;letter-spacing:1px}
+  .func-item .fi-sub{font-size:12px;color:#a08a76;margin-top:3px}
+  .func-item .fi-arrow{color:#d4b896;font-size:16px}
+  .admin-only{display:none}
+  body.admin-mode .admin-only{display:flex}
+  body.admin-mode .guest-only{display:none}
+
+  /* 反馈表单 */
+  .fb-card{background:#fff;border-radius:16px;border:1px solid #f0dcc4;padding:20px 22px;box-shadow:0 3px 12px rgba(139,26,26,.08);margin-bottom:22px}
+  .fb-card h3{color:#8B1A1A;font-size:16px;letter-spacing:2px;margin-bottom:14px}
+  .fb-card input,.fb-card textarea{
+    width:100%;border:1.5px solid #e8d3b0;border-radius:10px;padding:11px 14px;
+    font-size:13.5px;font-family:inherit;color:#4a2c2c;margin-bottom:12px;outline:none;
+    background:#FFFBF5;transition:border .2s;
+  }
+  .fb-card input:focus,.fb-card textarea:focus{border-color:#C9A24A}
+  .fb-card textarea{height:90px;resize:vertical}
+  .fb-submit{
+    background:#8B1A1A;color:#FDE68A;border:none;border-radius:20px;
+    padding:10px 30px;font-size:14px;letter-spacing:2px;cursor:pointer;display:block;margin:0 auto;transition:.2s;
+  }
+  .fb-submit:hover{background:#6E1414;transform:scale(1.03)}
+
+  /* 反馈列表（管理员） */
+  .fb-list{margin-top:16px}
+  .fb-item{background:#FFFBF5;border:1px solid #f0e0cc;border-radius:12px;padding:12px 16px;margin-bottom:10px;position:relative}
+  .fb-item .fb-name{font-size:13px;font-weight:700;color:#8B1A1A;margin-bottom:4px}
+  .fb-item .fb-text{font-size:13px;color:#5a4a3a;line-height:1.7}
+  .fb-item .fb-del{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:14px}
+
+  /* 管理员登录弹窗 */
+  .modal{position:fixed;inset:0;background:rgba(40,10,10,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.active{display:flex}
+  .modal-box{background:#fff;border-radius:16px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+  .modal-header{background:#8B1A1A;color:#FDE68A;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+  .modal-header h3{font-size:16px;letter-spacing:2px}
+  .modal-header button{background:none;border:none;color:#fff;font-size:17px;cursor:pointer}
+  .modal-body{padding:22px 24px 26px}
+  .modal-body input{
+    width:100%;border:1.5px solid #e8d3b0;border-radius:10px;padding:11px 14px;
+    font-size:14px;outline:none;margin-bottom:8px;background:#FFFBF5;
+  }
+  .modal-body input:focus{border-color:#C9A24A}
+  .login-err{color:#c0392b;font-size:12.5px;margin-bottom:8px;display:none}
+  .login-err.show{display:block}
+  .login-btn{
+    width:100%;background:#8B1A1A;color:#FDE68A;border:none;border-radius:10px;
+    padding:11px 0;font-size:15px;letter-spacing:3px;cursor:pointer;margin-top:6px;
+  }
+  .login-btn:hover{background:#6E1414}
+
+  .admin-tip{display:none;position:fixed;top:56px;right:14px;z-index:160;background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.2);letter-spacing:1px}
+  body.admin-mode .admin-tip{display:block}
+
+  .bottom-tab{position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;background:#fff;border-top:2px solid #C9A24A;display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1)}
+  .bottom-tab .bt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#9a8f85;font-size:10.5px;letter-spacing:1px}
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  @media(max-width:640px){
+    .stat-grid{grid-template-columns:repeat(2,1fr)}
+    .page-main{padding:16px 12px 40px}
+  }
+</style>
+</head>
+<body data-page="me">
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式已开启</div>
+
+<main class="page-main">
+  <!-- 用户卡片 -->
+  <div class="user-card">
+    <div class="avatar">👤</div>
+    <div class="user-info">
+      <div class="u-name">游客 · 欢迎回来</div>
+      <div class="u-desc">三下乡 · 文化云游 | 红色文化 · 乡土情怀</div>
+    </div>
+    <div class="admin-badge">🛡️ 管理员</div>
+  </div>
+
+  <!-- 数据统计 -->
+  <div class="stat-grid">
+    <div class="stat-card"><div class="st-num" id="stBuildings">-</div><div class="st-label">云游建筑</div></div>
+    <div class="stat-card"><div class="st-num" id="stRed">-</div><div class="st-label">红色足迹</div></div>
+    <div class="stat-card"><div class="st-num" id="stProducts">-</div><div class="st-label">农特产品</div></div>
+    <div class="stat-card"><div class="st-num" id="stCustoms">-</div><div class="st-label">乡土风物</div></div>
+  </div>
+
+  <!-- 功能列表 -->
+  <div class="func-list">
+    <a class="func-item guest-only" href="javascript:void(0)" onclick="openLogin()">
+      <div class="fi-icon">🔐</div>
+      <div class="fi-body"><div class="fi-title">管理员登录</div><div class="fi-sub">登录后可编辑全站内容并永久保存</div></div>
+      <div class="fi-arrow">›</div>
+    </a>
+    <a class="func-item admin-only" href="javascript:void(0)" onclick="logoutAdmin()">
+      <div class="fi-icon">🚪</div>
+      <div class="fi-body"><div class="fi-title">退出管理员模式</div><div class="fi-sub">退出后所有页面恢复访客只读状态</div></div>
+      <div class="fi-arrow">›</div>
+    </a>
+    <a class="func-item" href="index.html">
+      <div class="fi-icon">🏠</div>
+      <div class="fi-body"><div class="fi-title">返回首页</div><div class="fi-sub">云游三下乡 · 精选景点与乡村动态</div></div>
+      <div class="fi-arrow">›</div>
+    </a>
+    <a class="func-item admin-only" href="index.html">
+      <div class="fi-icon">🗄️</div>
+      <div class="fi-body"><div class="fi-title">数据管理</div><div class="fi-sub">在首页底部的「存储管理」中导入 / 导出全站数据</div></div>
+      <div class="fi-arrow">›</div>
+    </a>
+    <a class="func-item" href="javascript:void(0)" onclick="clearCart()">
+      <div class="fi-icon">🛒</div>
+      <div class="fi-body"><div class="fi-title">清空购物车</div><div class="fi-sub" id="cartInfo">商城选购暂存</div></div>
+      <div class="fi-arrow">›</div>
+    </a>
+  </div>
+
+  <!-- 反馈建议 -->
+  <div class="fb-card">
+    <h3>💬 留言反馈</h3>
+    <input type="text" id="fbName" placeholder="您的称呼（选填）" maxlength="20">
+    <textarea id="fbText" placeholder="写下您对网站的建议或想对三下乡团队说的话……" maxlength="200"></textarea>
+    <button class="fb-submit" onclick="submitFeedback()">提交留言</button>
+    <div class="fb-list admin-only" id="fbList" style="display:none"></div>
+  </div>
+</main>
+
+<!-- 管理员登录弹窗 -->
+<div class="modal" id="loginModal" onclick="if(event.target===this)closeLogin()">
+  <div class="modal-box">
+    <div class="modal-header"><h3>🔐 管理员登录</h3><button onclick="closeLogin()">✕</button></div>
+    <div class="modal-body">
+      <input type="password" id="adminPwd" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="loginErr">❌ 密码错误，请重试</div>
+      <button class="login-btn" onclick="doLogin()">登 录</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item active" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const ADMIN_PASSWORD = 'admin123';
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/* ============ 管理员登录 ============ */
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+function openLogin(){
+  document.getElementById('loginModal').classList.add('active');
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('adminPwd').value = '';
+  setTimeout(() => document.getElementById('adminPwd').focus(), 100);
+}
+function closeLogin(){ document.getElementById('loginModal').classList.remove('active'); }
+function doLogin(){
+  const pwd = document.getElementById('adminPwd').value;
+  if(pwd === ADMIN_PASSWORD){
+    isAdmin = true;
+    localStorage.setItem('sxx_admin_auth', '1');
+    document.body.classList.add('admin-mode');
+    closeLogin();
+    alert('✅ 管理员登录成功！所有页面均可编辑内容');
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+  }
+}
+function logoutAdmin(){
+  if(!confirm('确定退出管理员模式吗？')) return;
+  isAdmin = false;
+  localStorage.removeItem('sxx_admin_auth');
+  document.body.classList.remove('admin-mode');
+}
+
+/* ============ 购物车管理 ============ */
+function getCart(){ try{ return JSON.parse(localStorage.getItem('sxx_cart') || '[]'); }catch(e){ return []; } }
+function updateCartInfo(){
+  const n = getCart().reduce((s, c) => s + c.qty, 0);
+  document.getElementById('cartInfo').textContent = n ? `购物车有 ${n} 件商品` : '商城选购暂存';
+}
+function clearCart(){
+  const n = getCart().reduce((s, c) => s + c.qty, 0);
+  if(!n){ alert('购物车已经是空的啦～'); return; }
+  if(!confirm(`确定清空购物车中的 ${n} 件商品吗？`)) return;
+  localStorage.removeItem('sxx_cart');
+  updateCartInfo();
+  alert('已清空购物车');
+}
+
+/* ============ 留言反馈（localStorage 持久，管理员可查看/删除） ============ */
+function getFeedbacks(){ try{ return JSON.parse(localStorage.getItem('sxx_feedback') || '[]'); }catch(e){ return []; } }
+function submitFeedback(){
+  const name = document.getElementById('fbName').value.trim() || '匿名游客';
+  const text = document.getElementById('fbText').value.trim();
+  if(!text){ alert('请先填写留言内容～'); return; }
+  const list = getFeedbacks();
+  list.unshift({ name, text, time: new Date().toLocaleString('zh-CN') });
+  localStorage.setItem('sxx_feedback', JSON.stringify(list));
+  document.getElementById('fbText').value = '';
+  alert('💌 留言提交成功！感谢您的支持');
+  renderFeedbacks();
+}
+function renderFeedbacks(){
+  if(!isAdmin) return;
+  const list = getFeedbacks();
+  const box = document.getElementById('fbList');
+  box.style.display = 'block';
+  box.innerHTML = '<h3 style="color:#8B1A1A;font-size:14px;letter-spacing:2px;margin-bottom:10px">📥 收到的留言（仅管理员可见）</h3>' +
+    (list.length ? list.map((f, i) => `
+      <div class="fb-item">
+        <div class="fb-name">${f.name} · ${f.time}</div>
+        <div class="fb-text">${f.text}</div>
+        <button class="fb-del" onclick="delFeedback(${i})" title="删除">🗑️</button>
+      </div>
+    `).join('') : '<div style="color:#b89878;font-size:13px;text-align:center;padding:10px 0">暂无留言</div>');
+}
+function delFeedback(i){
+  if(!confirm('确定删除这条留言吗？')) return;
+  const list = getFeedbacks();
+  list.splice(i, 1);
+  localStorage.setItem('sxx_feedback', JSON.stringify(list));
+  renderFeedbacks();
+}
+
+/* ============ 数据统计 ============ */
+async function loadStats(){
+  try{
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    const buildings = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds.length : 6;
+    const red = (Array.isArray(meta.redSpots) && meta.redSpots.length) ? meta.redSpots.length : 4;
+    const products = (Array.isArray(meta.products) && meta.products.length) ? meta.products.length : 6;
+    const customs = (Array.isArray(meta.customs) && meta.customs.length) ? meta.customs.length : 6;
+    animateNum('stBuildings', buildings);
+    animateNum('stRed', red);
+    animateNum('stProducts', products);
+    animateNum('stCustoms', customs);
+  }catch(e){
+    ['stBuildings','stRed','stProducts','stCustoms'].forEach(id => document.getElementById(id).textContent = '0');
+  }
+}
+function animateNum(id, target){
+  const el = document.getElementById(id);
+  let cur = 0;
+  const step = Math.max(1, Math.ceil(target / 20));
+  const timer = setInterval(() => {
+    cur += step;
+    if(cur >= target){ cur = target; clearInterval(timer); }
+    el.textContent = cur;
+  }, 40);
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  updateCartInfo();
+  renderFeedbacks();
+  await openDB();
+  loadStats();
+})();
+</script>
+</body>
+</html>

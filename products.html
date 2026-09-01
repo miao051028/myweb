@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>农特产品 · 乡村好物商城 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;padding-bottom:64px;
+  }
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+  .top-actions{display:flex;align-items:center;gap:10px}
+  .cart-btn{
+    position:relative;color:#fff;text-decoration:none;font-size:13px;cursor:pointer;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);
+    padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px;
+    font-family:inherit;
+  }
+  .cart-btn:hover{background:rgba(255,255,255,.28)}
+  .cart-count{
+    position:absolute;top:-7px;right:-7px;background:#FDE68A;color:#8B1A1A;
+    font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+  }
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  .page-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#8B1A1A 0%,#b87333 70%,#C9A24A 100%);
+    color:#fff;text-align:center;padding:44px 18px 52px;
+  }
+  .page-banner::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;background:#F5E6D3;border-radius:22px 22px 0 0}
+  .page-banner .pb-icon{font-size:40px;margin-bottom:8px}
+  .page-banner h1{font-size:28px;letter-spacing:6px;margin-bottom:10px;color:#FDE68A}
+  .page-banner p{font-size:13.5px;letter-spacing:2px;opacity:.92}
+
+  .page-main{max-width:1180px;margin:0 auto;padding:20px 16px 50px}
+  .page-title{text-align:center;font-size:22px;font-weight:700;color:#8B1A1A;letter-spacing:3px;margin:10px 0 6px;display:flex;align-items:center;justify-content:center;gap:14px}
+  .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
+  .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:24px}
+
+  /* 产品网格 */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .p-card{
+    background:#fff;border-radius:14px;overflow:hidden;border:1px solid #f0dcc4;
+    box-shadow:0 3px 12px rgba(139,26,26,.08);transition:transform .3s,box-shadow .3s;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .p-card:hover{transform:translateY(-5px);box-shadow:0 10px 26px rgba(139,26,26,.2)}
+  .p-card .pc-img{width:100%;aspect-ratio:1/0.82;background:#efe3d0;display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden}
+  .p-card .pc-img img{width:100%;height:100%;object-fit:cover}
+  .p-card .pc-body{padding:13px 15px 15px;flex:1;display:flex;flex-direction:column}
+  .p-card .pc-name{font-size:16px;font-weight:700;color:#8B1A1A;letter-spacing:1px;margin-bottom:6px;outline:none}
+  .p-card .pc-desc{font-size:12.5px;color:#6b4c3b;line-height:1.7;flex:1;outline:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .p-card .pc-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px}
+  .p-card .pc-price{color:#C0392B;font-weight:700;font-size:17px;outline:none;min-width:52px}
+  .p-card .pc-price::first-letter{font-size:12px}
+  .buy-btn{
+    background:#8B1A1A;color:#FDE68A;border:none;border-radius:18px;
+    padding:7px 16px;font-size:12.5px;cursor:pointer;letter-spacing:1px;transition:.2s;
+  }
+  .buy-btn:hover{background:#6E1414;transform:scale(1.04)}
+  .p-card .edit-only{position:absolute;top:8px;right:8px;display:none;gap:6px;z-index:5}
+  body.admin-mode .edit-only{display:flex}
+  .mini-btn{background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;transition:.2s}
+  .mini-btn:hover{background:#6E1414}
+  .mini-btn.danger{background:#a33}
+  .add-wrap{text-align:center;margin-top:26px}
+  .add-btn{background:#fff;color:#8B1A1A;border:2px dashed #C9A24A;border-radius:24px;padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:none}
+  body.admin-mode .add-btn{display:inline-block}
+  .add-btn:hover{background:#F5E6D3}
+
+  /* 购物车弹窗 */
+  .modal{position:fixed;inset:0;background:rgba(40,10,10,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.active{display:flex}
+  .modal-box{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .modal-header{background:#8B1A1A;color:#FDE68A;padding:14px 20px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center}
+  .modal-header h3{font-size:16px;letter-spacing:2px}
+  .modal-header button{background:none;border:none;color:#fff;font-size:17px;cursor:pointer}
+  .modal-body{padding:16px 20px;overflow-y:auto;flex:1}
+  .cart-empty{text-align:center;color:#b89878;padding:34px 0;font-size:13.5px}
+  .cart-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed #eee0cd}
+  .cart-item .ci-name{flex:1;font-size:14px;color:#5a3a3a}
+  .cart-item .ci-price{color:#C0392B;font-weight:700;font-size:14px;min-width:64px;text-align:right}
+  .qty-ctrl{display:flex;align-items:center;gap:8px}
+  .qty-ctrl button{width:24px;height:24px;border-radius:6px;border:1px solid #d4b896;background:#fff;color:#8B1A1A;font-size:14px;cursor:pointer;line-height:1}
+  .qty-ctrl button:hover{background:#F5E6D3}
+  .qty-ctrl .qty{min-width:20px;text-align:center;font-size:14px;font-weight:700;color:#8B1A1A}
+  .modal-footer{padding:14px 20px;border-top:2px solid #F5E6D3;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .modal-footer .total{font-size:14px;color:#5a3a3a}
+  .modal-footer .total b{color:#C0392B;font-size:20px}
+  .checkout-btn{background:#8B1A1A;color:#FDE68A;border:none;border-radius:20px;padding:10px 24px;font-size:14px;letter-spacing:2px;cursor:pointer}
+  .checkout-btn:disabled{background:#c9b8a8;color:#fff;cursor:not-allowed}
+
+  .admin-tip{display:none;position:fixed;top:56px;right:14px;z-index:160;background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.2);letter-spacing:1px}
+  body.admin-mode .admin-tip{display:block}
+
+  .bottom-tab{position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;background:#fff;border-top:2px solid #C9A24A;display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1)}
+  .bottom-tab .bt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#9a8f85;font-size:10.5px;letter-spacing:1px}
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  @media(max-width:640px){
+    .page-banner h1{font-size:22px;letter-spacing:4px}
+    .card-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+    .page-main{padding:14px 12px 40px}
+    .top-nav .logo{font-size:15px}
+  }
+</style>
+</head>
+<body data-page="products">
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <div class="top-actions">
+    <button class="cart-btn" onclick="openCart()">🛒 购物车<span class="cart-count" id="cartCount">0</span></button>
+    <a class="back-home" href="index.html">← 首页</a>
+  </div>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式：点击文字可编辑，修改自动保存</div>
+
+<section class="page-banner">
+  <div class="pb-icon">🍎</div>
+  <h1>农 特 产 品</h1>
+  <p>乡村好物 · 产地直供 · 助力乡村振兴</p>
+</section>
+
+<main class="page-main">
+  <div class="page-title">乡 村 好 物 商 城</div>
+  <div class="page-subtitle">每一份农产品，都承载着乡土的味道</div>
+
+  <div class="card-grid" id="productGrid"><!-- JS 渲染 --></div>
+
+  <div class="add-wrap">
+    <button class="add-btn" onclick="addProduct()">＋ 添加新产品</button>
+  </div>
+</main>
+
+<!-- 购物车弹窗 -->
+<div class="modal" id="cartModal" onclick="if(event.target===this)closeCart()">
+  <div class="modal-box">
+    <div class="modal-header"><h3>🛒 我的购物车</h3><button onclick="closeCart()">✕</button></div>
+    <div class="modal-body" id="cartBody"></div>
+    <div class="modal-footer">
+      <div class="total">合计：<b id="cartTotal">￥0.00</b></div>
+      <button class="checkout-btn" id="checkoutBtn" onclick="checkout()">提交订单</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="filePicker" accept="image/*" style="display:none">
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item active" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function getImageFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly'), rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result ? (rq.result.data || null) : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveImageToDB(key, dataUrl){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data: dataUrl, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ 产品数据 ============ */
+const DEFAULT_PRODUCTS = [
+  { id:'p1', icon:'荔枝', name:'白糖罂荔枝', price:29.9, desc:'茂名特产，果肉晶莹、清甜多汁，产地现摘现发。', tags:'时令鲜果' },
+  { id:'p2', icon:'陈皮', name:'化州橘红', price:58.0, desc:'传统道地药材，理气化痰，匠心陈化三年。', tags:'道地药材' },
+  { id:'p3', icon:'蜂蜜', name:'山岭百花蜜', price:45.0, desc:'深山蜂场自然放养，蜜香浓郁，回味甘甜。', tags:'农家自产' },
+  { id:'p4', icon:'番薯', name:'沙地蜜薯', price:19.9, desc:'沙质土壤种植，粉糯香甜，烘烤后香气四溢。', tags:'现挖现发' },
+  { id:'p5', icon:'花生', name:'红衣小粒花生', price:22.5, desc:'阳光晒制，颗粒饱满，咸香酥脆下酒好搭档。', tags:'炒货零食' },
+  { id:'p6', icon:'凉粉', name:'手工仙人粄', price:12.0, desc:'传统手艺制作，清凉解暑，搭配蜂蜜风味更佳。', tags:'传统小吃' }
+];
+let products = [];
+let cart = [];  // {id, qty}
+
+async function loadProducts(){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  products = Array.isArray(meta.products) && meta.products.length
+    ? JSON.parse(JSON.stringify(meta.products))
+    : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  for(const p of products){
+    try{
+      const img = await getImageFromDB('product_' + p.id);
+      if(img) p.img = img;
+    }catch(e){}
+  }
+}
+
+function renderGrid(){
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = products.map(p => `
+    <div class="p-card" data-pid="${p.id}">
+      <div class="edit-only">
+        <button class="mini-btn" onclick="replaceProductImage('${p.id}')" title="更换图片">🖼️</button>
+        <button class="mini-btn danger" onclick="deleteProduct('${p.id}')" title="删除">🗑️</button>
+      </div>
+      <div class="pc-img">${p.img ? `<img src="${p.img}" alt="${p.name}">` : (p.icon || '🧺')}</div>
+      <div class="pc-body">
+        <div class="pc-name" data-field="name" data-pid="${p.id}">${p.name}</div>
+        <div class="pc-desc" data-field="desc" data-pid="${p.id}">${p.desc}</div>
+        <div class="pc-row">
+          <div class="pc-price" data-field="price" data-pid="${p.id}">￥${Number(p.price).toFixed(2)}</div>
+          <button class="buy-btn" onclick="addToCart('${p.id}')">加入购物车</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  bindEditable();
+}
+
+function persist(){
+  return saveAllMeta(m => { m.products = products.map(p => ({ ...p, img: undefined })); });
+}
+
+function bindEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('#productGrid [data-field]').forEach(el => {
+    if(el.dataset.field === 'price') return; // 价格用专用编辑
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    el.onblur = async () => {
+      const pid = el.dataset.pid, field = el.dataset.field;
+      const item = products.find(x => x.id === pid);
+      const val = el.textContent.trim();
+      if(!item || item[field] === val) return;
+      item[field] = val;
+      await persist();
+    };
+  });
+  // 价格：点击弹出输入框修改（防误触）
+  document.querySelectorAll('#productGrid .pc-price').forEach(el => {
+    el.title = '点击修改价格';
+    el.onclick = async () => {
+      if(!isAdmin) return;
+      const pid = el.dataset.pid;
+      const item = products.find(x => x.id === pid);
+      const v = prompt('请输入价格（元）：', item.price);
+      if(v === null) return;
+      const num = parseFloat(v);
+      if(isNaN(num) || num < 0){ alert('请输入有效数字'); return; }
+      item.price = num;
+      el.textContent = '￥' + num.toFixed(2);
+      await persist();
+    };
+  });
+}
+
+/* 换图 */
+document.getElementById('filePicker').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file || !window._pickPid) return;
+  const pid = window._pickPid;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    await saveImageToDB('product_' + pid, reader.result);
+    const item = products.find(x => x.id === pid);
+    if(item) item.img = reader.result;
+    renderGrid();
+    alert('✅ 产品图片已更新并保存！');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+  window._pickPid = null;
+});
+function replaceProductImage(pid){ window._pickPid = pid; document.getElementById('filePicker').click(); }
+
+/* 增删产品 */
+async function addProduct(){
+  const id = 'p' + Date.now();
+  products.push({ id, icon:'🧺', name:'新产品', price:9.9, desc:'在此填写产品介绍……', tags:'' });
+  await persist();
+  renderGrid();
+}
+async function deleteProduct(pid){
+  if(!confirm('确定删除该产品吗？')) return;
+  products = products.filter(p => p.id !== pid);
+  await persist();
+  renderGrid();
+}
+
+/* ============ 购物车（localStorage 持久） ============ */
+function loadCart(){
+  try{ cart = JSON.parse(localStorage.getItem('sxx_cart') || '[]'); }catch(e){ cart = []; }
+}
+function saveCart(){ localStorage.setItem('sxx_cart', JSON.stringify(cart)); }
+function addToCart(pid){
+  const item = cart.find(c => c.id === pid);
+  if(item) item.qty++;
+  else cart.push({ id: pid, qty: 1 });
+  saveCart();
+  updateCartBadge();
+  const btn = event && event.target;
+  if(btn){ btn.textContent = '✓ 已加入'; setTimeout(() => btn.textContent = '加入购物车', 900); }
+}
+function updateCartBadge(){
+  const n = cart.reduce((s, c) => s + c.qty, 0);
+  document.getElementById('cartCount').textContent = n;
+}
+function renderCart(){
+  const body = document.getElementById('cartBody');
+  if(!cart.length){
+    body.innerHTML = '<div class="cart-empty">🛒 购物车空空如也<br>快去挑选心仪的乡村好物吧～</div>';
+    document.getElementById('cartTotal').textContent = '￥0.00';
+    document.getElementById('checkoutBtn').disabled = true;
+    return;
+  }
+  let total = 0;
+  body.innerHTML = cart.map(c => {
+    const p = products.find(x => x.id === c.id);
+    if(!p) return '';
+    total += p.price * c.qty;
+    return `
+      <div class="cart-item">
+        <div class="ci-name">${p.name}</div>
+        <div class="qty-ctrl">
+          <button onclick="changeQty('${p.id}',-1)">−</button>
+          <span class="qty">${c.qty}</span>
+          <button onclick="changeQty('${p.id}',1)">＋</button>
+        </div>
+        <div class="ci-price">￥${(p.price * c.qty).toFixed(2)}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('cartTotal').textContent = '￥' + total.toFixed(2);
+  document.getElementById('checkoutBtn').disabled = false;
+}
+function changeQty(pid, delta){
+  const item = cart.find(c => c.id === pid);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty <= 0) cart = cart.filter(c => c.id !== pid);
+  saveCart();
+  updateCartBadge();
+  renderCart();
+}
+function openCart(){ renderCart(); document.getElementById('cartModal').classList.add('active'); }
+function closeCart(){ document.getElementById('cartModal').classList.remove('active'); }
+function checkout(){
+  if(!cart.length) return;
+  const n = cart.reduce((s, c) => s + c.qty, 0);
+  if(!confirm(`确认提交 ${n} 件商品的订单吗？（演示模式，不产生真实交易）`)) return;
+  cart = [];
+  saveCart();
+  updateCartBadge();
+  renderCart();
+  closeCart();
+  alert('🎉 下单成功！感谢您对乡村振兴的支持～');
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  loadCart();
+  updateCartBadge();
+  try{
+    await openDB();
+    await loadProducts();
+    renderGrid();
+  }catch(e){
+    document.getElementById('productGrid').innerHTML =
+      '<div style="text-align:center;color:#a0764f;padding:40px 0;grid-column:1/-1">数据加载失败，请刷新重试</div>';
+  }
+})();
+</script>
+</body>
+</html>

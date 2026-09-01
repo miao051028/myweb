@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>云游导览 · 名胜古迹建筑巡礼 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;
+    padding-bottom:64px;
+  }
+
+  /* ============ 顶栏 ============ */
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{
+    color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .back-home{
+    color:#fff;text-decoration:none;font-size:13px;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);
+    padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px;
+  }
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  /* ============ 页头 Banner ============ */
+  .page-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#8B1A1A 0%,#A63426 55%,#8B1A1A 100%);
+    color:#fff;text-align:center;padding:44px 18px 52px;
+  }
+  .page-banner::after{
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;
+    background:#F5E6D3;border-radius:22px 22px 0 0;
+  }
+  .page-banner .pb-icon{font-size:40px;margin-bottom:8px}
+  .page-banner h1{font-size:28px;letter-spacing:6px;margin-bottom:10px;color:#FDE68A}
+  .page-banner p{font-size:13.5px;letter-spacing:2px;opacity:.92}
+
+  /* ============ 内容区 ============ */
+  .page-main{max-width:1180px;margin:0 auto;padding:20px 16px 50px}
+  .page-title{
+    text-align:center;font-size:22px;font-weight:700;color:#8B1A1A;
+    letter-spacing:3px;margin:10px 0 6px;
+    display:flex;align-items:center;justify-content:center;gap:14px;
+  }
+  .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
+  .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:24px}
+
+  /* 建筑卡片网格 */
+  .card-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;
+  }
+  .b-card{
+    background:#fff;border-radius:14px;overflow:hidden;cursor:pointer;
+    border:1px solid #f0dcc4;
+    box-shadow:0 3px 12px rgba(139,26,26,.08);
+    transition:transform .3s,box-shadow .3s;position:relative;
+    display:flex;flex-direction:column;
+  }
+  .b-card:hover{transform:translateY(-5px);box-shadow:0 10px 26px rgba(139,26,26,.2)}
+  .b-card .bc-img{width:100%;aspect-ratio:16/10;background:#efe3d0;display:flex;align-items:center;justify-content:center;color:#b89878;font-size:14px;letter-spacing:2px;overflow:hidden}
+  .b-card .bc-img img{width:100%;height:100%;object-fit:cover}
+  .b-card .bc-body{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column}
+  .b-card .bc-name{font-size:17px;font-weight:700;color:#8B1A1A;letter-spacing:1px;margin-bottom:8px;outline:none}
+  .b-card .bc-intro{
+    font-size:13px;color:#6b4c3b;line-height:1.75;flex:1;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+    outline:none;
+  }
+  .b-card .bc-more{margin-top:12px;font-size:12.5px;color:#C9A24A;letter-spacing:1px}
+  .b-card .edit-only{
+    position:absolute;top:8px;right:8px;display:none;gap:6px;z-index:5;
+  }
+  body.admin-mode .edit-only{display:flex}
+  .mini-btn{
+    background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;
+    padding:5px 10px;font-size:12px;cursor:pointer;transition:.2s;
+  }
+  .mini-btn:hover{background:#6E1414}
+  .mini-btn.danger{background:#a33}
+
+  .add-wrap{text-align:center;margin-top:26px}
+  .add-btn{
+    background:#fff;color:#8B1A1A;border:2px dashed #C9A24A;border-radius:24px;
+    padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:none;
+  }
+  body.admin-mode .add-btn{display:inline-block}
+  .add-btn:hover{background:#F5E6D3}
+
+  /* ============ 详情弹窗 ============ */
+  .modal{position:fixed;inset:0;background:rgba(40,10,10,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.active{display:flex}
+  .modal-box{background:#fff;border-radius:16px;max-width:680px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .modal-box .mb-img{width:100%;aspect-ratio:16/9;background:#efe3d0;overflow:hidden}
+  .modal-box .mb-img img{width:100%;height:100%;object-fit:cover}
+  .modal-box .mb-body{padding:22px 26px 28px}
+  .modal-box .mb-close{
+    position:sticky;top:0;float:right;margin:10px 10px -30px 0;z-index:5;
+    width:32px;height:32px;border-radius:50%;border:none;background:#8B1A1A;color:#fff;font-size:16px;cursor:pointer;
+  }
+  .modal-box h3{color:#8B1A1A;font-size:21px;letter-spacing:2px;margin-bottom:14px;outline:none}
+  .modal-box .mb-desc{font-size:14.5px;line-height:2;color:#5a3a3a;white-space:pre-wrap;outline:none}
+  .mb-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .mb-actions .mini-btn{padding:8px 16px;font-size:13px;border-radius:8px}
+
+  /* ============ 底部 Tab Bar ============ */
+  .bottom-tab{
+    position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;
+    background:#fff;border-top:2px solid #C9A24A;
+    display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1);
+  }
+  .bottom-tab .bt-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    text-decoration:none;color:#9a8f85;font-size:10.5px;letter-spacing:1px;transition:.2s;
+  }
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  /* 管理员提示 */
+  .admin-tip{
+    display:none;position:fixed;top:56px;right:14px;z-index:160;
+    background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;
+    box-shadow:0 3px 10px rgba(0,0,0,.2);letter-spacing:1px;
+  }
+  body.admin-mode .admin-tip{display:block}
+
+  @media(max-width:640px){
+    .page-banner h1{font-size:22px;letter-spacing:4px}
+    .card-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+    .page-main{padding:14px 12px 40px}
+    .modal-box .mb-body{padding:18px 16px 22px}
+  }
+</style>
+</head>
+<body data-page="tour">
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式：点击文字可编辑，修改自动保存</div>
+
+<section class="page-banner">
+  <div class="pb-icon">📖</div>
+  <h1>云 游 导 览</h1>
+  <p>名胜古迹 · 建筑巡礼 · 足不出户畅游三下乡</p>
+</section>
+
+<main class="page-main">
+  <div class="page-title">名 胜 古 迹 · 建 筑 巡 礼</div>
+  <div class="page-subtitle">点击卡片查看详细介绍</div>
+
+  <div class="card-grid" id="buildingGrid"><!-- JS 渲染 --></div>
+
+  <div class="add-wrap">
+    <button class="add-btn" onclick="addBuilding()">＋ 添加新建筑</button>
+  </div>
+</main>
+
+<!-- 详情弹窗 -->
+<div class="modal" id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="modal-box">
+    <button class="mb-close" onclick="closeDetail()">✕</button>
+    <div class="mb-img" id="mbImg"></div>
+    <div class="mb-body">
+      <h3 id="mbName" contenteditable="false"></h3>
+      <div class="mb-desc" id="mbDesc" contenteditable="false"></div>
+      <div class="mb-actions edit-only" style="display:none" id="mbActions">
+        <button class="mini-btn" onclick="pickDetailImage()">🖼️ 更换大图</button>
+        <button class="mini-btn" onclick="editFromDetail()">✏️ 编辑内容</button>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="filePicker" accept="image/*" style="display:none">
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item active" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function getImageFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly'), rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result ? (rq.result.data || null) : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveImageToDB(key, dataUrl){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data: dataUrl, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+/* 读全量 metadata → 修改一个字段 → 写回（保证不覆盖首页数据） */
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ 云游导览：建筑数据 ============ */
+const DEFAULT_INTRO = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
+let buildings = [];   // {id, name, intro, img}
+let currentId = null;
+
+async function loadBuildings(){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
+  const infos = meta.buildingInfos || {};
+  const list = [];
+  for(const id of ids){
+    let img = null;
+    try{ img = await getImageFromDB('building_' + id); }catch(e){}
+    list.push({
+      id,
+      name: infos[id + '_name'] || ('建筑名称 ' + id),
+      intro: infos[id] || DEFAULT_INTRO,
+      img
+    });
+  }
+  buildings = list;
+}
+
+function renderGrid(){
+  const grid = document.getElementById('buildingGrid');
+  grid.innerHTML = buildings.map(b => `
+    <div class="b-card" data-bid="${b.id}" onclick="if(!event.target.closest('.edit-only'))openDetail('${b.id}')">
+      <div class="edit-only">
+        <button class="mini-btn" onclick="replaceCardImage('${b.id}')" title="更换图片">🖼️</button>
+        <button class="mini-btn danger" onclick="deleteBuilding('${b.id}')" title="删除">🗑️</button>
+      </div>
+      <div class="bc-img">${b.img ? `<img src="${b.img}" alt="${b.name}">` : '暂无图片<br>点击查看详情'}</div>
+      <div class="bc-body">
+        <div class="bc-name" data-field="name" data-bid="${b.id}">${b.name}</div>
+        <div class="bc-intro" data-field="intro" data-bid="${b.id}">${b.intro}</div>
+        <div class="bc-more">查看详情 ›</div>
+      </div>
+    </div>
+  `).join('');
+  bindCardEditable();
+}
+
+/* 管理员：卡片文字就地编辑（失焦保存） */
+function bindCardEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('.bc-name,.bc-intro').forEach(el => {
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    el.onblur = async () => {
+      const bid = el.dataset.bid, field = el.dataset.field;
+      const val = el.textContent.trim();
+      const item = buildings.find(x => x.id === bid);
+      if(!item) return;
+      const key = field === 'name' ? bid + '_name' : bid;
+      if(item[field] === val) return;
+      item[field] = val;
+      await saveAllMeta(m => {
+        m.buildingInfos = m.buildingInfos || {};
+        m.buildingInfos[key] = val;
+      });
+      if(currentId === bid && field === 'name') document.getElementById('mbName').textContent = val;
+      if(currentId === bid && field === 'intro') document.getElementById('mbDesc').textContent = val;
+    };
+  });
+}
+
+/* 详情弹窗 */
+function openDetail(id){
+  const b = buildings.find(x => x.id === id);
+  if(!b) return;
+  currentId = id;
+  document.getElementById('mbImg').innerHTML = b.img ? `<img src="${b.img}" alt="${b.name}">` : '';
+  document.getElementById('mbName').textContent = b.name;
+  document.getElementById('mbDesc').textContent = b.intro;
+  if(isAdmin){
+    document.getElementById('mbName').setAttribute('contenteditable','true');
+    document.getElementById('mbDesc').setAttribute('contenteditable','true');
+    document.getElementById('mbActions').style.display = 'flex';
+    ['mbName','mbDesc'].forEach(mid => {
+      const el = document.getElementById(mid);
+      el.onblur = async () => {
+        const val = el.textContent.trim();
+        const field = mid === 'mbName' ? 'name' : 'intro';
+        const item = buildings.find(x => x.id === currentId);
+        if(!item || item[field] === val) return;
+        item[field] = val;
+        await saveAllMeta(m => {
+          m.buildingInfos = m.buildingInfos || {};
+          m.buildingInfos[field === 'name' ? currentId + '_name' : currentId] = val;
+        });
+        renderGrid();
+      };
+    });
+  } else {
+    ['mbName','mbDesc'].forEach(mid => {
+      const el = document.getElementById(mid);
+      el.removeAttribute('contenteditable');
+      el.onblur = null;
+    });
+    document.getElementById('mbActions').style.display = 'none';
+  }
+  document.getElementById('detailModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeDetail(){
+  document.getElementById('detailModal').classList.remove('active');
+  document.body.style.overflow = '';
+  renderGrid();
+}
+function editFromDetail(){ /* 内容已可就地编辑，此按钮提示 */
+  document.getElementById('mbDesc').focus();
+}
+
+/* 换图 */
+let pickTarget = null;
+function replaceCardImage(id){ pickTarget = { mode:'card', id }; document.getElementById('filePicker').click(); }
+function pickDetailImage(){ pickTarget = { mode:'card', id: currentId }; document.getElementById('filePicker').click(); }
+document.getElementById('filePicker').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file || !pickTarget) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const url = reader.result;
+    await saveImageToDB('building_' + pickTarget.id, url);
+    const item = buildings.find(x => x.id === pickTarget.id);
+    if(item) item.img = url;
+    await saveAllMeta(m => {
+      m.buildingKeys = m.buildingKeys || [];
+      if(!m.buildingKeys.includes(pickTarget.id)) m.buildingKeys.push(pickTarget.id);
+    });
+    renderGrid();
+    if(document.getElementById('detailModal').classList.contains('active') && currentId === pickTarget.id){
+      document.getElementById('mbImg').innerHTML = `<img src="${url}" alt="">`;
+    }
+    alert('✅ 图片已更新并保存！');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+/* 添加 / 删除建筑 */
+async function addBuilding(){
+  const newId = 'b' + Date.now();
+  buildings.push({ id:newId, name:'新建筑', intro:DEFAULT_INTRO, img:null });
+  await saveAllMeta(m => {
+    m.buildingIds = m.buildingIds || [];
+    m.buildingIds.push(newId);
+    m.buildingInfos = m.buildingInfos || {};
+    m.buildingInfos[newId + '_name'] = '新建筑';
+    m.buildingInfos[newId] = DEFAULT_INTRO;
+  });
+  renderGrid();
+  openDetail(newId);
+}
+async function deleteBuilding(id){
+  if(!confirm('确定删除该建筑吗？')) return;
+  buildings = buildings.filter(b => b.id !== id);
+  await saveAllMeta(m => {
+    m.buildingIds = (m.buildingIds || []).filter(x => x !== id);
+    if(m.buildingInfos){ delete m.buildingInfos[id]; delete m.buildingInfos[id + '_name']; }
+  });
+  renderGrid();
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  try{
+    await openDB();
+    await loadBuildings();
+    renderGrid();
+  }catch(e){
+    document.getElementById('buildingGrid').innerHTML =
+      '<div style="text-align:center;color:#a0764f;padding:40px 0">数据加载失败，请刷新重试</div>';
+  }
+})();
+</script>
+</body>
+</html>

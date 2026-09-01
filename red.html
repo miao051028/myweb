@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>红色足迹 · 革命历史寻访 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.05) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.05) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;padding-bottom:64px;
+  }
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  .page-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#6E1414 0%,#8B1A1A 55%,#a63426 100%);
+    color:#fff;text-align:center;padding:44px 18px 52px;
+  }
+  .page-banner::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;background:#F5E6D3;border-radius:22px 22px 0 0}
+  .page-banner .pb-icon{font-size:40px;margin-bottom:8px}
+  .page-banner h1{font-size:28px;letter-spacing:6px;margin-bottom:10px;color:#FDE68A}
+  .page-banner p{font-size:13.5px;letter-spacing:2px;opacity:.92}
+
+  .page-main{max-width:900px;margin:0 auto;padding:20px 16px 50px}
+  .page-title{text-align:center;font-size:22px;font-weight:700;color:#8B1A1A;letter-spacing:3px;margin:10px 0 6px;display:flex;align-items:center;justify-content:center;gap:14px}
+  .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
+  .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:26px}
+
+  /* ============ 时间轴 ============ */
+  .timeline{position:relative;padding:10px 0}
+  .timeline::before{content:"";position:absolute;left:24px;top:0;bottom:0;width:3px;background:linear-gradient(#C9A24A,#8B1A1A);border-radius:2px}
+  .tl-item{position:relative;padding:0 0 26px 64px}
+  .tl-item:last-child{padding-bottom:6px}
+  .tl-dot{
+    position:absolute;left:12px;top:6px;width:28px;height:28px;border-radius:50%;
+    background:#8B1A1A;border:3px solid #F5E6D3;box-shadow:0 0 0 2px #C9A24A;
+    display:flex;align-items:center;justify-content:center;color:#FDE68A;font-size:12px;
+  }
+  .tl-card{
+    background:#fff;border-radius:14px;border:1px solid #f0dcc4;
+    box-shadow:0 3px 12px rgba(139,26,26,.08);padding:18px 20px;position:relative;
+    transition:transform .3s,box-shadow .3s;
+  }
+  .tl-card:hover{transform:translateX(4px);box-shadow:0 8px 22px rgba(139,26,26,.18)}
+  .tl-era{
+    display:inline-block;background:#8B1A1A;color:#FDE68A;font-size:11.5px;
+    padding:3px 12px;border-radius:14px;letter-spacing:1px;margin-bottom:8px;outline:none;
+  }
+  .tl-name{font-size:17.5px;font-weight:700;color:#8B1A1A;letter-spacing:1px;margin-bottom:8px;outline:none}
+  .tl-desc{font-size:13.5px;color:#6b4c3b;line-height:1.85;outline:none}
+  .tl-tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .tl-tags .tag{
+    background:#F5E6D3;color:#8B6a3a;font-size:11.5px;padding:3px 12px;border-radius:12px;
+    border:1px solid #e8d3b0;outline:none;
+  }
+  .tl-card .edit-only{position:absolute;top:12px;right:12px;display:none;gap:6px}
+  body.admin-mode .edit-only{display:flex}
+  .mini-btn{background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;transition:.2s}
+  .mini-btn:hover{background:#6E1414}
+  .mini-btn.danger{background:#a33}
+  .add-wrap{text-align:center;margin-top:26px}
+  .add-btn{background:#fff;color:#8B1A1A;border:2px dashed #C9A24A;border-radius:24px;padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:none}
+  body.admin-mode .add-btn{display:inline-block}
+  .add-btn:hover{background:#F5E6D3}
+
+  /* 红色精神卡片带 */
+  .spirit-band{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:34px;
+  }
+  .spirit-card{
+    background:linear-gradient(135deg,#8B1A1A,#a63426);color:#fff;border-radius:14px;
+    padding:18px 14px;text-align:center;box-shadow:0 4px 14px rgba(139,26,26,.25);
+  }
+  .spirit-card .sp-icon{font-size:26px;margin-bottom:6px}
+  .spirit-card .sp-name{font-size:15px;font-weight:700;letter-spacing:2px;color:#FDE68A;margin-bottom:6px;outline:none}
+  .spirit-card .sp-desc{font-size:11.5px;opacity:.9;line-height:1.7;outline:none}
+
+  .admin-tip{display:none;position:fixed;top:56px;right:14px;z-index:160;background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.2);letter-spacing:1px}
+  body.admin-mode .admin-tip{display:block}
+
+  .bottom-tab{position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;background:#fff;border-top:2px solid #C9A24A;display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1)}
+  .bottom-tab .bt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#9a8f85;font-size:10.5px;letter-spacing:1px}
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  @media(max-width:640px){
+    .page-banner h1{font-size:22px;letter-spacing:4px}
+    .page-main{padding:14px 12px 40px}
+    .tl-item{padding-left:52px}
+    .timeline::before{left:18px}
+    .tl-dot{left:6px}
+  }
+</style>
+</head>
+<body data-page="red">
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式：点击文字可编辑，修改自动保存</div>
+
+<section class="page-banner">
+  <div class="pb-icon">🚩</div>
+  <h1>红 色 足 迹</h1>
+  <p>追寻革命记忆 · 赓续红色血脉 · 传承奋斗精神</p>
+</section>
+
+<main class="page-main">
+  <div class="page-title">革 命 历 史 寻 访</div>
+  <div class="page-subtitle">沿着时间轴，重温峥嵘岁月</div>
+
+  <div class="timeline" id="redTimeline"><!-- JS 渲染 --></div>
+
+  <div class="add-wrap">
+    <button class="add-btn" onclick="addRedSpot()">＋ 添加红色足迹</button>
+  </div>
+
+  <div class="page-title" style="margin-top:38px">红 色 精 神</div>
+  <div class="page-subtitle">精神如炬，照亮前行之路</div>
+  <div class="spirit-band" id="spiritBand">
+    <div class="spirit-card"><div class="sp-icon">🔥</div><div class="sp-name" contenteditable="false">井冈山精神</div><div class="sp-desc" contenteditable="false">坚定信念、艰苦奋斗，实事求是、敢闯新路</div></div>
+    <div class="spirit-card"><div class="sp-icon">🏔️</div><div class="sp-name" contenteditable="false">长征精神</div><div class="sp-desc" contenteditable="false">不怕牺牲、排除万难，革命理想高于天</div></div>
+    <div class="spirit-card"><div class="sp-icon">🌾</div><div class="sp-name" contenteditable="false">延安精神</div><div class="sp-desc" contenteditable="false">自力更生、丰衣足食，为人民服务</div></div>
+    <div class="spirit-card"><div class="sp-icon">⭐</div><div class="sp-name" contenteditable="false">西柏坡精神</div><div class="sp-desc" contenteditable="false">谦虚谨慎、不骄不躁，艰苦奋斗</div></div>
+  </div>
+</main>
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item active" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+/* 读全量 → 修改 → 写回（不覆盖首页数据） */
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ 红色足迹数据 ============ */
+const DEFAULT_RED_SPOTS = [
+  { id:'r1', era:'大革命时期', name:'农民自卫军训练所旧址', desc:'大革命时期本地农民自卫军在此集结训练，掀起了轰轰烈烈的农民运动，播下了革命的火种。旧址保存有当年的训练场地与历史图文资料。', tags:['农民运动','革命火种'] },
+  { id:'r2', era:'抗日战争时期', name:'南路特委秘密联络站', desc:'抗战期间，中共南路特委在此设立秘密联络站，传递情报、转运物资、掩护同志，是粤西地区重要的地下交通线节点。', tags:['地下交通','隐蔽战线'] },
+  { id:'r3', era:'解放战争时期', name:'马踏革命烈士纪念碑', desc:'为纪念在解放战争中英勇牺牲的革命烈士而建。碑体庄严肃穆，每年清明都有干部群众与青年学生前来瞻仰祭扫，缅怀先烈功绩。', tags:['烈士纪念','爱国主义教育'] },
+  { id:'r4', era:'新时代', name:'红色文化展览馆', desc:'系统展示本地革命历史脉络与红色文物，配套多媒体互动展陈，是开展党史学习教育与青少年研学实践的重要阵地。', tags:['党史学习','研学基地'] }
+];
+let redSpots = [];
+
+async function loadRedSpots(){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  redSpots = Array.isArray(meta.redSpots) && meta.redSpots.length
+    ? JSON.parse(JSON.stringify(meta.redSpots))
+    : JSON.parse(JSON.stringify(DEFAULT_RED_SPOTS));
+}
+
+function renderTimeline(){
+  const box = document.getElementById('redTimeline');
+  box.innerHTML = redSpots.map((r, i) => `
+    <div class="tl-item" data-rid="${r.id}">
+      <div class="tl-dot">★</div>
+      <div class="tl-card">
+        <div class="edit-only">
+          <button class="mini-btn danger" onclick="deleteRedSpot('${r.id}')" title="删除">🗑️</button>
+        </div>
+        <div class="tl-era" data-field="era" data-rid="${r.id}">${r.era}</div>
+        <div class="tl-name" data-field="name" data-rid="${r.id}">${r.name}</div>
+        <div class="tl-desc" data-field="desc" data-rid="${r.id}">${r.desc}</div>
+        <div class="tl-tags">${(r.tags||[]).map((t,ti) => `<span class="tag" data-field="tags" data-ti="${ti}" data-rid="${r.id}">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+  bindEditable();
+}
+
+function persist(){
+  return saveAllMeta(m => { m.redSpots = redSpots; });
+}
+
+function bindEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('#redTimeline [contenteditable],#redTimeline .tl-era,#redTimeline .tl-name,#redTimeline .tl-desc,#redTimeline .tag').forEach(el => {
+    if(el.dataset.field === 'tags'){
+      // 标签编辑
+      el.setAttribute('contenteditable','true');
+      el.onblur = async () => {
+        const rid = el.dataset.rid, ti = parseInt(el.dataset.ti);
+        const item = redSpots.find(x => x.id === rid);
+        const val = el.textContent.trim();
+        if(!item || !item.tags || item.tags[ti] === val) return;
+        item.tags[ti] = val;
+        await persist();
+      };
+    } else {
+      el.setAttribute('contenteditable','true');
+      el.setAttribute('spellcheck','false');
+      el.onblur = async () => {
+        const rid = el.dataset.rid, field = el.dataset.field;
+        const item = redSpots.find(x => x.id === rid);
+        const val = el.textContent.trim();
+        if(!item || item[field] === val) return;
+        item[field] = val;
+        await persist();
+      };
+    }
+  });
+}
+
+async function addRedSpot(){
+  const id = 'r' + Date.now();
+  redSpots.push({ id, era:'历史时期', name:'新足迹', desc:'在此填写该红色足迹的历史背景与教育意义……', tags:['标签'] });
+  await persist();
+  renderTimeline();
+}
+async function deleteRedSpot(id){
+  if(!confirm('确定删除该红色足迹吗？')) return;
+  redSpots = redSpots.filter(r => r.id !== id);
+  await persist();
+  renderTimeline();
+}
+
+/* 红色精神卡片编辑 */
+function bindSpiritEditable(){
+  if(!isAdmin) return;
+  document.querySelectorAll('#spiritBand .sp-name,#spiritBand .sp-desc').forEach(el => {
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    el.onblur = async () => {
+      await saveAllMeta(m => {
+        m.spiritCards = [...document.querySelectorAll('#spiritBand .spirit-card')].map(card => ({
+          name: card.querySelector('.sp-name').textContent.trim(),
+          desc: card.querySelector('.sp-desc').textContent.trim()
+        }));
+      });
+    };
+  });
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  try{
+    await openDB();
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    if(Array.isArray(meta.spiritCards) && meta.spiritCards.length === 4){
+      const cards = document.querySelectorAll('#spiritBand .spirit-card');
+      meta.spiritCards.forEach((sc, i) => {
+        if(cards[i]){
+          cards[i].querySelector('.sp-name').textContent = sc.name;
+          cards[i].querySelector('.sp-desc').textContent = sc.desc;
+        }
+      });
+    }
+    await loadRedSpots();
+    renderTimeline();
+    bindSpiritEditable();
+  }catch(e){
+    document.getElementById('redTimeline').innerHTML =
+      '<div style="text-align:center;color:#a0764f;padding:40px 0">数据加载失败，请刷新重试</div>';
+  }
+})();
+</script>
+</body>
+</html>
