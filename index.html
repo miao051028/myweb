@@ -2025,8 +2025,11 @@ async function loadAllImages() {
 
 async function saveMetadata() {
   try {
+    // 保留其他页面（如 3D 全景 panorama.html）写入的字段，避免覆盖丢失
+    const existing = (await getMetaFromDB('allMetadata')) || {};
     // 保存图片 key 列表（用于刷新后恢复）
     const metaData = {
+      ...existing,
       buildingInfos: dataStore.buildingInfos,
       panoUrls: dataStore.panoUrls,
       featuredKeys: Object.keys(dataStore.featuredImages),
@@ -3458,6 +3461,62 @@ function base64ToDataUrl(base64, mimeType = 'image/jpeg'){
   return `data:${mimeType};base64,${base64}`;
 }
 
+/* ============ 通用媒体同步（覆盖所有图片 + 3D模型，跨设备互通） ============ */
+// 读取 images 存储库中的全部媒体记录（图片=dataURL 字符串；3D模型=Blob）
+function getAllMediaRecords(){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly');
+    const rq = tx.objectStore('images').getAll();
+    rq.onsuccess = () => resolve(rq.result || []);
+    rq.onerror = () => reject(rq.error);
+  });
+}
+function getMediaRecord(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly');
+    const rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result || null);
+    rq.onerror = () => reject(rq.error);
+  });
+}
+function saveMediaRecord(key, data){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+const MEDIA_MAX_BYTES = 25 * 1024 * 1024; // 单文件 25MB 上限（GitHub Contents API）
+function mediaTypeOf(data){ return (data instanceof Blob) ? 'glb' : 'img'; }
+function mediaPath(key, type){ return 'media/' + encodeURIComponent(key) + (type === 'glb' ? '.glb' : '.img'); }
+async function uploadMediaRecord(rec){
+  const t = mediaTypeOf(rec.data);
+  if(t === 'glb'){
+    const buf = new Uint8Array(await rec.data.arrayBuffer());
+    let bin = '';
+    const CH = 0x8000;
+    for(let i = 0; i < buf.length; i += CH){
+      bin += String.fromCharCode.apply(null, buf.subarray(i, i + CH));
+    }
+    return uploadToGithub(mediaPath(rec.key, 'glb'), btoa(bin));
+  }
+  // dataURL 本身是 ascii，整体编码后在对端 atob 还原
+  return uploadToGithub(mediaPath(rec.key, 'img'), btoa(rec.data));
+}
+async function downloadMediaRecord(key, type){
+  const b64 = await downloadFromGithub(mediaPath(key, type));
+  if(!b64) return null;
+  if(type === 'glb'){
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: 'model/gltf-binary' });
+  }
+  return atob(b64); // 还原为 dataURL 字符串
+}
+
+
 // 上传文件到 GitHub 仓库
 async function uploadToGithub(path, content){
   const config = getGithubConfig();
@@ -3518,23 +3577,19 @@ async function downloadFromGithub(path){
   return data.content; // Base64 内容
 }
 
-// 保存元数据到 GitHub
+// 保存元数据到 GitHub（上传完整 allMetadata，确保文章/3D标志/文字等所有字段都跨设备同步）
 async function saveMetadataToGithub(){
-  const metaData = {
-    buildingInfos: dataStore.buildingInfos,
-    panoUrls: dataStore.panoUrls,
-    featuredKeys: Object.keys(dataStore.featuredImages),
-    buildingKeys: Object.keys(dataStore.buildingImages),
-    buildingIds: dataStore.buildingIds,
-    featuredIds: dataStore.featuredIds,
-    currentPage: dataStore.currentPage,
-    bgConfig: dataStore.bgConfig,
-    textData: dataStore.textData || {},
-    textStyles: dataStore.textStyles || {},
-    coverImage: dataStore.coverImage === true,
-    version: 4,
-    timestamp: Date.now()
-  };
+  await saveMetadata(); // 先确保本地为最新（含其他页面写入的字段）
+  const metaData = (await getMetaFromDB('allMetadata')) || {};
+  // 附加媒体清单（key → 类型），供对端下载所有图片与3D模型
+  try{
+    const recs = await getAllMediaRecords();
+    const mediaFiles = {};
+    recs.forEach(r => { mediaFiles[r.key] = mediaTypeOf(r.data); });
+    metaData.mediaFiles = mediaFiles;
+  }catch(e){ console.warn('媒体清单生成失败', e); }
+  metaData.version = 4;
+  metaData.timestamp = Date.now();
   const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(metaData))));
   return uploadToGithub('sxx_metadata.json', base64Content);
 }
@@ -3598,69 +3653,38 @@ async function syncFromGithub(){
     // 文章系统恢复（GitHub 同步）
     if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
 
-    // 下载特色图片
-    for(let id of metaData.featuredKeys || []){
-      const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
-      if(base64){
-        const dataUrl = base64ToDataUrl(base64);
-        await saveImage(`featured_${id}`, dataUrl);
-        dataStore.featuredImages[id] = dataUrl;
-      }
+    // 完整持久化远程元数据（含 3D 全景标志 panoBuildings 等跨页面字段），随后 saveMetadata 会合并保留
+    await saveMetaToDB('allMetadata', metaData);
+
+    // 通用下载：按媒体清单拉取全部图片与 3D 模型（特色/建筑/新闻/景点/文章封面/背景/封面/全景/GLB）
+    const mediaFiles = metaData.mediaFiles || {};
+    const mediaKeys = Object.keys(mediaFiles);
+    let got = 0;
+    for(let i = 0; i < mediaKeys.length; i++){
+      const key = mediaKeys[i];
+      statusEl.innerHTML = `⏳ 正在下载媒体 ${i+1}/${mediaKeys.length} ...`;
+      try{
+        const data = await downloadMediaRecord(key, mediaFiles[key]);
+        if(data){ await saveMediaRecord(key, data); got++; }
+      }catch(err){ console.warn('媒体下载失败:', key, err.message); }
     }
-    
-    // 下载建筑图片
-    for(let id of metaData.buildingKeys || []){
-      const base64 = await downloadFromGithub(`images/building_${id}.jpg`);
-      if(base64){
-        const dataUrl = base64ToDataUrl(base64);
-        await saveImage(`building_${id}`, dataUrl);
-        dataStore.buildingImages[id] = dataUrl;
+    // 兼容旧版本：清单缺失时回退按旧路径下载特色/建筑图
+    if(!mediaKeys.length){
+      for(let id of metaData.featuredKeys || []){
+        const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
+        if(base64){ await saveImage(`featured_${id}`, base64ToDataUrl(base64)); }
+      }
+      for(let id of metaData.buildingKeys || []){
+        const base64 = await downloadFromGithub(`images/building_${id}.jpg`);
+        if(base64){ await saveImage(`building_${id}`, base64ToDataUrl(base64)); }
       }
     }
 
-    // 下载乡村动态缩略图 / 精选景点图
-    for(let id of metaData.newsKeys || []){
-      const base64 = await downloadFromGithub(`images/news_${id}.jpg`);
-      if(base64){
-        const dataUrl = base64ToDataUrl(base64);
-        await saveImage(`news_${id}`, dataUrl);
-        dataStore.newsImages[id] = dataUrl;
-      }
-    }
-    for(let id of metaData.spotKeys || []){
-      const base64 = await downloadFromGithub(`images/spot_${id}.jpg`);
-      if(base64){
-        const dataUrl = base64ToDataUrl(base64);
-        await saveImage(`spot_${id}`, dataUrl);
-        dataStore.spotImages[id] = dataUrl;
-      }
-    }
-
-    // 下载背景图片
-    if(metaData.bgConfig && metaData.bgConfig.bgImage){
-      const bgBase64 = await downloadFromGithub('images/bg_image.jpg');
-      if(bgBase64){
-        const bgDataUrl = base64ToDataUrl(bgBase64);
-        await saveImage('bg_image', bgDataUrl);
-        window._bgImageDataUrl = bgDataUrl;
-      }
-    }
-
-    // 下载特色封面
-    if(metaData.coverImage){
-      const coverBase64 = await downloadFromGithub('images/cover_image.jpg');
-      if(coverBase64){
-        const coverDataUrl = base64ToDataUrl(coverBase64);
-        await saveImage('cover_image', coverDataUrl);
-        window._coverImageDataUrl = coverDataUrl;
-      }
-    }
-
-    // 保存元数据到本地
+    // 保存元数据到本地（合并远程全量字段）
     await saveMetadata();
-    
-    statusEl.innerHTML = '✅ 同步完成！页面即将刷新...';
-    setTimeout(() => location.reload(), 1000);
+
+    statusEl.innerHTML = `✅ 同步完成！共同步 ${got} 个媒体文件，页面即将刷新...`;
+    setTimeout(() => location.reload(), 1200);
   } catch(e) {
     console.error(e);
     statusEl.innerHTML = '❌ 同步失败: ' + e.message;
@@ -3680,52 +3704,21 @@ async function syncToGithub(){
     statusEl.innerHTML = '⏳ 正在上传元数据...';
     await saveMetadataToGithub();
     
-    // 上传特色图片
-    const featuredKeys = Object.keys(dataStore.featuredImages);
-    for(let i = 0; i < featuredKeys.length; i++){
-      const id = featuredKeys[i];
-      statusEl.innerHTML = `⏳ 正在上传特色图片 ${i+1}/${featuredKeys.length}...`;
-      const dataUrl = await getImageFromDB(`featured_${id}`);
-      if(dataUrl){
-        const base64 = dataUrlToBase64(dataUrl);
-        await uploadToGithub(`images/featured_${id}.jpg`, base64);
-      }
-    }
-    
-    // 上传建筑图片
-    const buildingKeys = Object.keys(dataStore.buildingImages);
-    for(let i = 0; i < buildingKeys.length; i++){
-      const id = buildingKeys[i];
-      statusEl.innerHTML = `⏳ 正在上传建筑图片 ${i+1}/${buildingKeys.length}...`;
-      const dataUrl = await getImageFromDB(`building_${id}`);
-      if(dataUrl){
-        const base64 = dataUrlToBase64(dataUrl);
-        await uploadToGithub(`images/building_${id}.jpg`, base64);
-      }
+    // 通用上传：images 存储库内的全部媒体（特色/建筑/新闻/景点/文章封面/背景图/3D全景图/GLB模型）
+    const recs = await getAllMediaRecords();
+    let okCount = 0; const skipped = [];
+    for(let i = 0; i < recs.length; i++){
+      const r = recs[i];
+      const size = (r.data instanceof Blob) ? r.data.size : r.data.length;
+      const kind = (r.data instanceof Blob) ? '3D模型' : '图片';
+      statusEl.innerHTML = `⏳ 正在同步${kind} ${i+1}/${recs.length} ...`;
+      if((r.data instanceof Blob) && r.data.size > MEDIA_MAX_BYTES){ skipped.push(r.key); continue; }
+      try{ await uploadMediaRecord(r); okCount++; }
+      catch(err){ console.warn('媒体上传失败:', r.key, err.message); }
     }
 
-    // 上传背景图片
-    if(dataStore.bgConfig.bgImage){
-      statusEl.innerHTML = '⏳ 正在上传背景图片...';
-      const bgUrl = await getImageFromDB('bg_image');
-      if(bgUrl){
-        const base64 = dataUrlToBase64(bgUrl);
-        await uploadToGithub('images/bg_image.jpg', base64);
-      }
-    }
-
-    // 上传特色封面
-    if(dataStore.coverImage){
-      statusEl.innerHTML = '⏳ 正在上传特色封面...';
-      const coverUrl = await getImageFromDB('cover_image');
-      if(coverUrl){
-        const base64 = dataUrlToBase64(coverUrl);
-        await uploadToGithub('images/cover_image.jpg', base64);
-      }
-    }
-    
-    statusEl.innerHTML = `✅ 上传完成！共上传 ${featuredKeys.length + buildingKeys.length} 张图片`;
-    alert('✅ 数据已上传到 GitHub！现在其他设备也可以同步这些数据了。');
+    statusEl.innerHTML = `✅ 上传完成！共同步 ${okCount} 个媒体文件` + (skipped.length ? `（${skipped.length} 个超过25MB已跳过）` : '');
+    alert('✅ 数据已上传到 GitHub！现在手机/电脑其他设备点「从 GitHub 同步」即可互通全部内容（含3D全景与模型）。' + (skipped.length ? '\n\n⚠️ 以下文件超过25MB未上传：\n' + skipped.join(', ') : ''));
   } catch(e) {
     console.error(e);
     statusEl.innerHTML = '❌ 上传失败: ' + e.message;
@@ -3816,6 +3809,22 @@ async function autoSyncFromGithub(){
     if(metaData.textData) dataStore.textData = metaData.textData;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
     if(metaData.coverImage) dataStore.coverImage = true;
+    // v5/文章/3D 字段
+    if(metaData.spots) dataStore.spots = metaData.spots;
+    if(metaData.newsList) dataStore.newsList = metaData.newsList;
+    if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
+    // 完整元数据落库（保留 3D 全景等跨页面字段）
+    await saveMetaToDB('allMetadata', metaData);
+    // 通用增量下载：本地缺失的媒体（图片/3D模型）自动拉取
+    const autoMedia = metaData.mediaFiles || {};
+    for(const key of Object.keys(autoMedia)){
+      const exist = await getMediaRecord(key).catch(() => null);
+      if(exist) continue;
+      try{
+        const data = await downloadMediaRecord(key, autoMedia[key]);
+        if(data) await saveMediaRecord(key, data);
+      }catch(e){}
+    }
     // 下载背景图片并应用
     if(metaData.bgConfig && metaData.bgConfig.bgImage){
       const bgBase64 = await downloadFromGithub('images/bg_image.jpg');
