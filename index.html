@@ -989,6 +989,20 @@
     margin-bottom:6px;
   }
   .news-item .news-date{font-size:12px;color:#B89878;letter-spacing:1px}
+  /* 文章卡片：管理员编辑/删除按钮（右上角，仅管理员可见，不影响原有布局尺寸） */
+  .news-admin-btns{
+    position:absolute;top:8px;right:8px;z-index:6;
+    display:none;gap:6px;
+  }
+  body.admin-mode .news-admin-btns{display:flex}
+  .news-admin-btns button{
+    background:rgba(139,26,26,.92);color:#fff;border:none;
+    border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;
+    font-family:inherit;line-height:1.4;
+  }
+  .news-admin-btns button:hover{background:#6E1414}
+  .news-admin-btns button:last-child{background:rgba(170,51,51,.92)}
+  .news-admin-btns button:last-child:hover{background:#8f2525}
   .news-empty{
     text-align:center;padding:30px;color:#B89878;font-size:13px;letter-spacing:1px;
   }
@@ -1251,10 +1265,10 @@
   <section class="quick-entry" aria-label="快速入口">
     <div class="quick-entry-title" data-textkey="quick_title">快速入口</div>
     <div class="quick-entry-grid">
-      <a href="tour.html" class="quick-entry-item"><div class="quick-entry-icon">📖</div><div class="quick-entry-label" data-textkey="quick_label1">云游导览</div></a>
-      <a href="red.html" class="quick-entry-item"><div class="quick-entry-icon">🚩</div><div class="quick-entry-label" data-textkey="quick_label2">红色足迹</div></a>
-      <a href="products.html" class="quick-entry-item"><div class="quick-entry-icon">🍎</div><div class="quick-entry-label" data-textkey="quick_label3">农特产品</div></a>
-      <a href="custom.html" class="quick-entry-item"><div class="quick-entry-icon">🎋</div><div class="quick-entry-label" data-textkey="quick_label4">乡土风物</div></a>
+      <a href="tour.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">📖</div><div class="quick-entry-label" data-textkey="quick_label1">云游导览</div></a>
+      <a href="red.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🚩</div><div class="quick-entry-label" data-textkey="quick_label2">红色足迹</div></a>
+      <a href="products.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🍎</div><div class="quick-entry-label" data-textkey="quick_label3">农特产品</div></a>
+      <a href="custom.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🎋</div><div class="quick-entry-label" data-textkey="quick_label4">乡土风物</div></a>
     </div>
   </section>
 
@@ -3095,6 +3109,17 @@ function bindTextEditable() {
   });
 }
 
+/* 全局守卫：管理员点击链接（<a>）内的可编辑文字时，捕获阶段阻止跳转，以便就地编辑文字。
+   覆盖快速入口、Hero按钮、底部Tab 等「文字包在链接内」的场景；游客模式不拦截。 */
+document.addEventListener('click', (e) => {
+  if (!isAdmin) return;
+  const t = e.target && e.target.closest && e.target.closest('a [data-textkey]');
+  if (t && t.isContentEditable) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
 function updateBgPresetActive() {
   const items = document.querySelectorAll('#bgPresetGrid .bg-preset-item');
   items.forEach((it, i) => {
@@ -4099,9 +4124,9 @@ function renderNews(){
       : '<span style="display:inline-block;margin-left:8px;background:#fdf0e0;color:#b87333;font-size:11px;padding:1px 9px;border-radius:10px;vertical-align:middle">📝 文章</span>';
     return `
     <div class="news-item" data-article-id="${a.id}" onclick="openArticle('${a.id}')" style="cursor:pointer">
-      <div class="delete-btn edit-only" style="background:none;border:none;padding:0;top:10px;right:10px;z-index:5">
-        <button onclick="event.stopPropagation();editArticle('${a.id}')" title="编辑文章" style="background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer">✏️ 编辑</button>
-        <button onclick="event.stopPropagation();deleteArticle('${a.id}')" title="删除文章" style="background:#a33;color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer;margin-left:6px">🗑️</button>
+      <div class="news-admin-btns edit-only">
+        <button onclick="event.stopPropagation();editArticle('${a.id}')" title="编辑文章">✏️ 编辑</button>
+        <button onclick="event.stopPropagation();deleteArticle('${a.id}')" title="删除文章">🗑️</button>
       </div>
       <div class="news-badge">${i + 1}</div>
       <img class="news-thumb" alt="文章封面" src="${thumbUrl}" onerror="this.style.visibility='hidden'">

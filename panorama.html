@@ -96,9 +96,11 @@
     background:rgba(30,15,10,.88);backdrop-filter:blur(8px);
     border-top:2px solid rgba(201,162,74,.5);
     padding:10px 14px;display:flex;align-items:center;justify-content:center;
-    gap:10px;flex-wrap:wrap;
+    gap:10px;flex-wrap:nowrap;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
-  .ctrl-btn{
+  .ctrl-bar::-webkit-scrollbar{display:none}
+  .ctrl-btn{flex-shrink:0;
     background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(253,230,138,.4);
     border-radius:22px;padding:9px 18px;font-size:13px;cursor:pointer;
     letter-spacing:1px;transition:.2s;font-family:inherit;
@@ -118,9 +120,46 @@
 
   input[type=file]{display:none}
 
+  /* ============ 建筑目录抽屉 ============ */
+  .dir-backdrop{
+    position:fixed;inset:0;z-index:94;background:rgba(0,0,0,.45);
+    display:none;
+  }
+  .dir-backdrop.show{display:block}
+  .dir-drawer{
+    position:fixed;left:0;top:54px;bottom:0;width:270px;z-index:96;
+    background:rgba(28,16,8,.96);backdrop-filter:blur(10px);
+    border-right:2px solid rgba(201,162,74,.5);
+    transform:translateX(-105%);transition:transform .3s ease;
+    display:flex;flex-direction:column;
+    box-shadow:6px 0 24px rgba(0,0,0,.4);
+  }
+  .dir-drawer.show{transform:translateX(0)}
+  .dir-head{
+    padding:14px 18px;color:#FDE68A;font-size:15px;font-weight:700;letter-spacing:2px;
+    border-bottom:1px solid rgba(201,162,74,.35);
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  }
+  .dir-head button{background:none;border:none;color:#FDE68A;font-size:15px;cursor:pointer;padding:2px 6px}
+  .dir-list{overflow-y:auto;flex:1;padding:8px 0}
+  .dir-item{
+    padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    color:#e8d9c0;font-size:13.5px;cursor:pointer;letter-spacing:1px;
+    border-left:3px solid transparent;transition:.2s;
+  }
+  .dir-item:hover{background:rgba(253,230,138,.12)}
+  .dir-item.active{
+    background:rgba(139,26,26,.5);border-left-color:#FDE68A;color:#FDE68A;font-weight:700;
+  }
+  .dir-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dir-status{font-size:14px;flex-shrink:0;opacity:.45}
+  .dir-status.has{opacity:1}
+  .dir-empty{padding:26px 18px;color:#b89878;font-size:12.5px;line-height:1.8;text-align:center}
+
   @media(max-width:640px){
-    .hint-bar{font-size:11px;padding:6px 14px;top:60px}
+    .hint-bar{font-size:11px;padding:6px 14px;top:auto;bottom:78px;max-width:92vw;white-space:normal;text-align:center}
     .mode-badge{font-size:11.5px;padding:6px 12px;top:60px}
+    .dir-drawer{width:74vw;top:50px}
     .admin-tip{display:none !important}
     .ctrl-btn{padding:8px 13px;font-size:12px}
     .top-nav .logo{font-size:15px}
@@ -165,8 +204,19 @@
   </div>
 </div>
 
+<!-- 建筑目录抽屉 -->
+<div class="dir-backdrop" id="dirBackdrop" onclick="closeDir()"></div>
+<aside class="dir-drawer" id="dirDrawer">
+  <div class="dir-head">
+    <span>🗂️ 建筑目录</span>
+    <button onclick="closeDir()">✕</button>
+  </div>
+  <div class="dir-list" id="dirList"></div>
+</aside>
+
 <!-- 控制栏 -->
 <div class="ctrl-bar">
+  <button class="ctrl-btn" onclick="toggleDir()">🗂️ 建筑目录</button>
   <button class="ctrl-btn" onclick="resetView()">🔄 重置视角</button>
   <button class="ctrl-btn primary admin-only" onclick="pickPanorama()">🖼️ 上传全景照片</button>
   <button class="ctrl-btn primary admin-only" onclick="pickModel()">🧊 上传3D模型</button>
@@ -259,6 +309,98 @@ let pinchDist = 0;
 let autoRotate = true;
 let hintTimer = null;
 let objectURLs = [];             // createObjectURL 待释放
+
+/* ============ 建筑目录（每个建筑独立全景内容） ============ */
+const DEFAULT_BID = '__default__';
+let currentBId = DEFAULT_BID;
+let buildings = [];              // [{id, name}]
+
+function keyImg(bid){ return bid === DEFAULT_BID ? 'pano_image' : 'pano_img_' + bid; }
+function keyModel(bid){ return bid === DEFAULT_BID ? 'pano_model' : 'pano_model_' + bid; }
+function panoTypeFor(meta, bid){
+  if(bid === DEFAULT_BID) return meta.panoType || null;
+  return (meta.panoBuildings && meta.panoBuildings[bid]) || null;
+}
+function currentBuildingName(){
+  if(currentBId === DEFAULT_BID) return '全景总览';
+  const b = buildings.find(x => x.id === currentBId);
+  return b ? b.name : '当前建筑';
+}
+function hint(text, ms){
+  const h = document.getElementById('hintBar');
+  h.textContent = text;
+  h.style.opacity = '1';
+  clearTimeout(h._t);
+  h._t = setTimeout(() => { h.style.opacity = '0.25'; }, ms || 5000);
+}
+
+function toggleDir(){
+  const open = document.getElementById('dirDrawer').classList.toggle('show');
+  document.getElementById('dirBackdrop').classList.toggle('show', open);
+}
+function closeDir(){
+  document.getElementById('dirDrawer').classList.remove('show');
+  document.getElementById('dirBackdrop').classList.remove('show');
+}
+
+// 读取云游导览中填写的建筑列表（与 tour.html / index.html 同源数据；无自定义数据时兜底默认6个）
+function buildDir(meta){
+  const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
+  const infos = meta.buildingInfos || {};
+  buildings = ids.map(id => ({ id, name: infos[id + '_name'] || ('建筑名称 ' + id) }));
+  renderDir(meta);
+}
+
+function renderDir(meta){
+  const items = [{ id: DEFAULT_BID, name: '🏞️ 全景总览' }].concat(buildings);
+  const list = document.getElementById('dirList');
+  if(!items.length){ list.innerHTML = '<div class="dir-empty">暂无建筑<br>请先在云游导览中添加</div>'; return; }
+  list.innerHTML = items.map(b => {
+    const t = panoTypeFor(meta, b.id);
+    const status = t === 'image' ? '<span class="dir-status has" title="全景照片">🖼️</span>'
+                 : t === 'model' ? '<span class="dir-status has" title="3D模型">🧊</span>'
+                 : '<span class="dir-status" title="暂无内容">⬜</span>';
+    return `<div class="dir-item ${b.id === currentBId ? 'active' : ''}" data-bid="${b.id}" onclick="selectBuilding('${b.id}')">
+      <span class="dir-name">${b.name}</span>${status}
+    </div>`;
+  }).join('');
+}
+
+async function selectBuilding(bid){
+  currentBId = bid;
+  closeDir();
+  resetView();
+  const name = bid === DEFAULT_BID ? '全景总览' : currentBuildingName();
+  document.querySelectorAll('.dir-item').forEach(el => el.classList.toggle('active', el.dataset.bid === bid));
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  renderDir(meta);
+  await loadContentFor(bid, meta);
+  hint('正在参观：' + name + ' · 拖拽环视 / 滚轮缩放', 4000);
+}
+
+async function loadContentFor(bid, meta){
+  const type = panoTypeFor(meta, bid);
+  if(type === 'model'){
+    const rec = await getRecordFromDB(keyModel(bid));
+    if(rec && rec.data instanceof Blob){
+      showLoading('正在加载「' + (bid === DEFAULT_BID ? '总览' : currentBuildingName()) + '」3D模型…');
+      loadModelFromBlob(rec.data);
+      return;
+    }
+  } else if(type === 'image'){
+    const rec = await getRecordFromDB(keyImg(bid));
+    if(rec && typeof rec.data === 'string'){
+      showLoading('正在加载「' + (bid === DEFAULT_BID ? '总览' : currentBuildingName()) + '」全景照片…');
+      loadPanoramaFromURL(rec.data, hideLoading);
+      return;
+    }
+  }
+  // 无内容 → 默认全景场景
+  showPanorama(makeDefaultPanoTexture());
+  if(bid !== DEFAULT_BID && !type){
+    hint('「' + currentBuildingName() + '」暂未上传全景内容，当前为默认场景（管理员可上传该建筑专属全景）', 6000);
+  }
+}
 
 const canvas = document.getElementById('panoCanvas');
 
@@ -531,10 +673,15 @@ document.getElementById('panoImageInput').addEventListener('change', async (e) =
   const reader = new FileReader();
   reader.onload = async () => {
     try{
-      await putRecordToDB('pano_image', reader.result);   // dataURL
-      await saveAllMeta(m => { m.panoType = 'image'; });
+      await putRecordToDB(keyImg(currentBId), reader.result);   // dataURL
+      await saveAllMeta(m => {
+        if(currentBId === DEFAULT_BID){ m.panoType = 'image'; }
+        else { m.panoBuildings = m.panoBuildings || {}; m.panoBuildings[currentBId] = 'image'; }
+      });
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      renderDir(meta);
       loadPanoramaFromURL(reader.result, () => { hideLoading(); });
-      alert('✅ 全景照片已上传并永久保存！\n💡 提示：使用 2:1 比例的全景照片（手机全景/360相机拍摄）环绕效果最佳。');
+      alert('✅「' + currentBuildingName() + '」全景照片已上传并永久保存！\n💡 提示：使用 2:1 比例的全景照片（手机全景/360相机拍摄）环绕效果最佳。');
     }catch(err){
       hideLoading();
       alert('保存失败：' + err.message);
@@ -575,9 +722,20 @@ document.getElementById('panoModelInput').addEventListener('change', async (e) =
   showLoading('正在加载 3D 模型，大文件请耐心等待…');
   try{
     const blob = file.slice(0);
-    await putRecordToDB('pano_model', blob);
-    await saveAllMeta(m => { m.panoType = 'model'; m.panoName = file.name; });
-    loadModelFromBlob(blob, file.name);
+    await putRecordToDB(keyModel(currentBId), blob);
+    await saveAllMeta(m => {
+      if(currentBId === DEFAULT_BID){ m.panoType = 'model'; m.panoName = file.name; }
+      else {
+        m.panoBuildings = m.panoBuildings || {}; m.panoBuildings[currentBId] = 'model';
+        m.panoNames = m.panoNames || {}; m.panoNames[currentBId] = file.name;
+      }
+    });
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    renderDir(meta);
+    loadModelFromBlob(blob, () => {
+      hideLoading();
+      alert('✅「' + currentBuildingName() + '」3D 模型加载成功并永久保存！');
+    });
   }catch(err){
     hideLoading();
     alert('模型保存失败：' + err.message);
@@ -585,7 +743,9 @@ document.getElementById('panoModelInput').addEventListener('change', async (e) =
   e.target.value = '';
 });
 
-function loadModelFromBlob(blob, name){
+function loadModelFromBlob(blob, onSuccess){
+  objectURLs.forEach(u => { try{ URL.revokeObjectURL(u); }catch(e){} });
+  objectURLs = [];
   const url = URL.createObjectURL(blob);
   objectURLs.push(url);
   const loader = new THREE.GLTFLoader();
@@ -596,7 +756,7 @@ function loadModelFromBlob(blob, name){
     scene.add(modelGroup);
     fitModel(modelGroup);
     hideLoading();
-    alert('✅ 3D 模型「' + (name || '模型') + '」加载成功并永久保存！');
+    if(typeof onSuccess === 'function') onSuccess();
   }, undefined, (err) => {
     hideLoading();
     console.error(err);
@@ -606,12 +766,17 @@ function loadModelFromBlob(blob, name){
 
 async function clearPano(){
   if(!isAdmin) return;
-  if(!confirm('确定清除当前 3D 内容吗？（将恢复默认全景场景）')) return;
-  await deleteRecordFromDB('pano_image');
-  await deleteRecordFromDB('pano_model');
-  await saveAllMeta(m => { m.panoType = null; });
+  if(!confirm('确定清除「' + currentBuildingName() + '」的 3D 内容吗？（将恢复默认全景场景）')) return;
+  await deleteRecordFromDB(keyImg(currentBId));
+  await deleteRecordFromDB(keyModel(currentBId));
+  await saveAllMeta(m => {
+    if(currentBId === DEFAULT_BID){ m.panoType = null; }
+    else if(m.panoBuildings){ delete m.panoBuildings[currentBId]; }
+  });
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  renderDir(meta);
   showPanorama(makeDefaultPanoTexture());
-  alert('🗑️ 已清除，恢复默认全景场景');
+  hint('🗑️ 已清除「' + currentBuildingName() + '」的全景内容', 3500);
 }
 
 /* ============ 初始化 ============ */
@@ -641,27 +806,24 @@ async function clearPano(){
     // 默认场景：程序化全景（离线兜底，先保证可用）
     showPanorama(makeDefaultPanoTexture());
 
-    // 加载已保存内容
+    // 加载已保存内容 + 建筑目录
     (async () => {
       try{
         const meta = (await getMetaFromDB('allMetadata')) || {};
-        if(meta.panoType === 'model'){
-          const rec = await getRecordFromDB('pano_model');
-          if(rec && rec.data instanceof Blob){
-            showLoading('正在加载已保存的 3D 模型…');
-            loadModelFromBlob(rec.data, meta.panoName || '模型');
-            return;
-          }
-        } else if(meta.panoType === 'image'){
-          const rec = await getRecordFromDB('pano_image');
-          if(rec && typeof rec.data === 'string'){
-            showLoading('正在加载全景照片…');
-            loadPanoramaFromURL(rec.data, hideLoading);
-            return;
-          }
+        buildDir(meta);
+        // URL 直达 ?id=建筑ID（从云游导览各建筑卡片进入）
+        const urlId = new URLSearchParams(location.search).get('id');
+        const allIds = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
+        if(urlId && (urlId === DEFAULT_BID || allIds.includes(urlId))){
+          currentBId = urlId;
+          renderDir(meta);
+          await loadContentFor(urlId, meta);
+          hint('正在参观：' + currentBuildingName() + ' · 点左下角「🗂️ 建筑目录」可切换', 6000);
+          return;
         }
-        // 无保存内容：访客显示引导提示
-        if(!isAdmin){
+        // 默认：全景总览
+        await loadContentFor(DEFAULT_BID, meta);
+        if(!panoTypeFor(meta, DEFAULT_BID) && !isAdmin){
           document.getElementById('emptyState').classList.add('show');
           setTimeout(() => document.getElementById('emptyState').classList.remove('show'), 5000);
         }

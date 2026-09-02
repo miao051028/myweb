@@ -96,7 +96,28 @@
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
     outline:none;
   }
-  .b-card .bc-more{margin-top:12px;font-size:12.5px;color:#C9A24A;letter-spacing:1px}
+  .b-card .bc-more{font-size:12.5px;color:#C9A24A;letter-spacing:1px}
+  /* 卡片底部：查看详情 + 3D全景入口 */
+  .b-card .bc-foot{
+    margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .bc-pano{
+    display:inline-flex;align-items:center;gap:3px;
+    background:linear-gradient(135deg,#8B1A1A,#b87333);color:#FDE68A;
+    text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.5px;
+    padding:5px 12px;border-radius:14px;transition:.25s;flex-shrink:0;
+    box-shadow:0 2px 8px rgba(139,26,26,.3);
+  }
+  .bc-pano:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(139,26,26,.45)}
+  /* 详情弹窗内的3D入口（所有用户可见） */
+  .mb-pano-link{
+    display:inline-block;margin-top:16px;
+    background:linear-gradient(135deg,#8B1A1A 0%,#b87333 100%);color:#FDE68A;
+    text-decoration:none;font-size:14px;font-weight:700;letter-spacing:2px;
+    padding:11px 26px;border-radius:24px;
+    box-shadow:0 4px 14px rgba(139,26,26,.35);transition:.25s;
+  }
+  .mb-pano-link:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(139,26,26,.5)}
   .b-card .edit-only{
     position:absolute;top:8px;right:8px;display:none;gap:6px;z-index:5;
   }
@@ -199,6 +220,7 @@
     <div class="mb-body">
       <h3 id="mbName" contenteditable="false"></h3>
       <div class="mb-desc" id="mbDesc" contenteditable="false"></div>
+      <a class="mb-pano-link" id="mbPanoLink" href="panorama.html">🌐 进入 3D 全景参观</a>
       <div class="mb-actions edit-only" style="display:none" id="mbActions">
         <button class="mini-btn" onclick="pickDetailImage()">🖼️ 更换大图</button>
         <button class="mini-btn" onclick="editFromDetail()">✏️ 编辑内容</button>
@@ -302,7 +324,7 @@ async function loadBuildings(){
 function renderGrid(){
   const grid = document.getElementById('buildingGrid');
   grid.innerHTML = buildings.map(b => `
-    <div class="b-card" data-bid="${b.id}" onclick="if(!event.target.closest('.edit-only'))openDetail('${b.id}')">
+    <div class="b-card" data-bid="${b.id}" onclick="if(!event.target.closest('.edit-only') && !event.target.closest('.bc-pano'))openDetail('${b.id}')">
       <div class="edit-only">
         <button class="mini-btn" onclick="replaceCardImage('${b.id}')" title="更换图片">🖼️</button>
         <button class="mini-btn danger" onclick="deleteBuilding('${b.id}')" title="删除">🗑️</button>
@@ -311,7 +333,10 @@ function renderGrid(){
       <div class="bc-body">
         <div class="bc-name" data-field="name" data-bid="${b.id}">${b.name}</div>
         <div class="bc-intro" data-field="intro" data-bid="${b.id}">${b.intro}</div>
-        <div class="bc-more">查看详情 ›</div>
+        <div class="bc-foot">
+          <div class="bc-more">查看详情 ›</div>
+          <a class="bc-pano" href="panorama.html?id=${encodeURIComponent(b.id)}" title="进入该建筑3D全景">🌐 3D全景</a>
+        </div>
       </div>
     </div>
   `).join('');
@@ -350,6 +375,7 @@ function openDetail(id){
   document.getElementById('mbImg').innerHTML = b.img ? `<img src="${b.img}" alt="${b.name}">` : '';
   document.getElementById('mbName').textContent = b.name;
   document.getElementById('mbDesc').textContent = b.intro;
+  document.getElementById('mbPanoLink').href = 'panorama.html?id=' + encodeURIComponent(id);
   if(isAdmin){
     document.getElementById('mbName').setAttribute('contenteditable','true');
     document.getElementById('mbDesc').setAttribute('contenteditable','true');
