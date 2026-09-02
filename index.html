@@ -993,6 +993,67 @@
     text-align:center;padding:30px;color:#B89878;font-size:13px;letter-spacing:1px;
   }
 
+  /* ============ 文章添加/编辑弹窗 ============ */
+  .artm-overlay{
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(40,10,10,.55);
+    display:none;align-items:center;justify-content:center;padding:18px;
+  }
+  .artm-overlay.active{display:flex}
+  .artm-box{
+    background:#fff;border-radius:16px;width:100%;max-width:560px;
+    max-height:88vh;display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;
+  }
+  .artm-header{
+    background:#8B1A1A;color:#FDE68A;padding:14px 20px;
+    display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+  }
+  .artm-header h3{font-size:16px;letter-spacing:2px}
+  .artm-close{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;width:30px;height:30px;border-radius:50%}
+  .artm-close:hover{background:rgba(255,255,255,.2)}
+  .artm-body{padding:20px 22px;overflow-y:auto;flex:1}
+  .artm-chooser{display:flex;gap:14px}
+  .artm-choice{
+    flex:1;border:2px dashed #d4b896;border-radius:14px;padding:22px 14px;
+    text-align:center;cursor:pointer;transition:.25s;background:#FFFBF5;
+  }
+  .artm-choice:hover{border-color:#8B1A1A;background:#fff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(139,26,26,.15)}
+  .artm-choice .ac-icon{font-size:34px;margin-bottom:8px}
+  .artm-choice .ac-name{font-size:16px;font-weight:700;color:#8B1A1A;letter-spacing:2px;margin-bottom:8px}
+  .artm-choice .ac-desc{font-size:12px;color:#a08a76;line-height:1.7}
+  .artm-label{display:block;font-size:13px;font-weight:700;color:#5a3a3a;margin:14px 0 6px;letter-spacing:1px}
+  .artm-input{
+    width:100%;border:1.5px solid #e8d3b0;border-radius:10px;padding:11px 14px;
+    font-size:14px;font-family:inherit;color:#4a2c2c;outline:none;background:#FFFBF5;
+  }
+  .artm-input:focus{border-color:#C9A24A}
+  .artm-textarea{
+    width:100%;border:1.5px solid #e8d3b0;border-radius:10px;padding:12px 14px;
+    font-size:14px;font-family:inherit;color:#4a2c2c;outline:none;background:#FFFBF5;
+    min-height:170px;resize:vertical;line-height:1.8;
+  }
+  .artm-textarea:focus{border-color:#C9A24A}
+  .artm-hint{font-size:12px;color:#b89878;margin-top:6px;line-height:1.6}
+  .artm-cover-preview{
+    width:100%;height:130px;border:2px dashed #d4b896;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    background:#FFFBF5;overflow:hidden;transition:.2s;
+  }
+  .artm-cover-preview:hover{border-color:#C9A24A}
+  .artm-footer{
+    padding:14px 22px;border-top:2px solid #F5E6D3;display:flex;
+    justify-content:flex-end;gap:12px;flex-shrink:0;
+  }
+  .artm-btn{border:none;border-radius:20px;padding:9px 24px;font-size:14px;cursor:pointer;letter-spacing:1px;font-family:inherit}
+  .artm-btn-cancel{background:#f0e4d4;color:#7a6a56}
+  .artm-btn-save{background:#8B1A1A;color:#FDE68A}
+  .artm-btn-save:hover{background:#6E1414}
+  @media(max-width:480px){
+    .artm-chooser{flex-direction:column;gap:10px}
+    .artm-body{padding:16px 14px}
+  }
+
   /* ============================================================
      ============ 底部 Tab Bar（固定底部） =====================
      ============================================================ */
@@ -1816,6 +1877,9 @@ const dataStore = {
   // 新增：乡村动态列表（null=用默认 DEFAULT_NEWS）+ 动态缩略图
   newsList: null,
   newsImages: {},
+  // 新增：文章系统（乡村动态卡片点击跳转文章页；type: custom 自己撰写 / link 链接读取）
+  articles: null,
+  articleCovers: {},   // 运行时封面图缓存（id → dataURL），不持久化进 metadata
   // 新增：当前页码
   currentPage: 1,
   // 新增：页面底纹配置
@@ -1923,6 +1987,17 @@ async function loadAllImages() {
       const url = await getImageFromDB(`news_${id}`);
       if(url) dataStore.newsImages[id] = url;
     }
+    // 加载文章封面图
+    if(Array.isArray(dataStore.articles)){
+      for(const a of dataStore.articles){
+        if(a.cover){
+          try{
+            const url = await getImageFromDB('article_cover_' + a.id);
+            if(url) dataStore.articleCovers[a.id] = url;
+          }catch(e){}
+        }
+      }
+    }
     // 加载精选景点图片
     const spotKeys = Object.keys(dataStore.spotImages || {});
     for(let id of spotKeys) {
@@ -1953,7 +2028,9 @@ async function saveMetadata() {
       spots: dataStore.spots || null,
       spotKeys: Object.keys(dataStore.spotImages || {}),
       newsList: dataStore.newsList || null,
-      newsKeys: Object.keys(dataStore.newsImages || {})
+      newsKeys: Object.keys(dataStore.newsImages || {}),
+      // 文章系统（封面图单独存 images/article_cover_{id}，此处只存文章数据）
+      articles: dataStore.articles || null
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -1989,6 +2066,8 @@ async function loadMetadata() {
       if(metaData.newsKeys){
         metaData.newsKeys.forEach(key => { dataStore.newsImages[key] = true; });
       }
+      // 文章系统恢复
+      if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
       // 新增恢复字段
       if(metaData.buildingIds && metaData.buildingIds.length) dataStore.buildingIds = metaData.buildingIds;
       if(metaData.featuredIds && metaData.featuredIds.length) dataStore.featuredIds = metaData.featuredIds;
@@ -3491,6 +3570,8 @@ async function syncFromGithub(){
     if(metaData.spots) dataStore.spots = metaData.spots;
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
+    // 文章系统恢复（GitHub 同步）
+    if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
 
     // 下载特色图片
     for(let id of metaData.featuredKeys || []){
@@ -3969,104 +4050,229 @@ function applyImageUrl(url, target){
   dataStore.currentTarget = null;
 }
 
-/* ============ 乡村动态（管理员可编辑 / 可增删 / 可换图，永久保存） ============ */
-function getNewsList(){
-  if(!Array.isArray(dataStore.newsList) || !dataStore.newsList.length){
-    dataStore.newsList = JSON.parse(JSON.stringify(DEFAULT_NEWS));
+/* ============ 乡村动态 · 文章系统（卡片点击跳转文章页，永久保存） ============ */
+// 获取文章列表（首次自动从旧动态数据迁移）
+function getArticles(){
+  if(!Array.isArray(dataStore.articles)){
+    migrateArticles();
   }
-  return dataStore.newsList;
+  return dataStore.articles;
+}
+
+// 首次迁移：旧 newsList（或默认动态）→ 文章列表；旧缩略图迁移为文章封面
+function migrateArticles(){
+  const src = (Array.isArray(dataStore.newsList) && dataStore.newsList.length)
+    ? dataStore.newsList
+    : JSON.parse(JSON.stringify(DEFAULT_NEWS));
+  const now = Date.now();
+  dataStore.articles = src.map((n, i) => ({
+    id: 'a' + now + '_' + i,
+    type: 'custom',
+    title: n.title || '未命名文章',
+    desc: n.desc || '',
+    date: n.date || ('📅 ' + new Date().toISOString().slice(0,10)),
+    body: (n.desc || '') + '\n\n（管理员可点击卡片右下角「✏️ 编辑」补充文章正文内容。）',
+    url: '',
+    cover: false
+  }));
+  // 旧动态缩略图（dataURL）迁移为文章封面
+  dataStore.articles.forEach((a, i) => {
+    const oldImg = dataStore.newsImages && dataStore.newsImages[i];
+    if(oldImg && typeof oldImg === 'string' && oldImg.startsWith('data:')){
+      saveImage('article_cover_' + a.id, oldImg);
+      a.cover = true;
+      dataStore.articleCovers[a.id] = oldImg;
+    }
+  });
+  saveMetadata();
 }
 
 function renderNews(){
   const wrap = document.getElementById('newsList');
   if(!wrap) return;
-  const list = getNewsList();
-  wrap.innerHTML = list.map((n, i) => {
-    const thumbUrl = dataStore.newsImages[i] ||
-      `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(n.title)}&image_size=portrait_4_3`;
-    const ce = isAdmin ? ' contenteditable="true" spellcheck="false"' : '';
+  const list = getArticles();
+  wrap.innerHTML = list.map((a, i) => {
+    const thumbUrl = (dataStore.articleCovers && dataStore.articleCovers[a.id]) ||
+      `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(a.title)}&image_size=portrait_4_3`;
+    const typeTag = a.type === 'link'
+      ? '<span style="display:inline-block;margin-left:8px;background:#e8f0fe;color:#1a56c4;font-size:11px;padding:1px 9px;border-radius:10px;vertical-align:middle">🔗 外链</span>'
+      : '<span style="display:inline-block;margin-left:8px;background:#fdf0e0;color:#b87333;font-size:11px;padding:1px 9px;border-radius:10px;vertical-align:middle">📝 文章</span>';
     return `
-    <div class="news-item" data-news-idx="${i}">
-      <button class="delete-btn edit-only" onclick="deleteNews(${i})">🗑️ 删除</button>
-      <button class="news-replace-btn edit-only" onclick="replaceNewsImage(${i})">🖼️ 换图</button>
+    <div class="news-item" data-article-id="${a.id}" onclick="openArticle('${a.id}')" style="cursor:pointer">
+      <div class="delete-btn edit-only" style="background:none;border:none;padding:0;top:10px;right:10px;z-index:5">
+        <button onclick="event.stopPropagation();editArticle('${a.id}')" title="编辑文章" style="background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer">✏️ 编辑</button>
+        <button onclick="event.stopPropagation();deleteArticle('${a.id}')" title="删除文章" style="background:#a33;color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer;margin-left:6px">🗑️</button>
+      </div>
       <div class="news-badge">${i + 1}</div>
-      <img class="news-thumb" alt="动态图" src="${thumbUrl}" onerror="this.style.visibility='hidden'">
+      <img class="news-thumb" alt="文章封面" src="${thumbUrl}" onerror="this.style.visibility='hidden'">
       <div class="news-body">
-        <div class="news-title-text"${ce} data-field="title">${n.title}</div>
-        <div class="news-desc"${ce} data-field="desc">${n.desc}</div>
-        <div class="news-date"${ce} data-field="date">${n.date}</div>
+        <div class="news-title-text">${a.title}</div>
+        <div class="news-desc">${a.desc}</div>
+        <div class="news-date">${a.date}${typeTag}</div>
       </div>
     </div>`;
   }).join('');
+  // 「更多 ›」跳转最新一篇文章
+  const more = document.querySelector('.news-more');
+  if(more){
+    more.href = list.length ? ('article.html?id=' + list[0].id) : '#';
+    more.removeAttribute('onclick');
+  }
 }
 
+// 点击卡片 → 文章详情页（外链文章也在详情页内嵌入展示）
+function openArticle(id){
+  location.href = 'article.html?id=' + id;
+}
+
+// “添加动态”按钮 → 打开文章编辑弹窗（选择添加方式）
 function addNews(){
-  getNewsList().push({ title:'新动态标题', desc:'在此填写动态描述内容……', date:'📅 ' + new Date().toISOString().slice(0,10) });
+  openArticleModal(null);
+}
+function editArticle(id){
+  openArticleModal(id);
+}
+
+async function deleteArticle(id){
+  if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return;
+  const list = getArticles();
+  dataStore.articles = list.filter(a => a.id !== id);
+  delete dataStore.articleCovers[id];
+  try{ await deleteImageFromDB('article_cover_' + id); }catch(e){}
   renderNews();
   saveMetadata();
   autoSyncMetaToGithub();
 }
 
-function deleteNews(i){
-  if(!confirm('确定删除这条动态吗？')) return;
-  const list = getNewsList();
-  list.splice(i, 1);
-  // 缩略图 key 顺移
-  const imgs = {};
-  Object.keys(dataStore.newsImages).forEach(k => {
-    const idx = parseInt(k);
-    if(idx < i) imgs[idx] = dataStore.newsImages[k];
-    else if(idx > i) imgs[idx - 1] = dataStore.newsImages[k];
-  });
-  dataStore.newsImages = imgs;
-  renderNews();
-  saveMetadata();
-  autoSyncMetaToGithub();
+/* ============ 文章添加/编辑弹窗（两种方式：链接读取 / 自己撰写） ============ */
+let _editingArticleId = null;   // null = 新增
+let _pendingCoverUrl = null;    // 弹窗内待保存的封面 dataURL
+
+function openArticleModal(id){
+  _editingArticleId = id;
+  _pendingCoverUrl = null;
+  const modal = document.getElementById('articleModal');
+  const a = id ? getArticles().find(x => x.id === id) : null;
+
+  // 类型选择区：新增时显示，编辑时隐藏（类型不可变更）
+  document.getElementById('artTypeChooser').style.display = a ? 'none' : 'flex';
+  document.getElementById('artForm').style.display = a ? 'block' : 'none';
+
+  if(a){
+    switchArticleType(a.type, true);
+    document.getElementById('artTitle').value = a.title || '';
+    document.getElementById('artDesc').value = a.desc || '';
+    document.getElementById('artUrl').value = a.url || '';
+    document.getElementById('artBody').value = a.body || '';
+    document.getElementById('artModalTitle').textContent = '✏️ 编辑文章';
+    const existCover = dataStore.articleCovers[a.id];
+    document.getElementById('artCoverPreview').innerHTML = existCover
+      ? `<img src="${existCover}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`
+      : '<span style="color:#b89878;font-size:12px">未上传封面（卡片将使用自动配图）</span>';
+  } else {
+    document.getElementById('artModalTitle').textContent = '➕ 添加文章 / 动态';
+    document.getElementById('artTitle').value = '';
+    document.getElementById('artDesc').value = '';
+    document.getElementById('artUrl').value = '';
+    document.getElementById('artBody').value = '';
+    document.getElementById('artCoverPreview').innerHTML = '<span style="color:#b89878;font-size:12px">点击下方按钮选择封面图（可选）</span>';
+  }
+  modal.classList.add('active');
 }
 
-function replaceNewsImage(i){
-  dataStore.currentTarget = { type:'news', id:i };
-  document.getElementById('filePicker').click();
+function closeArticleModal(){
+  document.getElementById('articleModal').classList.remove('active');
 }
 
-// 动态文字编辑：事件委托（列表会重渲染，避免重复绑定）
-// focusout：失焦立即保存
-document.getElementById('newsList').addEventListener('focusout', (e) => {
-  if(!isAdmin) return;
-  const field = e.target.dataset && e.target.dataset.field;
-  if(!field) return;
-  const item = e.target.closest('.news-item');
-  if(!item) return;
-  const idx = parseInt(item.dataset.newsIdx);
-  const val = e.target.textContent.trim();
-  const list = getNewsList();
-  if(list[idx] && list[idx][field] !== undefined && list[idx][field] !== val){
-    list[idx][field] = val;
-    saveMetadata();
-    autoSyncMetaToGithub();
+// 切换文章类型表单
+function switchArticleType(type, silent){
+  document.getElementById('artForm').style.display = 'block';
+  document.getElementById('artTypeChooser').style.display = 'none';
+  const isLink = type === 'link';
+  document.getElementById('artFieldUrl').style.display = isLink ? 'block' : 'none';
+  document.getElementById('artFieldBody').style.display = isLink ? 'none' : 'block';
+  document.getElementById('artFieldCover').style.display = isLink ? 'none' : 'block';
+  document.getElementById('artForm').dataset.type = type;
+  if(!silent){
+    document.getElementById('artModalTitle').textContent = isLink ? '🔗 添加链接文章' : '✍️ 撰写原创文章';
+  } else {
+    document.getElementById('artModalTitle').textContent = isLink ? '🔗 编辑链接文章' : '✏️ 编辑原创文章';
+  }
+}
+
+// 弹窗内选择封面
+function pickArticleCover(){
+  document.getElementById('artCoverInput').click();
+}
+document.addEventListener('change', (e) => {
+  if(e.target && e.target.id === 'artCoverInput'){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      _pendingCoverUrl = reader.result;
+      document.getElementById('artCoverPreview').innerHTML =
+        `<img src="${_pendingCoverUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   }
 });
 
-// input：真实键入防抖保存（双保险，不依赖失焦）
-let _newsInputTimer = null;
-document.getElementById('newsList').addEventListener('input', (e) => {
-  if(!isAdmin) return;
-  const field = e.target.dataset && e.target.dataset.field;
-  if(!field) return;
-  const item = e.target.closest('.news-item');
-  if(!item) return;
-  const idx = parseInt(item.dataset.newsIdx);
-  const val = e.target.textContent.trim();
-  clearTimeout(_newsInputTimer);
-  _newsInputTimer = setTimeout(() => {
-    const list = getNewsList();
-    if(list[idx] && list[idx][field] !== undefined && list[idx][field] !== val){
-      list[idx][field] = val;
-      saveMetadata();
-      autoSyncMetaToGithub();
-    }
-  }, 600);
-});
+// 保存（新增或编辑）
+async function saveArticleFromModal(){
+  const form = document.getElementById('artForm');
+  const type = form.dataset.type || 'custom';
+  const title = document.getElementById('artTitle').value.trim();
+  const desc = document.getElementById('artDesc').value.trim();
+  const url = document.getElementById('artUrl').value.trim();
+  const body = document.getElementById('artBody').value.trim();
+
+  if(!title){ alert('请填写文章标题'); return; }
+  if(type === 'link'){
+    if(!url){ alert('请填写文章链接地址'); return; }
+    if(!/^https?:\/\//.test(url)){ alert('链接需以 http:// 或 https:// 开头'); return; }
+  } else {
+    if(!body){ alert('请填写文章正文内容'); return; }
+  }
+
+  const list = getArticles();
+  let article;
+  if(_editingArticleId){
+    article = list.find(a => a.id === _editingArticleId);
+    if(!article) return;
+    article.title = title;
+    article.desc = desc;
+    article.date = article.date || ('📅 ' + new Date().toISOString().slice(0,10));
+    if(type === 'link'){ article.url = url; }
+    else { article.body = body; }
+  } else {
+    article = {
+      id: 'a' + Date.now(),
+      type,
+      title, desc,
+      date: '📅 ' + new Date().toISOString().slice(0,10),
+      body: type === 'custom' ? body : '',
+      url: type === 'link' ? url : '',
+      cover: false
+    };
+    list.unshift(article); // 新文章排在最前
+  }
+
+  // 保存封面图
+  if(_pendingCoverUrl){
+    await saveImage('article_cover_' + article.id, _pendingCoverUrl);
+    article.cover = true;
+    dataStore.articleCovers[article.id] = _pendingCoverUrl;
+  }
+
+  dataStore.articles = list;
+  closeArticleModal();
+  renderNews();
+  saveMetadata();
+  autoSyncMetaToGithub();
+  alert('✅ 文章已保存并永久生效！');
+}
 
 /* ============ 360° 全景 ============ */
 function open360(id){
@@ -4313,6 +4519,62 @@ document.addEventListener('keydown',(e)=>{
 <!-- ============ 底部 Tab Bar（固定底部，移动端和PC端都显示） ============ -->
 <!-- 桌面端管理员浮动入口（仅管理员模式显示） -->
 <button class="admin-fab" onclick="openStorageModal()">⚙️ 存储管理</button>
+
+<!-- ============ 文章添加/编辑弹窗（链接读取 / 自己撰写） ============ -->
+<div class="artm-overlay" id="articleModal" onclick="if(event.target===this)closeArticleModal()">
+  <div class="artm-box">
+    <div class="artm-header">
+      <h3 id="artModalTitle">➕ 添加文章 / 动态</h3>
+      <button class="artm-close" onclick="closeArticleModal()">✕</button>
+    </div>
+    <div class="artm-body">
+      <!-- 方式选择 -->
+      <div class="artm-chooser" id="artTypeChooser">
+        <div class="artm-choice" onclick="switchArticleType('link')">
+          <div class="ac-icon">🔗</div>
+          <div class="ac-name">链接读取</div>
+          <div class="ac-desc">粘贴文章链接（公众号/新闻/网页），自动嵌入展示，尺寸自适应</div>
+        </div>
+        <div class="artm-choice" onclick="switchArticleType('custom')">
+          <div class="ac-icon">✍️</div>
+          <div class="ac-name">自己撰写</div>
+          <div class="ac-desc">标题、封面、正文全部自己上传编辑，内容永久保存</div>
+        </div>
+      </div>
+      <!-- 表单 -->
+      <div class="artm-form" id="artForm" style="display:none" data-type="custom">
+        <label class="artm-label">文章标题 <span style="color:#c0392b">*</span></label>
+        <input type="text" id="artTitle" class="artm-input" placeholder="请输入标题" maxlength="50">
+
+        <label class="artm-label">卡片简介（显示在首页动态列表中）</label>
+        <input type="text" id="artDesc" class="artm-input" placeholder="一句话简介（选填）" maxlength="80">
+
+        <div class="artm-field" id="artFieldUrl">
+          <label class="artm-label">文章链接 <span style="color:#c0392b">*</span></label>
+          <input type="url" id="artUrl" class="artm-input" placeholder="https:// 开头的完整链接">
+          <div class="artm-hint">💡 部分网站（如微信公众号）禁止被嵌入，文章页会自动提供「新标签页打开」入口</div>
+        </div>
+
+        <div class="artm-field" id="artFieldBody">
+          <label class="artm-label">文章正文 <span style="color:#c0392b">*</span></label>
+          <textarea id="artBody" class="artm-textarea" placeholder="在此撰写正文，换行分段直接回车即可……"></textarea>
+        </div>
+
+        <div class="artm-field" id="artFieldCover">
+          <label class="artm-label">封面图片（选填，不上传则自动配图）</label>
+          <div class="artm-cover-preview" id="artCoverPreview" onclick="pickArticleCover()">
+            <span style="color:#b89878;font-size:12px">点击选择封面图</span>
+          </div>
+          <input type="file" id="artCoverInput" accept="image/*" style="display:none">
+        </div>
+      </div>
+    </div>
+    <div class="artm-footer">
+      <button class="artm-btn artm-btn-cancel" onclick="closeArticleModal()">取消</button>
+      <button class="artm-btn artm-btn-save" onclick="saveArticleFromModal()">💾 保存文章</button>
+    </div>
+  </div>
+</div>
 
 <nav class="bottom-tab" id="bottomTab" aria-label="底部导航">
   <a href="index.html" class="bt-item active" data-tab="home">

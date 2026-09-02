@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文章详情 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;color:#4a2c2c;min-height:100vh;
+  }
+  /* ============ 顶栏 ============ */
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;padding:10px 18px;
+    display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:2px}
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  /* ============ 自己撰写模式 ============ */
+  .article-wrap{max-width:820px;margin:0 auto;padding:22px 16px 60px}
+  .article-card{
+    background:#fff;border-radius:18px;overflow:hidden;
+    border:1px solid #f0dcc4;box-shadow:0 6px 24px rgba(139,26,26,.1);
+  }
+  .article-cover{
+    width:100%;aspect-ratio:16/8;background:linear-gradient(135deg,#8B1A1A,#b87333);
+    display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);
+    font-size:15px;letter-spacing:3px;overflow:hidden;position:relative;
+  }
+  .article-cover img{width:100%;height:100%;object-fit:cover}
+  .article-cover .cover-tip{position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.4);color:#fff;font-size:11.5px;padding:4px 12px;border-radius:14px;display:none;letter-spacing:1px}
+  body.admin-mode .article-cover .cover-tip{display:block}
+  .article-body{padding:26px 30px 34px}
+  .article-title{
+    font-size:25px;font-weight:700;color:#8B1A1A;letter-spacing:2px;
+    line-height:1.5;margin-bottom:12px;outline:none;border-radius:6px;
+  }
+  .article-meta{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding-bottom:16px;margin-bottom:20px;border-bottom:1.5px dashed #ecd9bd;
+    font-size:13px;color:#a08a76;
+  }
+  .article-meta .tag-type{
+    background:#F5E6D3;color:#8B6a3a;border:1px solid #e8d3b0;
+    padding:2px 12px;border-radius:12px;font-size:12px;
+  }
+  .article-content{
+    font-size:15.5px;line-height:2.1;color:#4a3a2a;
+    white-space:pre-wrap;word-break:break-word;outline:none;border-radius:6px;
+  }
+  .article-content:empty::before{content:"暂无正文内容";color:#c4b098}
+  body.admin-mode .article-title:focus,
+  body.admin-mode .article-content:focus{background:#FFFBF5;box-shadow:0 0 0 2px rgba(201,162,74,.35)}
+  .article-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1.5px dashed #ecd9bd}
+  .act-btn{
+    background:#8B1A1A;color:#FDE68A;border:none;border-radius:20px;
+    padding:9px 22px;font-size:13.5px;cursor:pointer;letter-spacing:1px;transition:.2s;
+    font-family:inherit;
+  }
+  .act-btn:hover{background:#6E1414;transform:translateY(-1px)}
+  .act-btn.ghost{background:#fff;color:#8B1A1A;border:1.5px solid #C9A24A}
+  .act-btn.danger{background:#a33;color:#fff}
+  .admin-tools{display:none;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1.5px dashed #ecd9bd}
+  body.admin-mode .admin-tools{display:flex}
+  .saved-tip{
+    display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);
+    background:#5a7247;color:#fff;font-size:13px;padding:8px 22px;border-radius:20px;
+    box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:300;letter-spacing:1px;
+  }
+  .saved-tip.show{display:block;animation:fadeUp .3s}
+  @keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  /* ============ 链接读取模式 ============ */
+  .link-bar{
+    background:#fff;border-bottom:1px solid #f0dcc4;
+    padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    box-shadow:0 2px 8px rgba(139,26,26,.06);
+  }
+  .link-info{flex:1;min-width:200px}
+  .link-info .li-title{font-size:16px;font-weight:700;color:#8B1A1A;letter-spacing:1px;margin-bottom:3px;outline:none}
+  .link-info .li-desc{font-size:12.5px;color:#a08a76;line-height:1.6;outline:none}
+  .link-open{
+    background:#8B1A1A;color:#FDE68A;text-decoration:none;font-size:13px;
+    padding:9px 18px;border-radius:20px;letter-spacing:1px;white-space:nowrap;
+  }
+  .link-frame-wrap{position:relative;width:100%;height:calc(100vh - 138px);background:#fff}
+  .link-frame-wrap iframe{width:100%;height:100%;border:none;display:block}
+  .frame-fallback{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;background:#FFFBF5;text-align:center;padding:30px;
+  }
+  .frame-fallback.show{display:flex}
+  .frame-fallback .ff-icon{font-size:46px}
+  .frame-fallback p{color:#8a7a66;font-size:14px;line-height:1.9;max-width:420px}
+  .frame-fallback a{
+    background:#8B1A1A;color:#FDE68A;text-decoration:none;
+    padding:11px 28px;border-radius:22px;font-size:14px;letter-spacing:2px;
+  }
+  body.admin-mode .link-info .li-title:focus,
+  body.admin-mode .link-info .li-desc:focus{background:#FFFBF5;box-shadow:0 0 0 2px rgba(201,162,74,.35);border-radius:6px}
+
+  .not-found{max-width:520px;margin:80px auto;text-align:center;background:#fff;border-radius:16px;padding:50px 30px;border:1px solid #f0dcc4}
+  .not-found .nf-icon{font-size:52px;margin-bottom:14px}
+  .not-found h2{color:#8B1A1A;font-size:20px;letter-spacing:2px;margin-bottom:10px}
+  .not-found p{color:#a08a76;font-size:14px;line-height:1.9;margin-bottom:22px}
+  input[type=file]{display:none}
+
+  @media(max-width:640px){
+    .article-body{padding:20px 18px 26px}
+    .article-title{font-size:20px}
+    .article-content{font-size:14.5px}
+    .link-bar{padding:12px 14px}
+    .link-frame-wrap{height:calc(100vh - 170px)}
+  }
+</style>
+</head>
+<body>
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<div class="saved-tip" id="savedTip">✅ 已自动保存</div>
+
+<!-- 自己撰写模式 -->
+<div class="article-wrap" id="customView" style="display:none">
+  <div class="article-card">
+    <div class="article-cover" id="articleCover">
+      <span id="coverPlaceholder">📷 暂无封面图</span>
+      <span class="cover-tip">点击下方按钮可上传封面</span>
+    </div>
+    <div class="article-body">
+      <div class="article-title" id="articleTitle"></div>
+      <div class="article-meta">
+        <span id="articleDate"></span>
+        <span class="tag-type">📝 原创文章</span>
+      </div>
+      <div class="article-content" id="articleContent"></div>
+      <div class="admin-tools">
+        <button class="act-btn" onclick="pickCover()">🖼️ 上传/更换封面</button>
+        <button class="act-btn ghost" onclick="saveArticle(true)">💾 保存修改</button>
+        <button class="act-btn danger" onclick="deleteArticle()">🗑️ 删除文章</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 链接读取模式 -->
+<div id="linkView" style="display:none">
+  <div class="link-bar">
+    <div class="link-info">
+      <div class="li-title" id="linkTitle"></div>
+      <div class="li-desc" id="linkDesc"></div>
+    </div>
+    <a class="link-open" id="linkOpenBtn" href="#" target="_blank" rel="noopener">🔗 在新标签页打开</a>
+    <button class="act-btn admin-tools-inline" id="linkEditBtn" style="display:none" onclick="editLinkArticle()">✏️ 编辑链接信息</button>
+  </div>
+  <div class="link-frame-wrap">
+    <iframe id="linkFrame" title="外链文章" referrerpolicy="no-referrer"></iframe>
+    <div class="frame-fallback" id="frameFallback">
+      <div class="ff-icon">🔗</div>
+      <p>该网站设置了安全限制，无法在页面内直接显示。<br>请点击下方按钮在新标签页中阅读原文：</p>
+      <a id="fallbackOpen" href="#" target="_blank" rel="noopener">前往阅读原文 →</a>
+    </div>
+  </div>
+</div>
+
+<!-- 文章不存在 -->
+<div class="not-found" id="notFound" style="display:none">
+  <div class="nf-icon">📭</div>
+  <h2>文章不存在或已被删除</h2>
+  <p>您访问的文章可能已被管理员移除。<br>返回首页查看更多乡村动态吧～</p>
+  <a class="act-btn" href="index.html" style="text-decoration:none;display:inline-block">返回首页</a>
+</div>
+
+<input type="file" id="coverPicker" accept="image/*">
+
+<script>
+/* ============ 数据层（与 index.html 同源共享 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false, article = null;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function getImageFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly'), rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result ? (rq.result.data || null) : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveImageToDB(key, dataUrl){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data: dataUrl, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function deleteImageFromDB(key){
+  return new Promise((resolve) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').delete(key);
+    tx.oncomplete = () => resolve();
+  });
+}
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+function showSaved(){
+  const tip = document.getElementById('savedTip');
+  tip.classList.add('show');
+  clearTimeout(tip._t);
+  tip._t = setTimeout(() => tip.classList.remove('show'), 1600);
+}
+
+/* ============ 加载文章 ============ */
+function getArticleId(){
+  return new URLSearchParams(location.search).get('id');
+}
+
+async function init(){
+  checkAdmin();
+  await openDB();
+  const id = getArticleId();
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  const list = Array.isArray(meta.articles) ? meta.articles : [];
+  article = list.find(a => a.id === id);
+
+  if(!article){
+    document.getElementById('notFound').style.display = 'block';
+    document.title = '文章不存在 | 三下乡文化云游';
+    return;
+  }
+
+  document.title = article.title + ' | 三下乡文化云游';
+
+  if(article.type === 'link'){
+    renderLink(article);
+  } else {
+    await renderCustom(article);
+  }
+}
+
+/* ============ 自己撰写模式 ============ */
+async function renderCustom(a){
+  document.getElementById('customView').style.display = 'block';
+  document.getElementById('articleTitle').textContent = a.title;
+  document.getElementById('articleDate').textContent = a.date || '';
+  document.getElementById('articleContent').textContent = a.body || '';
+
+  // 封面
+  const coverEl = document.getElementById('articleCover');
+  const cover = await getImageFromDB('article_cover_' + a.id);
+  if(cover){
+    coverEl.innerHTML = `<img src="${cover}" alt="封面"><span class="cover-tip">点击下方按钮可更换封面</span>`;
+  } else {
+    coverEl.innerHTML = `<span id="coverPlaceholder">📷 暂无封面图</span><span class="cover-tip">点击下方按钮可上传封面</span>`;
+  }
+
+  if(isAdmin){
+    const titleEl = document.getElementById('articleTitle');
+    const bodyEl = document.getElementById('articleContent');
+    titleEl.setAttribute('contenteditable','true');
+    bodyEl.setAttribute('contenteditable','true');
+    titleEl.setAttribute('spellcheck','false');
+    bodyEl.setAttribute('spellcheck','false');
+    // 失焦自动保存
+    titleEl.onblur = () => saveArticle(false);
+    bodyEl.onblur = () => saveArticle(false);
+  }
+}
+
+async function saveArticle(manual){
+  if(!isAdmin || !article) return;
+  const title = document.getElementById('articleTitle').textContent.trim();
+  const body = document.getElementById('articleContent').innerText.trim();
+  if(!title){ alert('标题不能为空'); return; }
+  article.title = title;
+  article.body = body;
+  await saveAllMeta(m => {
+    m.articles = (m.articles || []).map(a => a.id === article.id ? article : a);
+  });
+  document.title = title + ' | 三下乡文化云游';
+  showSaved();
+  if(manual) alert('✅ 文章已保存！');
+}
+
+function pickCover(){
+  if(!isAdmin) return;
+  document.getElementById('coverPicker').click();
+}
+document.getElementById('coverPicker').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file || !article) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    await saveImageToDB('article_cover_' + article.id, reader.result);
+    article.cover = true;
+    await saveAllMeta(m => {
+      m.articles = (m.articles || []).map(a => a.id === article.id ? article : a);
+    });
+    renderCustom(article);
+    showSaved();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+async function deleteArticle(){
+  if(!isAdmin || !article) return;
+  if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return;
+  await saveAllMeta(m => {
+    m.articles = (m.articles || []).filter(a => a.id !== article.id);
+  });
+  await deleteImageFromDB('article_cover_' + article.id);
+  alert('🗑️ 文章已删除，即将返回首页');
+  location.href = 'index.html';
+}
+
+/* ============ 链接读取模式（iframe 自适应嵌入 + 新窗口兜底） ============ */
+function renderLink(a){
+  document.getElementById('linkView').style.display = 'block';
+  const titleEl = document.getElementById('linkTitle');
+  const descEl = document.getElementById('linkDesc');
+  titleEl.textContent = a.title || '外链文章';
+  descEl.textContent = a.desc || ('来源：' + safeDomain(a.url));
+  document.getElementById('linkOpenBtn').href = a.url;
+  document.getElementById('fallbackOpen').href = a.url;
+
+  const frame = document.getElementById('linkFrame');
+  const fallback = document.getElementById('frameFallback');
+
+  // 部分网站禁止 iframe 嵌入（X-Frame-Options / CSP），跨域无法检测加载失败，
+  // 因此 5 秒后若 iframe 仍无内容高度（跨域时无法读取），始终展示兜底入口提示条
+  let loaded = false;
+  frame.onload = () => { loaded = true; };
+  setTimeout(() => {
+    // 跨域情况下 loaded 可能为 true 但内容是对方的拒绝页，因此兜底入口始终常驻提示
+    fallback.classList.add('show');
+    // 不隐藏 iframe：允许嵌入的站点仍正常显示；不允许的站点用户可点兜底按钮
+  }, 4000);
+
+  frame.src = a.url;
+
+  if(isAdmin){
+    titleEl.setAttribute('contenteditable','true');
+    descEl.setAttribute('contenteditable','true');
+    titleEl.setAttribute('spellcheck','false');
+    descEl.setAttribute('spellcheck','false');
+    document.getElementById('linkEditBtn').style.display = 'inline-block';
+    titleEl.onblur = () => saveLinkMeta();
+    descEl.onblur = () => saveLinkMeta();
+  }
+}
+function safeDomain(url){
+  try{ return new URL(url).hostname; }catch(e){ return '外部链接'; }
+}
+async function saveLinkMeta(){
+  if(!isAdmin || !article) return;
+  article.title = document.getElementById('linkTitle').textContent.trim();
+  article.desc = document.getElementById('linkDesc').textContent.trim();
+  await saveAllMeta(m => {
+    m.articles = (m.articles || []).map(a => a.id === article.id ? article : a);
+  });
+  document.title = article.title + ' | 三下乡文化云游';
+  showSaved();
+}
+function editLinkArticle(){
+  const url = prompt('文章链接地址：', article.url);
+  if(url === null) return;
+  if(!/^https?:\/\//.test(url.trim())){ alert('请输入以 http:// 或 https:// 开头的有效链接'); return; }
+  article.url = url.trim();
+  saveAllMeta(m => {
+    m.articles = (m.articles || []).map(a => a.id === article.id ? article : a);
+  }).then(() => {
+    document.getElementById('linkFrame').src = article.url;
+    document.getElementById('linkOpenBtn').href = article.url;
+    document.getElementById('fallbackOpen').href = article.url;
+    showSaved();
+  });
+}
+
+init().catch(err => {
+  document.getElementById('notFound').style.display = 'block';
+  console.error(err);
+});
+</script>
+</body>
+</html>

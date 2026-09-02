@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D全景参观 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#1a1208;color:#fff;
+  }
+  /* ============ 顶栏 ============ */
+  .top-nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(139,26,26,.96);color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.4);
+  }
+  .top-nav .logo{color:#FDE68A;text-decoration:none;font-weight:700;font-size:17px;letter-spacing:2px}
+  .back-home{color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px}
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  /* ============ 3D 画布 ============ */
+  #panoCanvas{
+    position:fixed;inset:0;width:100%;height:100%;
+    background:linear-gradient(180deg,#87b5e0 0%,#c9e0f0 55%,#d8c9a0 100%);
+    cursor:grab;touch-action:none;
+  }
+  #panoCanvas.dragging{cursor:grabbing}
+
+  /* 操作提示 */
+  .hint-bar{
+    position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;
+    background:rgba(30,15,10,.72);backdrop-filter:blur(6px);
+    color:#FDE68A;font-size:12.5px;letter-spacing:1px;
+    padding:8px 20px;border-radius:20px;white-space:nowrap;
+    border:1px solid rgba(253,230,138,.3);
+    transition:opacity 1s;pointer-events:none;
+  }
+  .mode-badge{
+    position:fixed;top:64px;left:16px;z-index:50;
+    background:rgba(139,26,26,.85);color:#FDE68A;font-size:12.5px;
+    padding:7px 16px;border-radius:18px;letter-spacing:1px;
+    border:1px solid rgba(253,230,138,.35);
+  }
+
+  /* 加载中 */
+  .loading{
+    position:fixed;inset:0;z-index:60;display:none;
+    align-items:center;justify-content:center;flex-direction:column;gap:16px;
+    background:rgba(20,12,6,.6);backdrop-filter:blur(4px);
+  }
+  .loading.show{display:flex}
+  .loading .spinner{
+    width:46px;height:46px;border:4px solid rgba(253,230,138,.25);
+    border-top-color:#FDE68A;border-radius:50%;animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading .lt{color:#FDE68A;font-size:14px;letter-spacing:2px}
+
+  /* 降级提示（CDN 加载失败） */
+  .cdn-fallback{
+    position:fixed;inset:0;z-index:80;display:none;
+    align-items:center;justify-content:center;text-align:center;padding:30px;
+    background:#2a1d10;
+  }
+  .cdn-fallback.show{display:flex}
+  .cdn-fallback .cf-box{max-width:440px}
+  .cdn-fallback .cf-icon{font-size:50px;margin-bottom:14px}
+  .cdn-fallback h2{color:#FDE68A;font-size:19px;letter-spacing:2px;margin-bottom:10px}
+  .cdn-fallback p{color:#d8c4a8;font-size:13.5px;line-height:1.9;margin-bottom:20px}
+  .cdn-fallback a{
+    background:#8B1A1A;color:#FDE68A;text-decoration:none;
+    padding:10px 26px;border-radius:22px;font-size:14px;letter-spacing:2px;
+  }
+
+  /* 空状态（无内容 + 访客） */
+  .empty-state{
+    position:fixed;inset:0;z-index:40;display:none;
+    align-items:center;justify-content:center;text-align:center;pointer-events:none;
+  }
+  .empty-state.show{display:flex}
+  .empty-state .es-box{
+    background:rgba(30,15,10,.72);border:1px solid rgba(253,230,138,.3);
+    border-radius:16px;padding:30px 36px;pointer-events:auto;
+  }
+  .empty-state .es-icon{font-size:44px;margin-bottom:10px}
+  .empty-state h2{color:#FDE68A;font-size:17px;letter-spacing:2px;margin-bottom:8px}
+  .empty-state p{color:#e0d0b0;font-size:13px;line-height:1.8}
+
+  /* ============ 底部控制栏 ============ */
+  .ctrl-bar{
+    position:fixed;bottom:0;left:0;right:0;z-index:90;
+    background:rgba(30,15,10,.88);backdrop-filter:blur(8px);
+    border-top:2px solid rgba(201,162,74,.5);
+    padding:10px 14px;display:flex;align-items:center;justify-content:center;
+    gap:10px;flex-wrap:wrap;
+  }
+  .ctrl-btn{
+    background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(253,230,138,.4);
+    border-radius:22px;padding:9px 18px;font-size:13px;cursor:pointer;
+    letter-spacing:1px;transition:.2s;font-family:inherit;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .ctrl-btn:hover{background:rgba(253,230,138,.2);border-color:#FDE68A;transform:translateY(-1px)}
+  .ctrl-btn.primary{background:#8B1A1A;border-color:#FDE68A;color:#FDE68A}
+  .ctrl-btn.primary:hover{background:#6E1414}
+  .ctrl-btn.danger{border-color:rgba(255,120,120,.5)}
+  .ctrl-btn.danger:hover{background:rgba(180,40,40,.4)}
+  .ctrl-btn.admin-only{display:none}
+  body.admin-mode .ctrl-btn.admin-only{display:inline-flex}
+
+  /* 管理员提示 */
+  .admin-tip{display:none;position:fixed;top:64px;right:16px;z-index:50;background:#C9A24A;color:#5a3a00;font-size:12px;padding:6px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.3);letter-spacing:1px}
+  body.admin-mode .admin-tip{display:block}
+
+  input[type=file]{display:none}
+
+  @media(max-width:640px){
+    .hint-bar{font-size:11px;padding:6px 14px;top:60px}
+    .mode-badge{font-size:11.5px;padding:6px 12px;top:60px}
+    .admin-tip{display:none !important}
+    .ctrl-btn{padding:8px 13px;font-size:12px}
+    .top-nav .logo{font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top-nav">
+  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="back-home" href="tour.html">← 返回云游</a>
+</header>
+
+<div class="admin-tip">🛡️ 管理员模式：可上传全景图或3D模型</div>
+<div class="mode-badge" id="modeBadge">🌐 全景模式</div>
+<div class="hint-bar" id="hintBar">🖱️ 按住拖拽旋转视角 · 滚轮 / 双指缩放</div>
+
+<canvas id="panoCanvas"></canvas>
+
+<!-- 空状态 -->
+<div class="empty-state" id="emptyState">
+  <div class="es-box">
+    <div class="es-icon">🌐</div>
+    <h2>3D 全景参观即将开放</h2>
+    <p>管理员可上传全景照片（手机全景模式拍摄）<br>或 3D 模型文件（.glb 格式）</p>
+  </div>
+</div>
+
+<!-- 加载中 -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="lt" id="loadingText">正在加载 3D 场景…</div>
+</div>
+
+<!-- CDN 失败降级 -->
+<div class="cdn-fallback" id="cdnFallback">
+  <div class="cf-box">
+    <div class="cf-icon">📡</div>
+    <h2>3D 引擎加载失败</h2>
+    <p>当前网络无法加载 3D 渲染引擎（Three.js）。<br>请检查网络连接后刷新页面重试。</p>
+    <a href="tour.html">← 返回云游导览</a>
+  </div>
+</div>
+
+<!-- 控制栏 -->
+<div class="ctrl-bar">
+  <button class="ctrl-btn" onclick="resetView()">🔄 重置视角</button>
+  <button class="ctrl-btn primary admin-only" onclick="pickPanorama()">🖼️ 上传全景照片</button>
+  <button class="ctrl-btn primary admin-only" onclick="pickModel()">🧊 上传3D模型</button>
+  <button class="ctrl-btn danger admin-only" onclick="clearPano()">🗑️ 清除内容</button>
+</div>
+
+<input type="file" id="panoImageInput" accept="image/*">
+<input type="file" id="panoModelInput" accept=".glb,.gltf,model/gltf-binary">
+
+<!-- Three.js r128 UMD 版本（全局 THREE，稳定可靠） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+<script>
+/* ============ 数据层（与首页同源 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function getRecordFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly'), rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result || null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function putRecordToDB(key, data){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function deleteRecordFromDB(key){
+  return new Promise((resolve) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').delete(key);
+    tx.oncomplete = () => resolve();
+  });
+}
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+}
+function checkAdmin(){
+  if(localStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ Three.js 场景管理 ============ */
+let scene, camera, renderer, controls = null;
+let currentMode = 'panorama';   // panorama | model
+let panoMesh = null, modelGroup = null, gridHelper = null;
+let isUserInteracting = false;
+let lon = 0, lat = 0;            // 全景视角经纬度
+let onPointerDownLon = 0, onPointerDownLat = 0;
+let pointerX = 0, pointerY = 0;
+let pinchDist = 0;
+let autoRotate = true;
+let hintTimer = null;
+let objectURLs = [];             // createObjectURL 待释放
+
+const canvas = document.getElementById('panoCanvas');
+
+function showLoading(text){
+  document.getElementById('loadingText').textContent = text || '正在加载 3D 场景…';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading(){ document.getElementById('loading').classList.remove('show'); }
+function setBadge(mode){
+  document.getElementById('modeBadge').textContent = mode === 'model' ? '🧊 3D模型模式' : '🌐 全景模式';
+}
+
+/* 默认全景纹理：Canvas 程序化生成（离线兜底，打开即有场景） */
+function makeDefaultPanoTexture(){
+  const c = document.createElement('canvas');
+  c.width = 2048; c.height = 1024;
+  const ctx = c.getContext('2d');
+  // 天空渐变
+  const sky = ctx.createLinearGradient(0, 0, 0, 620);
+  sky.addColorStop(0, '#5d9bd4');
+  sky.addColorStop(0.55, '#a8cde8');
+  sky.addColorStop(1, '#e8d9b8');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, 2048, 620);
+  // 太阳
+  const sun = ctx.createRadialGradient(1500, 160, 10, 1500, 160, 130);
+  sun.addColorStop(0, 'rgba(255,244,200,.95)');
+  sun.addColorStop(0.4, 'rgba(255,230,150,.5)');
+  sun.addColorStop(1, 'rgba(255,230,150,0)');
+  ctx.fillStyle = sun;
+  ctx.fillRect(1300, 0, 400, 320);
+  // 远山（两层剪影，横向重复）
+  ctx.fillStyle = '#8aa68a';
+  for(let k = 0; k < 2; k++){
+    ctx.beginPath();
+    ctx.moveTo(0, 620);
+    const offset = k * 1024;
+    for(let x = 0; x <= 1024; x += 64){
+      const y = 620 - 60 - Math.sin((x + k * 300) * 0.012) * 45 - Math.sin(x * 0.03) * 20;
+      ctx.lineTo(offset + x, y);
+    }
+    ctx.lineTo(offset + 1024, 620); ctx.lineTo(offset, 620);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle = '#6e8f6e';
+  for(let k = 0; k < 2; k++){
+    ctx.beginPath();
+    ctx.moveTo(0, 640);
+    const offset = k * 1024 + 200;
+    for(let x = 0; x <= 1024; x += 64){
+      const y = 640 - 35 - Math.sin((x + k * 500) * 0.015) * 28;
+      ctx.lineTo(offset + x, y);
+    }
+    ctx.lineTo(offset + 1024, 640); ctx.lineTo(offset, 640);
+    ctx.closePath(); ctx.fill();
+  }
+  // 地面
+  const ground = ctx.createLinearGradient(0, 620, 0, 1024);
+  ground.addColorStop(0, '#b8c98a');
+  ground.addColorStop(1, '#7a8f56');
+  ctx.fillStyle = ground;
+  ctx.fillRect(0, 620, 2048, 404);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  return tex;
+}
+
+function initThree(){
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xF5E6D3);
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1200);
+  camera.position.set(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // 灯光（模型模式使用，全景贴图自发光不受影响）
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const hemi = new THREE.HemisphereLight(0xfff4e0, 0x8a7a5a, 0.7);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+
+  bindControls();
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+function onResize(){
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+/* ============ 全景球模式 ============ */
+function showPanorama(texture){
+  currentMode = 'panorama';
+  setBadge('panorama');
+  document.getElementById('emptyState').classList.remove('show');
+  clearModel();
+  if(panoMesh){ scene.remove(panoMesh); panoMesh.geometry.dispose(); if(panoMesh.material.map) panoMesh.material.map.dispose(); panoMesh.material.dispose(); panoMesh = null; }
+  const geo = new THREE.SphereGeometry(500, 60, 40);
+  geo.scale(-1, 1, 1); // 翻转使贴图朝内
+  const mat = new THREE.MeshBasicMaterial({ map: texture });
+  panoMesh = new THREE.Mesh(geo, mat);
+  scene.add(panoMesh);
+  scene.background = null;
+  if(controls){ controls.enabled = false; }
+  camera.position.set(0, 0, 0);
+  camera.fov = 75;
+  camera.updateProjectionMatrix();
+  lat = 0; lon = 0;
+  document.getElementById('hintBar').textContent = '🖱️ 按住拖拽 360° 环视 · 滚轮 / 双指缩放';
+}
+
+/* ============ 3D 模型模式 ============ */
+function showModelScene(){
+  currentMode = 'model';
+  setBadge('model');
+  document.getElementById('emptyState').classList.remove('show');
+  if(panoMesh){ scene.remove(panoMesh); panoMesh = null; }
+  scene.background = new THREE.Color(0xF5E6D3);
+  if(!gridHelper){
+    gridHelper = new THREE.GridHelper(20, 20, 0xC9A24A, 0xe0cdb0);
+    gridHelper.position.y = -1.5;
+    scene.add(gridHelper);
+  }
+  gridHelper.visible = true;
+  if(!controls){
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 0, 0);
+    controls.minDistance = 1.5;
+    controls.maxDistance = 15;
+    controls.maxPolarAngle = Math.PI * 0.92;
+  }
+  controls.enabled = true;
+  document.getElementById('hintBar').textContent = '🖱️ 拖拽旋转 · 滚轮缩放 · 右键平移';
+}
+
+function clearModel(){
+  if(modelGroup){
+    scene.remove(modelGroup);
+    modelGroup.traverse(o => {
+      if(o.geometry) o.geometry.dispose();
+      if(o.material){
+        if(Array.isArray(o.material)) o.material.forEach(m => { if(m.map) m.map.dispose(); m.dispose(); });
+        else { if(o.material.map) o.material.map.dispose(); o.material.dispose(); }
+      }
+    });
+    modelGroup = null;
+  }
+  if(gridHelper){ gridHelper.visible = false; }
+}
+
+function fitModel(object){
+  // 自动居中 + 缩放到合适大小
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  const scale = 2.2 / maxDim;
+  object.scale.setScalar(scale);
+  object.position.set(-center.x * scale, -box.min.y * scale - 1.5 * (1 / scale) * scale, -center.z * scale);
+  // 重新计算放置到地面（y=-1.5 网格面）
+  const box2 = new THREE.Box3().setFromObject(object);
+  object.position.y += (-1.5 - box2.min.y);
+  camera.position.set(3.2, 1.8, 4.2);
+  if(controls){ controls.target.set(0, 0, 0); controls.update(); }
+  camera.lookAt(0, 0, 0);
+}
+
+/* ============ 交互控制（全景模式自写，模型模式 OrbitControls） ============ */
+function bindControls(){
+  const el = renderer.domElement;
+
+  el.addEventListener('pointerdown', (e) => {
+    if(currentMode !== 'panorama') return;
+    isUserInteracting = true;
+    autoRotate = false;
+    pointerX = e.clientX; pointerY = e.clientY;
+    onPointerDownLon = lon; onPointerDownLat = lat;
+    el.classList.add('dragging');
+  });
+  el.addEventListener('pointermove', (e) => {
+    if(currentMode !== 'panorama' || !isUserInteracting) return;
+    lon = (pointerX - e.clientX) * 0.12 + onPointerDownLon;
+    lat = (e.clientY - pointerY) * 0.12 + onPointerDownLat;
+    lat = Math.max(-85, Math.min(85, lat));
+  });
+  const endDrag = () => { isUserInteracting = false; el.classList.remove('dragging'); };
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointerleave', endDrag);
+
+  // 滚轮缩放
+  el.addEventListener('wheel', (e) => {
+    if(currentMode !== 'panorama') return;
+    e.preventDefault();
+    camera.fov = Math.max(35, Math.min(90, camera.fov + e.deltaY * 0.05));
+    camera.updateProjectionMatrix();
+  }, { passive: false });
+
+  // 触摸：双指捏合缩放
+  el.addEventListener('touchmove', (e) => {
+    if(currentMode !== 'panorama') return;
+    if(e.touches.length === 2){
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if(pinchDist > 0){
+        camera.fov = Math.max(35, Math.min(90, camera.fov - (dist - pinchDist) * 0.12));
+        camera.updateProjectionMatrix();
+      }
+      pinchDist = dist;
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', () => { pinchDist = 0; });
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(currentMode === 'panorama'){
+    if(!isUserInteracting && autoRotate) lon += 0.025;
+    lat = Math.max(-85, Math.min(85, lat));
+    const phi = THREE.MathUtils.degToRad(90 - lat);
+    const theta = THREE.MathUtils.degToRad(lon);
+    camera.lookAt(
+      Math.sin(phi) * Math.cos(theta),
+      Math.cos(phi),
+      Math.sin(phi) * Math.sin(theta)
+    );
+  } else if(controls){
+    controls.update();
+  }
+  renderer.render(scene, camera);
+}
+
+function resetView(){
+  if(currentMode === 'panorama'){
+    lat = 0; lon = 0;
+    camera.fov = 75;
+    camera.updateProjectionMatrix();
+    autoRotate = true;
+  } else if(controls){
+    camera.position.set(3.2, 1.8, 4.2);
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+}
+
+/* ============ 管理员上传 ============ */
+function pickPanorama(){
+  if(!isAdmin){ alert('请先在「我的」页面登录管理员'); return; }
+  document.getElementById('panoImageInput').click();
+}
+function pickModel(){
+  if(!isAdmin){ alert('请先在「我的」页面登录管理员'); return; }
+  document.getElementById('panoModelInput').click();
+}
+
+document.getElementById('panoImageInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  showLoading('正在处理全景照片…');
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      await putRecordToDB('pano_image', reader.result);   // dataURL
+      await saveAllMeta(m => { m.panoType = 'image'; });
+      loadPanoramaFromURL(reader.result, () => { hideLoading(); });
+      alert('✅ 全景照片已上传并永久保存！\n💡 提示：使用 2:1 比例的全景照片（手机全景/360相机拍摄）环绕效果最佳。');
+    }catch(err){
+      hideLoading();
+      alert('保存失败：' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function loadPanoramaFromURL(url, done){
+  const loader = new THREE.TextureLoader();
+  loader.crossOrigin = 'anonymous';
+  loader.load(url, (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    showPanorama(tex);
+    // 比例提示
+    const img = tex.image;
+    if(img && img.width && img.height && img.width / img.height < 1.7){
+      const hint = document.getElementById('hintBar');
+      const old = hint.textContent;
+      hint.textContent = '⚠️ 当前图片非 2:1 全景比例，建议上传全景照片以获得最佳环绕效果';
+      setTimeout(() => { hint.textContent = old; }, 6000);
+    }
+    if(done) done();
+  }, undefined, () => {
+    hideLoading();
+    alert('图片加载失败，请重试');
+  });
+}
+
+document.getElementById('panoModelInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!/\.(glb|gltf)$/i.test(file.name)){
+    alert('请上传 .glb 或 .gltf 格式的 3D 模型（推荐 .glb 单文件格式，纹理已内嵌）');
+    return;
+  }
+  showLoading('正在加载 3D 模型，大文件请耐心等待…');
+  try{
+    const blob = file.slice(0);
+    await putRecordToDB('pano_model', blob);
+    await saveAllMeta(m => { m.panoType = 'model'; m.panoName = file.name; });
+    loadModelFromBlob(blob, file.name);
+  }catch(err){
+    hideLoading();
+    alert('模型保存失败：' + err.message);
+  }
+  e.target.value = '';
+});
+
+function loadModelFromBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  objectURLs.push(url);
+  const loader = new THREE.GLTFLoader();
+  loader.load(url, (gltf) => {
+    showModelScene();
+    clearModel();
+    modelGroup = gltf.scene || gltf.scenes[0];
+    scene.add(modelGroup);
+    fitModel(modelGroup);
+    hideLoading();
+    alert('✅ 3D 模型「' + (name || '模型') + '」加载成功并永久保存！');
+  }, undefined, (err) => {
+    hideLoading();
+    console.error(err);
+    alert('模型加载失败：请确认是有效的 .glb/.gltf 文件（推荐用 Blender/Three.js 导出的 GLB 格式）');
+  });
+}
+
+async function clearPano(){
+  if(!isAdmin) return;
+  if(!confirm('确定清除当前 3D 内容吗？（将恢复默认全景场景）')) return;
+  await deleteRecordFromDB('pano_image');
+  await deleteRecordFromDB('pano_model');
+  await saveAllMeta(m => { m.panoType = null; });
+  showPanorama(makeDefaultPanoTexture());
+  alert('🗑️ 已清除，恢复默认全景场景');
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+
+  // CDN 超时检测（8 秒内 THREE 未就绪 → 降级提示）
+  setTimeout(() => {
+    if(typeof THREE === 'undefined'){
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('cdnFallback').classList.add('show');
+    }
+  }, 8000);
+
+  try{
+    await openDB();
+  }catch(e){
+    // IndexedDB 不可用仍可看默认场景
+    console.warn('DB open failed', e);
+  }
+
+  const waitThree = setInterval(() => {
+    if(typeof THREE === 'undefined') return;
+    clearInterval(waitThree);
+    initThree();
+
+    // 默认场景：程序化全景（离线兜底，先保证可用）
+    showPanorama(makeDefaultPanoTexture());
+
+    // 加载已保存内容
+    (async () => {
+      try{
+        const meta = (await getMetaFromDB('allMetadata')) || {};
+        if(meta.panoType === 'model'){
+          const rec = await getRecordFromDB('pano_model');
+          if(rec && rec.data instanceof Blob){
+            showLoading('正在加载已保存的 3D 模型…');
+            loadModelFromBlob(rec.data, meta.panoName || '模型');
+            return;
+          }
+        } else if(meta.panoType === 'image'){
+          const rec = await getRecordFromDB('pano_image');
+          if(rec && typeof rec.data === 'string'){
+            showLoading('正在加载全景照片…');
+            loadPanoramaFromURL(rec.data, hideLoading);
+            return;
+          }
+        }
+        // 无保存内容：访客显示引导提示
+        if(!isAdmin){
+          document.getElementById('emptyState').classList.add('show');
+          setTimeout(() => document.getElementById('emptyState').classList.remove('show'), 5000);
+        }
+      }catch(e){
+        console.warn('加载保存内容失败', e);
+      }
+    })();
+  }, 120);
+
+  // 操作提示 6 秒后淡出，交互时短暂恢复
+  hintTimer = setTimeout(() => { document.getElementById('hintBar').style.opacity = '0.25'; }, 6000);
+})();
+</script>
+</body>
+</html>

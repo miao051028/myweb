@@ -57,6 +57,24 @@
   .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
   .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:24px}
 
+  /* 3D 全景入口大按钮 */
+  .pano-entry{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    max-width:420px;margin:0 auto 26px;
+    background:linear-gradient(135deg,#8B1A1A 0%,#b87333 100%);
+    color:#FDE68A;text-decoration:none;font-size:16px;font-weight:700;letter-spacing:3px;
+    padding:16px 28px;border-radius:30px;
+    box-shadow:0 6px 20px rgba(139,26,26,.35);
+    transition:transform .3s,box-shadow .3s;
+    animation:panoGlow 2.4s ease-in-out infinite;
+  }
+  .pano-entry:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 10px 28px rgba(139,26,26,.5)}
+  .pano-entry .pe-icon{font-size:22px}
+  @keyframes panoGlow{
+    0%,100%{box-shadow:0 6px 20px rgba(139,26,26,.35)}
+    50%{box-shadow:0 6px 28px rgba(201,162,74,.65)}
+  }
+
   /* 建筑卡片网格 */
   .card-grid{
     display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;
@@ -161,6 +179,10 @@
 <main class="page-main">
   <div class="page-title">名 胜 古 迹 · 建 筑 巡 礼</div>
   <div class="page-subtitle">点击卡片查看详细介绍</div>
+
+  <a class="pano-entry" href="panorama.html">
+    <span class="pe-icon">🌐</span> 3D 全景参观
+  </a>
 
   <div class="card-grid" id="buildingGrid"><!-- JS 渲染 --></div>
 
