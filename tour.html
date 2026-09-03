@@ -315,7 +315,7 @@
 
 <nav class="bottom-tab">
   <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
-  <a class="bt-item active" href="tour.html"><span class="bt-icon">📖</span>云游</a>
+  <a class="bt-item" href="community.html"><span class="bt-icon">💬</span>社区</a>
   <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
   <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
 </nav>
@@ -473,7 +473,11 @@ async function flushTourPending(meta){
         rq.onerror = () => reject(rq.error);
       }));
       finalMeta.mediaFiles = finalMeta.mediaFiles || {};
-      recs.forEach(r => { finalMeta.mediaFiles[r.key] = (r.data instanceof Blob) ? 'glb' : 'img'; });
+      recs.forEach(r => {
+        finalMeta.mediaFiles[r.key] = (r.data instanceof Blob)
+          ? (/^(post_)/.test(r.key) ? 'vid' : 'glb')   // 社区视频 post_* 保持 .mp4 通道类型
+          : 'img';
+      });
     }catch(e){}
     finalMeta.timestamp = Date.now();
     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(finalMeta))));
@@ -513,6 +517,84 @@ function markTourUploaded(key, ts){
     m[key] = ts;
     localStorage.setItem('sxx_uploaded_media', JSON.stringify(m));
   }catch(e){}
+}
+/* tour 端完整性补传：building_ 缩略图 + pano_ 全景媒体凡是 metadata 登记了但 GitHub 缺失的，从本地 DB 补传 */
+async function backfillTourMediaToGithub(){
+  const cfg = tourGhConfig();
+  if(!cfg || !cfg.token) return;
+  const base = pagesBaseForRepo(cfg.repo);
+  // 1) 远端最新 mediaFiles
+  let meta = null;
+  const urls = [ base + '/sxx_metadata.json',
+    'https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json?raw=' + Date.now() ];
+  for(const u of urls){
+    try{
+      const h = { 'Cache-Control': 'no-cache' };
+      if(u.indexOf('api.github.com') !== -1){ h['Accept'] = 'application/vnd.github.raw'; h['Authorization'] = 'token ' + cfg.token; }
+      const r = await fetch(u, { headers: h });
+      if(r.ok){ meta = JSON.parse(await r.text()); break; }
+    }catch(e){}
+  }
+  if(!meta) return;
+  const mf = meta.mediaFiles || {};
+  const keys = Object.keys(mf).filter(k => /^(building_|pano_)/.test(k));
+  if(!keys.length) return;
+  // 2) GitHub 上已存在的媒体文件名（目录 API 更快，失败则逐个探测）
+  let namesOnGH = new Set();
+  try{
+    const dir = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media', {
+      headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if(dir.ok){ const arr = await dir.json(); if(Array.isArray(arr)) arr.forEach(f => namesOnGH.add(f.name)); }
+  }catch(e){}
+  const missing = [];
+  for(const k of keys){
+    const type = mf[k];
+    const filename = encodeURIComponent(k) + (type === 'glb' ? '.glb' : '.img');
+    if(namesOnGH.has(filename)) continue;
+    if(!namesOnGH.size){
+      let exists = false;
+      try{
+        if(base){ const hr = await fetch(base + '/media/' + filename, { method:'HEAD', cache:'no-cache' }); if(hr.ok) exists = true; }
+        if(!exists){
+          const h2 = { 'Accept':'application/vnd.github.raw','Authorization':'token ' + cfg.token,'Cache-Control':'no-cache' };
+          const hr = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media/' + filename, { headers: h2 });
+          if(hr.ok) exists = true;
+        }
+      }catch(e){}
+      if(exists) continue;
+    }
+    missing.push({ key: k, type, filename });
+  }
+  if(!missing.size && missing.length === 0){ console.log('✅ tour媒体 GitHub 上已齐全 (' + keys.length + ')'); return; }
+  // 3) 从本地 DB 取并排队上传（建筑缩略图若 >1MB 再压一次）
+  let uploaded = 0, skipped = 0;
+  showTourToast('☁️ 补传缺失图片/3D 0/' + missing.length + ' …请勿关闭页面');
+  for(const { key, type } of missing){
+    const rec = await (new Promise((resolve) => {
+      try{
+        const tx = db.transaction('images','readonly');
+        const rq = tx.objectStore('images').get(key);
+        rq.onsuccess = () => resolve(rq.result || null);
+        rq.onerror = () => resolve(null);
+      }catch(e){ resolve(null); }
+    }));
+    if(!rec || !(type === 'glb' ? (rec.data instanceof Blob) : typeof rec.data === 'string')){
+      skipped++; continue; // 本地也没有，可能是手机端上传的 → 手机端会自己补
+    }
+    if(type === 'img' && typeof rec.data === 'string' && rec.data.length > 1200000){
+      try{
+        const compressed = await compressImage(rec.data, 1600, 0.82, [[1400,0.7],[1200,0.6],[1000,0.5]]);
+        rec.data = compressed;
+        await saveImageToDB(key, compressed);
+      }catch(e){}
+    }
+    queueTourMedia(key);
+    uploaded++;
+  }
+  await flushTourPending({}); // 立即 flush（媒体 + 元数据清单）
+  showTourToast('✅ 补传完成：上传 ' + uploaded + ' / 跳过 ' + skipped + '（本地缺失）');
+  setTimeout(hideTourToast, 6000);
 }
 function showTourToast(txt){
   let el = document.getElementById('tourSyncToast');
@@ -904,6 +986,12 @@ let currentId = null;
     // ③ 拉完新图重新渲染
     await loadBuildings();
     renderGrid();
+    // ④ ★ 完整性补传（电脑端管理员）：
+    // 旧版本可能只推了元数据，媒体文件实际没上传到 GitHub（手机端 404）。
+    // 对比远端 mediaFiles 登记与 GitHub 真实文件，找出缺失并从本地 DB 补传。
+    if(isAdmin && tourGhConfig() && tourGhConfig().token){
+      try{ await backfillTourMediaToGithub(); }catch(e){ console.warn('tour 补传失败:', e.message); }
+    }
   }catch(e){
     console.warn('tour init err', e);
     CATEGORY_LIST.forEach(c => {

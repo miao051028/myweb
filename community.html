@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社区 · 话题与AI漫剧 | 三下乡文化云游</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:#F5E6D3;
+    background-image:radial-gradient(circle at 20% 20%, rgba(139,26,26,.04) 0%, transparent 50%),radial-gradient(circle at 80% 80%, rgba(139,26,26,.04) 0%, transparent 50%);
+    color:#4a2c2c;min-height:100vh;
+    padding-bottom:70px;
+  }
+  a{text-decoration:none;color:inherit}
+
+  /* ============ 顶栏 ============ */
+  .top-nav{
+    position:sticky;top:0;z-index:100;
+    background:#8B1A1A;color:#fff;
+    padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .top-nav .logo{color:#FDE68A;font-weight:700;font-size:18px;letter-spacing:2px}
+  .back-home{
+    color:#fff;font-size:13px;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);
+    padding:6px 14px;border-radius:20px;transition:.25s;letter-spacing:1px;
+  }
+  .back-home:hover{background:rgba(255,255,255,.28)}
+
+  /* ============ 页头 Banner ============ */
+  .page-banner{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#8B1A1A 0%,#A63426 55%,#8B1A1A 100%);
+    color:#fff;text-align:center;padding:40px 18px 50px;
+  }
+  .page-banner::after{
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;
+    background:#F5E6D3;border-radius:22px 22px 0 0;
+  }
+  .page-banner .pb-icon{font-size:38px;margin-bottom:6px}
+  .page-banner h1{font-size:26px;letter-spacing:6px;margin-bottom:8px;color:#FDE68A}
+  .page-banner p{font-size:13px;letter-spacing:2px;opacity:.92}
+
+  .page-main{max-width:860px;margin:0 auto;padding:18px 14px 50px}
+
+  /* ============ 发布器（人人可投稿；游客投稿为待审核状态） ============ */
+  .composer{
+    display:block;background:#fff;border:1.5px solid #E8D5B0;border-radius:16px;
+    padding:18px 16px;margin-bottom:16px;box-shadow:0 6px 22px rgba(139,26,26,.08);
+  }
+  .cp-cancel{
+    border:1.5px solid #E8D5B0;background:#fff;color:#6b4c3b;
+    padding:10px 16px;border-radius:10px;font-size:14px;cursor:pointer;transition:.2s;
+  }
+  .cp-cancel:hover{border-color:#C9A24A}
+  /* 管理员审核条 */
+  .mod-bar{
+    display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    background:#EAF5EC;border:1.5px solid #1f6b3b;border-radius:12px;
+    padding:12px 16px;margin-bottom:18px;font-size:13.5px;color:#1f6b3b;letter-spacing:1px;
+  }
+  .mod-bar button{
+    background:#1f6b3b;color:#fff;border:none;padding:7px 18px;border-radius:18px;
+    font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;
+  }
+  .mod-bar button:hover{background:#17502d}
+  .cp-head{font-size:16px;font-weight:700;color:#8B1A1A;letter-spacing:2px;margin-bottom:12px}
+  .cp-type{display:flex;gap:10px;margin-bottom:12px}
+  .cp-type-btn{
+    flex:1;border:1.5px solid #E8D5B0;background:#FDF6EC;color:#6b4c3b;
+    padding:9px 0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:2px;
+  }
+  .cp-type-btn.active{background:#8B1A1A;border-color:#8B1A1A;color:#FDE68A}
+  .cp-input{
+    width:100%;border:1.5px solid #E8D5B0;border-radius:10px;outline:none;
+    padding:10px 12px;font-size:14px;margin-bottom:10px;background:#FFFDF8;color:#4a2c2c;
+  }
+  .cp-input:focus{border-color:#C9A24A}
+  .cp-area{
+    width:100%;border:1.5px solid #E8D5B0;border-radius:10px;outline:none;
+    padding:10px 12px;font-size:14px;min-height:88px;resize:vertical;margin-bottom:10px;
+    background:#FFFDF8;color:#4a2c2c;font-family:inherit;
+  }
+  .cp-area:focus{border-color:#C9A24A}
+  .cp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .cp-mini{
+    border:1.5px dashed #C9A24A;background:#FDF6EC;color:#8B1A1A;
+    padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;transition:.2s;
+  }
+  .cp-mini:hover{background:#FBEED8}
+  .cp-filename{font-size:12px;color:#a0764f;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cp-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+  .cp-foot .cp-input{margin-bottom:0;flex:1;min-width:140px;max-width:200px}
+  .cp-publish{
+    flex:1;border:none;background:linear-gradient(135deg,#9B2828,#6E1414);color:#FDE68A;
+    padding:11px 0;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:.25s;
+  }
+  .cp-publish:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(139,26,26,.35)}
+
+  /* 访客提示条 */
+  .visitor-tip{
+    background:#FDF6EC;border:1.5px dashed #C9A24A;border-radius:12px;
+    padding:12px 16px;font-size:13px;color:#8b6a1a;margin-bottom:20px;letter-spacing:1px;
+  }
+  .visitor-tip a{color:#8B1A1A;font-weight:700}
+
+  /* ============ Tab 过滤 ============ */
+  .feed-tabs{display:flex;gap:10px;margin-bottom:16px}
+  .feed-tab{
+    border:1.5px solid #E8D5B0;background:#fff;color:#6b4c3b;
+    padding:8px 20px;border-radius:20px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:2px;
+  }
+  .feed-tab.active{background:#8B1A1A;border-color:#8B1A1A;color:#FDE68A}
+
+  /* ============ 内容卡片 ============ */
+  .post-card{
+    background:#fff;border:1.5px solid #E8D5B0;border-radius:16px;overflow:hidden;
+    margin-bottom:20px;box-shadow:0 6px 22px rgba(139,26,26,.08);transition:border-color .3s;
+  }
+  .post-card.highlight{border-color:#C9A24A;animation:postGlow 2.4s ease}
+  .post-card.pending{border-color:#E0B84A;background:#FFFCF3}
+  @keyframes postGlow{
+    0%{box-shadow:0 0 0 4px rgba(201,162,74,.55)}
+    100%{box-shadow:0 6px 22px rgba(139,26,26,.08)}
+  }
+  .post-media{position:relative;background:#2a1d10;max-height:460px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .post-media img{width:100%;object-fit:cover;display:block;max-height:460px}
+  .post-media video{width:100%;max-height:460px;display:block;background:#000}
+  .post-media .pm-badge{
+    position:absolute;top:12px;left:12px;background:#8B1A1A;color:#FDE68A;
+    font-size:12px;font-weight:600;padding:4px 12px;border-radius:14px;border:1px solid #C9A24A;letter-spacing:1px;z-index:2;
+  }
+  .post-body{padding:16px 18px 14px}
+  .post-title{font-size:18px;font-weight:700;color:#3C2F2F;letter-spacing:1px;margin-bottom:8px;line-height:1.4}
+  .post-text{font-size:14px;color:#6b5244;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+  .post-link{
+    display:inline-block;margin-top:10px;background:#FDF6EC;border:1.5px solid #C9A24A;color:#8B1A1A;
+    padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;letter-spacing:1px;
+  }
+  .post-link:hover{background:#FBEED8}
+  .post-meta{display:flex;gap:16px;margin-top:12px;font-size:12px;color:#a08a76;letter-spacing:1px}
+  .post-actions{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px dashed #E8D5B0}
+  .post-actions button{
+    border:1.5px solid #E8D5B0;background:#FDF6EC;border-radius:18px;
+    padding:6px 16px;font-size:13px;cursor:pointer;transition:.2s;color:#6b4c3b;
+  }
+  .post-actions button:hover{border-color:#C9A24A}
+  .post-actions button.liked{background:#8B1A1A;border-color:#8B1A1A;color:#FDE68A}
+  .post-actions button.approve{color:#1f6b3b;border-color:#1f6b3b;font-weight:700}
+  .post-actions button.approve:hover{background:#eaf5ec}
+  .post-actions button.edit{color:#1d4e89}
+  .post-actions button.del{margin-left:auto;color:#a33}
+  .post-actions button.del:hover{background:#fdecec;border-color:#a33}
+  .pending-badge{
+    display:inline-block;align-self:center;background:#FFF7E0;border:1px solid #E0B84A;
+    color:#8b6a1a;font-size:11.5px;padding:4px 12px;border-radius:12px;letter-spacing:1px;margin-left:auto;
+  }
+
+  .feed-empty{
+    text-align:center;padding:50px 0;color:#a0764f;font-size:14px;letter-spacing:2px;
+  }
+  .feed-loading{text-align:center;padding:40px 0;color:#a0764f;font-size:13px;letter-spacing:2px}
+
+  /* ============ 版块导航（原首页卡片内容入口） ============ */
+  .sec-title{
+    text-align:center;font-size:18px;font-weight:700;color:#8B1A1A;letter-spacing:4px;
+    margin:34px 0 6px;display:flex;align-items:center;justify-content:center;gap:14px;
+  }
+  .sec-title::before,.sec-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
+  .sec-sub{text-align:center;font-size:12px;color:#a0764f;letter-spacing:2px;margin-bottom:16px}
+  .sec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .sec-item{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    background:#fff;border:1.5px solid #E8D5B0;border-radius:14px;
+    padding:18px 8px 14px;transition:.25s;text-align:center;
+  }
+  .sec-item:hover{transform:translateY(-3px);border-color:#C9A24A;box-shadow:0 8px 20px rgba(201,162,74,.2)}
+  .sec-item .si-icon{
+    width:44px;height:44px;border-radius:12px;font-size:22px;
+    display:flex;align-items:center;justify-content:center;background:rgba(139,26,26,.08);
+  }
+  .sec-item .si-label{font-size:13.5px;font-weight:700;color:#3C2F2F;letter-spacing:1px}
+  .sec-item .si-desc{font-size:11px;color:#a0764f;letter-spacing:1px}
+  .pano-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+  .pano-chip{
+    background:#fff;border:1.5px solid #E8D5B0;border-radius:20px;
+    padding:8px 18px;font-size:13px;font-weight:600;letter-spacing:1px;transition:.2s;
+  }
+  .pano-chip:hover{transform:translateY(-2px);border-color:#C9A24A}
+  .pano-chip.c-red{color:#8B1A1A}.pano-chip.c-eco{color:#1f6b3b}
+  .pano-chip.c-int{color:#1d4e89}.pano-chip.c-civ{color:#8b6a1a}
+
+  /* ============ 底部 Tab ============ */
+  .bottom-tab{
+    position:fixed;left:0;right:0;bottom:0;z-index:150;height:56px;background:#fff;
+    border-top:2px solid #C9A24A;display:flex;box-shadow:0 -3px 14px rgba(139,26,26,.1);
+  }
+  .bottom-tab .bt-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    color:#9a8f85;font-size:10.5px;letter-spacing:1px;
+  }
+  .bottom-tab .bt-icon{font-size:20px;line-height:1}
+  .bottom-tab .bt-item.active{color:#8B1A1A;font-weight:700}
+
+  @media(max-width:640px){
+    .page-banner h1{font-size:21px;letter-spacing:4px}
+    .page-main{padding:14px 10px 40px}
+    .sec-grid{grid-template-columns:repeat(2,1fr)}
+    .post-body{padding:14px 14px 12px}
+    .post-title{font-size:16.5px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top-nav">
+  <a class="logo" href="index.html">云游马踏</a>
+  <a class="back-home" href="index.html">← 返回首页</a>
+</header>
+
+<section class="page-banner">
+  <div class="pb-icon">💬</div>
+  <h1>云 游 社 区</h1>
+  <p>话题交流 · AI漫剧展映 · 分享你眼中的马踏</p>
+</section>
+
+<main class="page-main">
+
+  <!-- 发布器（管理员模式显示） -->
+  <section class="composer" id="composer">
+    <div class="cp-head" id="cpHead">✍️ 发布新内容</div>
+    <div class="cp-type" id="cpTypeRow">
+      <button class="cp-type-btn active" id="cpTypeTopic" onclick="setCpType('topic')">💬 话题</button>
+      <button class="cp-type-btn" id="cpTypeDrama" onclick="setCpType('aidrama')">🎬 AI漫剧</button>
+    </div>
+    <input id="cpTitle" class="cp-input" placeholder="标题（必填）" maxlength="60">
+    <textarea id="cpText" class="cp-area" placeholder="正文内容，与大家分享…" maxlength="2000"></textarea>
+    <div class="cp-row" id="cpTopicRow">
+      <button class="cp-mini" onclick="document.getElementById('cpImgInput').click()">🖼️ 添加配图（可选）</button>
+      <span id="cpImgName" class="cp-filename"></span>
+    </div>
+    <div class="cp-row" id="cpDramaVidRow" style="display:none">
+      <button class="cp-mini" onclick="document.getElementById('cpVidInput').click()">🎞️ 上传漫剧视频文件</button>
+      <span id="cpVidName" class="cp-filename"></span>
+    </div>
+    <div class="cp-row" id="cpDramaCoverRow" style="display:none">
+      <button class="cp-mini" onclick="document.getElementById('cpCoverInput').click()">🖼️ 自定义封面（可选，默认截取视频画面）</button>
+      <span id="cpCoverName" class="cp-filename"></span>
+    </div>
+    <input id="cpLink" class="cp-input" placeholder="外部视频链接（B站/抖音等，与视频文件二选一）">
+    <div class="cp-foot">
+      <input id="cpAuthor" class="cp-input" placeholder="署名（默认：游客）" maxlength="20">
+      <button class="cp-cancel" id="cpCancelEdit" onclick="cancelEdit()" style="display:none">取消修改</button>
+      <button class="cp-publish" id="cpPublishBtn" onclick="publishPost()">🚀 发布</button>
+    </div>
+  </section>
+
+  <!-- 管理员审核条：有待审核投稿时显示 -->
+  <div class="mod-bar" id="modBar">
+    <span>🛡️ 有 <b id="modCount">0</b> 条游客投稿等待审核（通过后才会同步到全站设备）</span>
+    <button onclick="approveAll()">✅ 全部通过并同步</button>
+  </div>
+
+  <!-- 投稿须知（常驻） -->
+  <div class="visitor-tip" id="visitorTip">
+    📢 <b>人人可投稿</b>：游客也能自由发布话题、上传 AI漫剧！投稿先保存在本机并标记「⏳ 待审核」，管理员审核通过后自动同步到全站设备（电脑手机互通）；已发布内容由管理员负责修改与撤帖，大家可为喜欢的内容 ❤️ 点赞。
+  </div>
+
+  <!-- 过滤 Tab -->
+  <div class="feed-tabs">
+    <button class="feed-tab active" data-f="all" onclick="setFeedFilter('all')">全部</button>
+    <button class="feed-tab" data-f="topic" onclick="setFeedFilter('topic')">💬 话题</button>
+    <button class="feed-tab" data-f="aidrama" onclick="setFeedFilter('aidrama')">🎬 AI漫剧</button>
+  </div>
+
+  <!-- 信息流 -->
+  <div id="feedList"><div class="feed-loading">正在加载社区内容…</div></div>
+
+  <!-- 版块导航：原首页四卡片内容入口 -->
+  <div class="sec-title">更 多 版 块</div>
+  <div class="sec-sub">社区之外，继续云游马踏</div>
+  <div class="sec-grid">
+    <a class="sec-item" href="tour.html"><div class="si-icon">📖</div><div class="si-label">云游导览</div><div class="si-desc">名胜古迹 · 建筑巡礼</div></a>
+    <a class="sec-item" href="red.html"><div class="si-icon">🚩</div><div class="si-label">红色足迹</div><div class="si-desc">革命历史寻访</div></a>
+    <a class="sec-item" href="products.html"><div class="si-icon">🍎</div><div class="si-label">农特产品</div><div class="si-desc">乡土好物 · 特产</div></a>
+    <a class="sec-item" href="custom.html"><div class="si-icon">🎋</div><div class="si-label">乡土风物</div><div class="si-desc">民俗文化 · 风物</div></a>
+  </div>
+  <div class="pano-chips">
+    <a class="pano-chip c-red" href="panorama.html?cat=red">🎗️ 红韵全景</a>
+    <a class="pano-chip c-eco" href="panorama.html?cat=eco">🌿 生态全景</a>
+    <a class="pano-chip c-int" href="panorama.html?cat=int">💻 数智全景</a>
+    <a class="pano-chip c-civ" href="panorama.html?cat=civ">🌅 文明全景</a>
+  </div>
+
+</main>
+
+<nav class="bottom-tab">
+  <a class="bt-item" href="index.html"><span class="bt-icon">🏠</span>首页</a>
+  <a class="bt-item active" href="community.html"><span class="bt-icon">💬</span>社区</a>
+  <a class="bt-item" href="products.html"><span class="bt-icon">🛍️</span>商城</a>
+  <a class="bt-item" href="me.html"><span class="bt-icon">👤</span>我的</a>
+</nav>
+
+<!-- 隐藏文件选择器 -->
+<input type="file" id="cpImgInput" accept="image/*" style="display:none">
+<input type="file" id="cpVidInput" accept="video/mp4,video/webm,video/*" style="display:none">
+<input type="file" id="cpCoverInput" accept="image/*" style="display:none">
+
+<script>
+/* ============ 数据层（与首页/全景页同源 IndexedDB） ============ */
+const DB_NAME = 'sxx_database', DB_VERSION = 2;
+let db = null, isAdmin = false;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath:'key' });
+      if(!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath:'key' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+function getMetaFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readonly'), rq = tx.objectStore('metadata').get(key);
+    rq.onsuccess = () => resolve(rq.result ? rq.result.value : null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+async function saveAllMeta(mutator){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  mutator(meta);
+  await saveMetaToDB('allMetadata', meta);
+  return meta;
+}
+function getRecordFromDB(key){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly'), rq = tx.objectStore('images').get(key);
+    rq.onsuccess = () => resolve(rq.result || null);
+    rq.onerror = (e) => reject(e.target.error);
+  });
+}
+function putRecordToDB(key, data){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').put({ key, data, timestamp: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function deleteRecordFromDB(key){
+  return new Promise((resolve) => {
+    const tx = db.transaction('images','readwrite');
+    tx.objectStore('images').delete(key);
+    tx.oncomplete = () => resolve();
+  });
+}
+function getAllRecords(){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images','readonly');
+    const rq = tx.objectStore('images').getAll();
+    rq.onsuccess = () => resolve(rq.result || []);
+    rq.onerror = () => reject(rq.error);
+  });
+}
+function checkAdmin(){
+  // 与其他页面一致：登录态存 sessionStorage，每次新进入默认游客模式
+  try{ localStorage.removeItem('sxx_admin_auth'); }catch(e){}
+  if(sessionStorage.getItem('sxx_admin_auth') === '1'){
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+}
+
+/* ============ GitHub 云同步（与 panorama.html 同一套多级通道） ============ */
+const GH_CFG_KEY = 'sxx_github_config';
+const GH_DEFAULT_REPO = 'miao051028/myweb';
+function ghConfig(){ try{ return JSON.parse(localStorage.getItem(GH_CFG_KEY) || 'null'); }catch(e){ return null; } }
+function ghRepo(){ return (ghConfig() && ghConfig().repo) || GH_DEFAULT_REPO; }
+function ghAuthHeaders(){
+  const c = ghConfig();
+  const h = { 'Accept': 'application/vnd.github.v3+json' };
+  if(c && c.token) h['Authorization'] = 'token ' + c.token;
+  return h;
+}
+function pagesBase(repo){
+  const m = (repo || '').match(/^([^/]+)\/([^/]+)$/);
+  if(!m) return null;
+  return 'https://' + m[1] + '.github.io/' + m[2];
+}
+// 多级下载：GitHub Pages 直读 → API raw 兜底（无 1MB 限制、绕过缓存）
+async function ghFetchRaw(path, asBinary){
+  const repo = ghRepo();
+  const base = pagesBase(repo);
+  if(base){
+    try{
+      const res = await fetch(base + '/' + path, { cache: 'no-cache' });
+      if(res.ok) return asBinary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
+    }catch(e){ console.warn('Pages 通道失败，改用 API:', e.message); }
+  }
+  const headers = ghAuthHeaders();
+  headers['Accept'] = 'application/vnd.github.raw';
+  const r = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path + '?raw=' + Date.now(), { headers });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('云端读取失败 ' + r.status);
+  return asBinary ? new Uint8Array(await r.arrayBuffer()) : await r.text();
+}
+async function ghFetchFile(path){
+  const r = await fetch('https://api.github.com/repos/' + ghRepo() + '/contents/' + path, { headers: ghAuthHeaders() });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('云端读取失败 ' + r.status);
+  return r.json();
+}
+async function ghPutFile(path, content, message){
+  const c = ghConfig();
+  if(!c || !c.token) throw new Error('未配置 GitHub Token（请到首页「数据管理」配置）');
+  let sha = null;
+  try{ const ex = await ghFetchFile(path); if(ex) sha = ex.sha; }catch(e){}
+  const body = { message: message || 'sync community', content };
+  if(sha) body.sha = sha;
+  const r = await fetch('https://api.github.com/repos/' + c.repo + '/contents/' + path, {
+    method: 'PUT',
+    headers: { ...ghAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!r.ok){ const ed = await r.json().catch(() => ({})); throw new Error(ed.message || ('上传失败 ' + r.status)); }
+  return r.json();
+}
+async function ghLoadMeta(){
+  const txt = await ghFetchRaw('sxx_metadata.json', false);
+  if(!txt) return null;
+  try{ return JSON.parse(txt); }catch(e){ return null; }
+}
+// 媒体路径：社区视频 post_* → .mp4，其余沿用 .img / .glb
+function mediaPath(key, type){
+  return 'media/' + encodeURIComponent(key) + (type === 'glb' ? '.glb' : type === 'vid' ? '.mp4' : '.img');
+}
+async function ghUploadMedia(key, type, data){
+  let content;
+  if(data instanceof Blob){
+    const buf = new Uint8Array(await data.arrayBuffer());
+    let bin = ''; const CH = 0x8000;
+    for(let i = 0; i < buf.length; i += CH){ bin += String.fromCharCode.apply(null, buf.subarray(i, i + CH)); }
+    content = btoa(bin);
+  } else {
+    content = btoa(data); // dataURL 整体编码
+  }
+  await ghPutFile(mediaPath(key, type), content, 'sync community media ' + key);
+}
+async function ghDownloadMedia(key, type){
+  const bin = await ghFetchRaw(mediaPath(key, type), true);
+  if(!bin) return null;
+  if(type === 'vid') return new Blob([bin], { type: 'video/mp4' });
+  return new Blob([bin]); // 图片 Blob（dataURL 文本字节流，转回文本用）
+}
+
+/* ============ 进度提示 ============ */
+function comToast(txt){
+  let el = document.getElementById('comSyncToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'comSyncToast';
+    el.style.cssText = 'position:fixed;bottom:70px;right:18px;z-index:99999;background:rgba(20,20,20,.88);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;transition:opacity .4s;opacity:0;max-width:78vw;';
+    document.body.appendChild(el);
+  }
+  el.style.opacity = '1'; el.textContent = txt;
+}
+function comToastHide(){ const el = document.getElementById('comSyncToast'); if(el) el.style.opacity = '0'; }
+
+/* ============ 社区数据（allMetadata.communityPosts） ============ */
+// post: { id, type:'topic'|'aidrama', title, text, media:''|'img'|'vid', link:'', author, ts, likes }
+// 媒体 key：post_<id>（配图/视频）、postc_<id>（漫剧封面）
+function esc(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtTime(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+async function getPostsLocal(){
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  return Array.isArray(meta.communityPosts) ? meta.communityPosts : [];
+}
+
+/* ============ 信息流渲染 ============ */
+let feedFilter = 'all';
+let mediaCache = {};        // key → {kind:'img'|'vid', src}
+let _objectURLs = [];
+function setFeedFilter(f){
+  feedFilter = f;
+  document.querySelectorAll('.feed-tab').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  renderFeed();
+}
+function likedSet(){
+  try{ return new Set(JSON.parse(localStorage.getItem('sxx_liked_posts') || '[]')); }catch(e){ return new Set(); }
+}
+function renderFeed(){
+  const list = document.getElementById('feedList');
+  if(!list) return;
+  const posts = (window._postsCache || []).filter(p => feedFilter === 'all' ? true : p.type === feedFilter);
+  if(!posts.length){
+    list.innerHTML = '<div class="feed-empty">暂无内容，快来发布第一条话题或 AI漫剧吧！</div>';
+    return;
+  }
+  const liked = likedSet();
+  list.innerHTML = posts.map(p => {
+    let mediaHtml = '';
+    if(p.media && mediaCache['post_' + p.id]){
+      const m = mediaCache['post_' + p.id];
+      const badge = '<span class="pm-badge">' + (p.type === 'aidrama' ? '🎬 AI漫剧' : '💬 话题') + '</span>';
+      if(m.kind === 'vid') mediaHtml = '<div class="post-media">' + badge + '<video src="' + m.src + '" controls playsinline preload="metadata"></video></div>';
+      else mediaHtml = '<div class="post-media">' + badge + '<img src="' + m.src + '" alt="' + esc(p.title) + '" loading="lazy"></div>';
+    }
+    const cover = (p.type === 'aidrama' && mediaCache['postc_' + p.id] && !p.media) ? mediaCache['postc_' + p.id].src : null;
+    if(cover && !mediaHtml){
+      mediaHtml = '<div class="post-media"><span class="pm-badge">🎬 AI漫剧</span><img src="' + cover + '" alt="' + esc(p.title) + '" loading="lazy"></div>';
+    }
+    const isLiked = liked.has(p.id);
+    let actions = '<button class="' + (isLiked ? 'liked' : '') + '" onclick="toggleLike(\'' + esc(p.id) + '\')">❤️ ' + (p.likes || 0) + '</button>';
+    if(p.pending){
+      // 本机待审核投稿：管理员可「通过同步」，任何人可在本机撤回
+      actions += '<span class="pending-badge">⏳ 待审核</span>';
+      if(isAdmin) actions += '<button class="approve" onclick="approvePost(\'' + esc(p.id) + '\')">☁️ 通过同步</button>';
+      actions += '<button class="del" onclick="deletePost(\'' + esc(p.id) + '\')">🗑️ 撤回</button>';
+    } else if(isAdmin){
+      // 已发布内容：管理员可修改 / 撤帖
+      actions += '<button class="edit" onclick="editPost(\'' + esc(p.id) + '\')">✏️ 修改</button>';
+      actions += '<button class="del" onclick="deletePost(\'' + esc(p.id) + '\')">🗑️ 撤帖</button>';
+    }
+    return '<article class="post-card' + (p.pending ? ' pending' : '') + '" id="post-' + esc(p.id) + '">' +
+      mediaHtml +
+      '<div class="post-body">' +
+        (!mediaHtml ? '<span style="display:inline-block;background:#FDF6EC;border:1px solid #E8D5B0;color:#8B1A1A;font-size:11.5px;padding:3px 10px;border-radius:12px;margin-bottom:8px;letter-spacing:1px">' + (p.type === 'aidrama' ? '🎬 AI漫剧' : '💬 话题') + '</span>' : '') +
+        (p.pending ? '<span style="display:inline-block;background:#FFF7E0;border:1px solid #E0B84A;color:#8b6a1a;font-size:11.5px;padding:3px 10px;border-radius:12px;margin:0 0 8px 6px;letter-spacing:1px">⏳ 待审核（仅本机可见）</span>' : '') +
+        '<h3 class="post-title">' + esc(p.title) + '</h3>' +
+        (p.text ? '<p class="post-text">' + esc(p.text) + '</p>' : '') +
+        (p.link ? '<a class="post-link" href="' + esc(p.link) + '" target="_blank" rel="noopener">▶ 前往观看外部视频</a>' : '') +
+        '<div class="post-meta"><span>🕒 ' + fmtTime(p.ts) + '</span><span>✍️ ' + esc(p.author || '游客') + '</span></div>' +
+        '<div class="post-actions">' + actions + '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('');
+}
+// 把本地媒体读进缓存（图片=dataURL；视频=Blob URL）再渲染
+async function loadMediaIntoCache(posts){
+  _objectURLs.forEach(u => { try{ URL.revokeObjectURL(u); }catch(e){} });
+  _objectURLs = [];
+  for(const p of posts){
+    if(p.media){
+      const key = 'post_' + p.id;
+      if(!mediaCache[key]){
+        const rec = await getRecordFromDB(key).catch(() => null);
+        if(rec){
+          if(rec.data instanceof Blob){ const u = URL.createObjectURL(rec.data); _objectURLs.push(u); mediaCache[key] = { kind:'vid', src:u }; }
+          else if(typeof rec.data === 'string') mediaCache[key] = { kind:'img', src:rec.data };
+        }
+      }
+    }
+    const ck = 'postc_' + p.id;
+    if(!mediaCache[ck]){
+      const rec = await getRecordFromDB(ck).catch(() => null);
+      if(rec && typeof rec.data === 'string') mediaCache[ck] = { kind:'img', src:rec.data };
+    }
+  }
+}
+
+/* ============ 点赞（本地永久保存；管理员点赞随云端同步） ============ */
+async function toggleLike(id){
+  const posts = window._postsCache || [];
+  const p = posts.find(x => x.id === id);
+  if(!p) return;
+  const s = likedSet();
+  if(s.has(id)){ s.delete(id); p.likes = Math.max(0, (p.likes || 0) - 1); }
+  else { s.add(id); p.likes = (p.likes || 0) + 1; }
+  try{ localStorage.setItem('sxx_liked_posts', JSON.stringify([...s])); }catch(e){}
+  await saveAllMeta(m => {
+    const arr = m.communityPosts || [];
+    const i = arr.findIndex(x => x.id === id);
+    if(i > -1) arr[i].likes = p.likes;
+  });
+  renderFeed();
+  if(isAdmin && ghConfig() && ghConfig().token){ try{ await pushCommunityMeta(); }catch(e){ console.warn('点赞同步失败:', e.message); } }
+}
+
+/* ============ 发布（管理员） ============ */
+let cpType = 'topic', cpImage = null, cpVideo = null, cpCover = null;
+function setCpType(t){
+  cpType = t;
+  document.getElementById('cpTypeTopic').classList.toggle('active', t === 'topic');
+  document.getElementById('cpTypeDrama').classList.toggle('active', t === 'aidrama');
+  document.getElementById('cpTopicRow').style.display = t === 'topic' ? '' : 'none';
+  document.getElementById('cpDramaVidRow').style.display = t === 'aidrama' ? '' : 'none';
+  document.getElementById('cpDramaCoverRow').style.display = t === 'aidrama' ? '' : 'none';
+}
+// 图片压缩（<1MB，与其他页面同策略）
+function compressImage(dataUrl, maxW, quality){
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      let w = im.width, h = im.height;
+      if(w > maxW){ h = Math.round(h * maxW / w); w = maxW; }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, w, h);
+      let out = cv.toDataURL('image/jpeg', quality);
+      const steps = [[1280, 0.72], [1080, 0.6], [900, 0.5]];
+      let i = 0;
+      while(out.length > 1200000 && i < steps.length){
+        const [mw, q] = steps[i++];
+        const c2 = document.createElement('canvas');
+        let w2 = im.width, h2 = im.height;
+        if(w2 > mw){ h2 = Math.round(h2 * mw / w2); w2 = mw; }
+        c2.width = w2; c2.height = h2;
+        c2.getContext('2d').drawImage(im, 0, 0, w2, h2);
+        out = c2.toDataURL('image/jpeg', q);
+      }
+      resolve(out);
+    };
+    im.onerror = () => resolve(dataUrl);
+    im.src = dataUrl;
+  });
+}
+// 截取视频画面作封面
+function videoCover(blob){
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata'; v.muted = true; v.playsInline = true;
+    const url = URL.createObjectURL(blob);
+    let done = false;
+    const finish = (val) => { if(done) return; done = true; try{ URL.revokeObjectURL(url); }catch(e){} resolve(val); };
+    v.onloadeddata = () => { try{ v.currentTime = Math.min(1.2, (v.duration || 2) / 3); }catch(e){ finish(null); } };
+    v.onseeked = () => {
+      try{
+        const cv = document.createElement('canvas');
+        cv.width = 800;
+        cv.height = Math.round(800 * (v.videoHeight / v.videoWidth)) || 450;
+        cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+        finish(cv.toDataURL('image/jpeg', 0.8));
+      }catch(e){ finish(null); }
+    };
+    v.onerror = () => finish(null);
+    setTimeout(() => finish(null), 8000);
+    v.src = url;
+  });
+}
+document.getElementById('cpImgInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = async () => { cpImage = await compressImage(r.result, 1600, 0.82); document.getElementById('cpImgName').textContent = '已选择：' + f.name; };
+  r.readAsDataURL(f);
+  e.target.value = '';
+});
+document.getElementById('cpCoverInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { cpCover = r.result; document.getElementById('cpCoverName').textContent = '已选择：' + f.name; };
+  r.readAsDataURL(f);
+  e.target.value = '';
+});
+document.getElementById('cpVidInput').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(f.size > 25 * 1024 * 1024){ alert('视频超过 25MB（GitHub 同步上限），请压缩后再上传'); e.target.value = ''; return; }
+  cpVideo = f;
+  document.getElementById('cpVidName').textContent = '已选择：' + f.name + '（' + (f.size / 1024 / 1024).toFixed(1) + 'MB）';
+  e.target.value = '';
+});
+
+/* ============ 发布 / 编辑（人人可投稿；游客投稿为待审核，管理员直发） ============ */
+let editingId = null;
+function resetComposerForm(){
+  document.getElementById('cpTitle').value = '';
+  document.getElementById('cpText').value = '';
+  document.getElementById('cpLink').value = '';
+  document.getElementById('cpAuthor').value = '';
+  document.getElementById('cpImgName').textContent = '';
+  document.getElementById('cpVidName').textContent = '';
+  document.getElementById('cpCoverName').textContent = '';
+  cpImage = cpVideo = cpCover = null;
+}
+async function publishPost(){
+  const title = document.getElementById('cpTitle').value.trim();
+  const text = document.getElementById('cpText').value.trim();
+  const link = document.getElementById('cpLink').value.trim();
+  const author = document.getElementById('cpAuthor').value.trim() || (isAdmin ? '管理员' : '游客');
+  if(!title){ alert('请填写标题'); return; }
+
+  // —— 编辑模式：仅管理员，改文字信息后推送云端 ——
+  if(editingId){
+    if(!isAdmin){ alert('仅管理员可修改已发布内容'); return; }
+    await saveAllMeta(m => {
+      const arr = m.communityPosts || [];
+      const i = arr.findIndex(x => x.id === editingId);
+      if(i > -1){ arr[i].title = title; arr[i].text = text; arr[i].link = link; arr[i].author = author; arr[i].editTs = Date.now(); }
+    });
+    const editedId = editingId;
+    cancelEdit();
+    window._postsCache = await getPostsLocal();
+    renderFeed();
+    if(ghConfig() && ghConfig().token){
+      try{ await pushCommunityMeta(); comToast('✅ 修改已同步到云端'); setTimeout(comToastHide, 3000); }
+      catch(e){ comToast('⚠️ 修改已本地生效，云同步失败：' + e.message); setTimeout(comToastHide, 4000); }
+    } else {
+      comToast('✅ 已保存修改'); setTimeout(comToastHide, 3000);
+    }
+    const el = document.getElementById('post-' + editedId);
+    if(el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
+  if(cpType === 'aidrama' && !cpVideo && !link){ alert('AI漫剧需要上传视频文件或填写外部链接（二选一）'); return; }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  // 游客投稿标记 pending（待审核，仅本机可见）；管理员直发
+  const post = { id, type: cpType, title, text, media: '', link, author, ts: Date.now(), likes: 0, pending: isAdmin ? 0 : 1 };
+  comToast('💾 正在保存内容…');
+  try{
+    if(cpType === 'topic' && cpImage){
+      await putRecordToDB('post_' + id, cpImage);
+      post.media = 'img';
+    }
+    if(cpType === 'aidrama'){
+      // 封面：自定义 > 视频首帧
+      let cover = cpCover;
+      if(!cover && cpVideo) cover = await videoCover(cpVideo);
+      if(cover) await putRecordToDB('postc_' + id, cover);
+      if(cpVideo){
+        await putRecordToDB('post_' + id, cpVideo);
+        post.media = 'vid';
+      }
+    }
+    await saveAllMeta(m => { m.communityPosts = m.communityPosts || []; m.communityPosts.unshift(post); });
+    window._postsCache = (await getPostsLocal());
+    if(post.media) delete mediaCache['post_' + id];
+    delete mediaCache['postc_' + id];
+    resetComposerForm();
+    await loadMediaIntoCache([post]);
+    setFeedFilter('all');
+    renderFeed();
+    updateModBar();
+    // 云端同步：管理员直发 → 先传媒体再传清单；游客 → 待管理员审核
+    if(isAdmin && ghConfig() && ghConfig().token){
+      const keys = [];
+      if(post.media) keys.push(['post_' + id, post.media]);
+      if(post.type === 'aidrama' && mediaCache['postc_' + id]) keys.push(['postc_' + id, 'img']);
+      try{
+        let done = 0;
+        comToast('☁️ 同步社区内容 ' + done + '/' + keys.length + ' …请勿关闭页面');
+        for(const [k, t] of keys){
+          const rec = await getRecordFromDB(k);
+          if(rec) await ghUploadMedia(k, t, rec.data);
+          done++;
+          comToast('☁️ 同步社区内容 ' + done + '/' + keys.length + ' …请勿关闭页面');
+        }
+        await pushCommunityMeta();
+        comToast('✅ 已发布并同步到云端，其他设备打开社区页即可看到');
+      }catch(err){
+        console.warn(err);
+        comToast('⚠️ 云同步失败：' + err.message + '（内容已本地保存）');
+      }
+      setTimeout(comToastHide, 5000);
+    } else if(!isAdmin){
+      comToast('📝 投稿已保存在本机（标记待审核），管理员在本机登录后点「通过同步」即可全站可见');
+      setTimeout(comToastHide, 6000);
+    } else {
+      comToast('✅ 已发布（未配置 GitHub Token，暂不跨设备同步）');
+      setTimeout(comToastHide, 4000);
+    }
+  }catch(err){
+    console.error(err);
+    comToastHide();
+    alert('发布失败：' + err.message);
+  }
+}
+
+/* ============ 修改（管理员）：复用发布器进入编辑模式 ============ */
+function editPost(id){
+  if(!isAdmin) return;
+  const p = (window._postsCache || []).find(x => x.id === id);
+  if(!p || p.pending) return;
+  editingId = id;
+  setCpType(p.type);
+  document.getElementById('cpTitle').value = p.title || '';
+  document.getElementById('cpText').value = p.text || '';
+  document.getElementById('cpLink').value = p.link || '';
+  document.getElementById('cpAuthor').value = p.author || '';
+  // 编辑模式只改文字信息：隐藏类型切换与媒体选择
+  document.getElementById('cpTypeRow').style.display = 'none';
+  document.getElementById('cpTopicRow').style.display = 'none';
+  document.getElementById('cpDramaVidRow').style.display = 'none';
+  document.getElementById('cpDramaCoverRow').style.display = 'none';
+  document.getElementById('cpCancelEdit').style.display = '';
+  document.getElementById('cpPublishBtn').textContent = '💾 保存修改';
+  document.getElementById('cpHead').textContent = '✏️ 修改内容（管理员）';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function cancelEdit(){
+  editingId = null;
+  resetComposerForm();
+  document.getElementById('cpTypeRow').style.display = '';
+  setCpType(cpType);
+  document.getElementById('cpCancelEdit').style.display = 'none';
+  document.getElementById('cpPublishBtn').textContent = '🚀 发布';
+  document.getElementById('cpHead').textContent = '✍️ 发布新内容';
+}
+
+/* ============ 审核通过（管理员）：上传投稿媒体 + 推送清单 ============ */
+async function approvePost(id){
+  if(!isAdmin) return;
+  const posts = await getPostsLocal();
+  const p = posts.find(x => x.id === id);
+  if(!p || !p.pending) return;
+  if(!ghConfig() || !ghConfig().token){ alert('请先在「我的 → 数据管理」配置 GitHub Token 后再审核同步'); return; }
+  comToast('☁️ 正在审核同步投稿…请勿关闭页面');
+  try{
+    const keys = [];
+    if(p.media) keys.push(['post_' + id, p.media]);
+    if(p.type === 'aidrama') keys.push(['postc_' + id, 'img']);
+    let done = 0;
+    for(const [k, t] of keys){
+      const rec = await getRecordFromDB(k);
+      if(rec) await ghUploadMedia(k, t, rec.data);
+      done++;
+      comToast('☁️ 同步投稿媒体 ' + done + '/' + keys.length + ' …');
+    }
+    await saveAllMeta(m => {
+      const arr = m.communityPosts || [];
+      const i = arr.findIndex(x => x.id === id);
+      if(i > -1){ arr[i].pending = 0; delete arr[i].local; arr[i].approvedTs = Date.now(); }
+    });
+    await pushCommunityMeta();
+    window._postsCache = await getPostsLocal();
+    renderFeed();
+    updateModBar();
+    comToast('✅ 已通过并同步到云端，全站设备可见');
+    setTimeout(comToastHide, 4000);
+  }catch(err){
+    console.warn(err);
+    alert('同步失败：' + err.message + '\n（投稿仍保留在本机，可稍后重试）');
+    comToastHide();
+  }
+}
+async function approveAll(){
+  if(!isAdmin) return;
+  const posts = await getPostsLocal();
+  const pend = posts.filter(p => p.pending);
+  if(!pend.length) return;
+  for(const p of pend){ await approvePost(p.id); }
+}
+
+/* ============ 审核条：管理员可见待审核数量 ============ */
+async function updateModBar(){
+  const bar = document.getElementById('modBar');
+  if(!bar) return;
+  if(!isAdmin){ bar.style.display = 'none'; return; }
+  const posts = await getPostsLocal();
+  const n = posts.filter(p => p.pending).length;
+  if(n > 0){
+    document.getElementById('modCount').textContent = n;
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+/* ============ 撤帖 / 撤回 ============ */
+async function deletePost(id){
+  const posts = window._postsCache || [];
+  const p = posts.find(x => x.id === id);
+  if(!p) return;
+  if(p.pending){
+    // 待审核投稿仅在本机：任何人可撤回（游客撤回自己的投稿 / 管理员清理）
+    if(!confirm('撤回这条本机投稿吗？（尚未同步到云端）')) return;
+    await saveAllMeta(m => {
+      m.communityPosts = (m.communityPosts || []).filter(x => x.id !== id);
+    });
+    await deleteRecordFromDB('post_' + id);
+    await deleteRecordFromDB('postc_' + id);
+    delete mediaCache['post_' + id];
+    delete mediaCache['postc_' + id];
+    window._postsCache = await getPostsLocal();
+    renderFeed();
+    updateModBar();
+    return;
+  }
+  // 已发布内容：仅管理员撤帖（墓碑防复活，同步所有设备）
+  if(!isAdmin){ alert('已发布内容仅管理员可撤帖'); return; }
+  if(!confirm('确定撤下该内容吗？（撤帖会同步到所有设备）')) return;
+  await saveAllMeta(m => {
+    m.communityPosts = (m.communityPosts || []).filter(x => x.id !== id);
+    m.communityDeleted = m.communityDeleted || [];
+    if(!m.communityDeleted.includes(id)) m.communityDeleted.push(id);
+  });
+  await deleteRecordFromDB('post_' + id);
+  await deleteRecordFromDB('postc_' + id);
+  delete mediaCache['post_' + id];
+  delete mediaCache['postc_' + id];
+  window._postsCache = await getPostsLocal();
+  renderFeed();
+  if(ghConfig() && ghConfig().token){
+    try{ await pushCommunityMeta(); comToast('🗑️ 已撤帖并同步到云端'); setTimeout(comToastHide, 3000); }
+    catch(e){ comToast('⚠️ 撤帖已本地生效，云同步失败：' + e.message); setTimeout(comToastHide, 4000); }
+  }
+}
+
+/* ============ 元数据推送（全量清单，与其他页面兼容；待审核投稿不上云端） ============ */
+async function pushCommunityMeta(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) throw new Error('未配置 GitHub Token');
+  const meta = (await getMetaFromDB('allMetadata')) || {};
+  try{
+    const recs = await getAllRecords();
+    meta.mediaFiles = meta.mediaFiles || {};
+    recs.forEach(r => {
+      meta.mediaFiles[r.key] = (r.data instanceof Blob)
+        ? (/^post_/.test(r.key) ? 'vid' : 'glb')
+        : 'img';
+    });
+  }catch(e){}
+  // 推送副本：过滤掉 pending（游客待审核）投稿，审核通过后才会进入云端清单
+  const cloudMeta = JSON.parse(JSON.stringify(meta));
+  cloudMeta.communityPosts = (meta.communityPosts || []).filter(p => !p.pending);
+  cloudMeta.timestamp = Date.now();
+  await ghPutFile('sxx_metadata.json', btoa(unescape(encodeURIComponent(JSON.stringify(cloudMeta)))), 'sync community');
+}
+
+/* ============ 云端拉取 + 缺失媒体下载 ============ */
+async function pullCommunity(){
+  const meta = await ghLoadMeta().catch(() => null);
+  if(!meta) return null;
+  const remote = Array.isArray(meta.communityPosts) ? meta.communityPosts : [];
+  const deleted = Array.isArray(meta.communityDeleted) ? meta.communityDeleted : [];
+  await saveAllMeta(m => {
+    // 按.id 合并（新 ts 覆盖旧 ts），再应用墓碑删除 → 单向删除可同步
+    const map = {};
+    (m.communityPosts || []).forEach(p => map[p.id] = p);
+    remote.forEach(p => { if(!map[p.id] || (p.ts || 0) >= (map[p.id].ts || 0)) map[p.id] = p; });
+    const dl = new Set(deleted.concat(m.communityDeleted || []));
+    m.communityPosts = Object.values(map).filter(p => !dl.has(p.id)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    m.communityDeleted = [...dl];
+  });
+  return meta;
+}
+async function downloadMissingPostMedia(){
+  const posts = await getPostsLocal();
+  let pulled = 0;
+  for(const p of posts){
+    const jobs = [];
+    if(p.media) jobs.push(['post_' + p.id, p.media]);
+    if(p.type === 'aidrama') jobs.push(['postc_' + p.id, 'img']);
+    for(const [key, type] of jobs){
+      if(mediaCache[key]) continue;
+      const exist = await getRecordFromDB(key).catch(() => null);
+      if(exist) continue;
+      try{
+        const data = await ghDownloadMedia(key, type);
+        if(data){
+          if(type === 'vid'){ await putRecordToDB(key, data); }
+          else { const txt = await data.text(); await putRecordToDB(key, txt); }
+          pulled++;
+        }
+      }catch(e){ console.warn('社区媒体下载失败:', key, e.message); }
+    }
+  }
+  return pulled;
+}
+
+/* ============ 管理员补传：云端登记了但实际缺失的社区媒体 ============ */
+async function backfillPostMedia(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return;
+  const meta = await ghLoadMeta().catch(() => null);
+  if(!meta) return;
+  const mf = meta.mediaFiles || {};
+  const keys = Object.keys(mf).filter(k => /^(post_|postc_)/.test(k));
+  if(!keys.length) return;
+  let namesOnGH = new Set();
+  try{
+    const r = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media', { headers: ghAuthHeaders() });
+    if(r.ok){ const list = await r.json(); if(Array.isArray(list)) list.forEach(f => namesOnGH.add(f.name)); }
+  }catch(e){}
+  const missing = [];
+  for(const k of keys){
+    const filename = encodeURIComponent(k) + (mf[k] === 'vid' ? '.mp4' : '.img');
+    if(namesOnGH.has(filename)) continue;
+    if(!namesOnGH.size){
+      let exists = false;
+      try{
+        const base = pagesBase(cfg.repo);
+        if(base){ const hr = await fetch(base + '/media/' + filename, { method: 'HEAD', cache: 'no-cache' }); if(hr.ok) exists = true; }
+        if(!exists){
+          const h2 = ghAuthHeaders(); h2['Accept'] = 'application/vnd.github.raw';
+          const hr = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media/' + filename + '?raw=' + Date.now(), { headers: h2 });
+          if(hr.ok) exists = true;
+        }
+      }catch(e){}
+      if(exists) continue;
+    }
+    missing.push({ key: k, type: mf[k] });
+  }
+  if(!missing.length){ console.log('✅ 社区媒体 GitHub 端已齐全（' + keys.length + '）'); return; }
+  let done = 0;
+  comToast('☁️ 补传社区媒体 0/' + missing.length + ' …请勿关闭页面');
+  for(const { key, type } of missing){
+    const rec = await getRecordFromDB(key).catch(() => null);
+    if(rec && (type === 'vid' ? (rec.data instanceof Blob) : typeof rec.data === 'string')){
+      try{ await ghUploadMedia(key, type, rec.data); }catch(e){ console.warn('补传失败:', key, e.message); }
+    }
+    done++;
+    comToast('☁️ 补传社区媒体 ' + done + '/' + missing.length + ' …请勿关闭页面');
+  }
+  await pushCommunityMeta();
+  comToast('✅ 社区媒体补传完成');
+  setTimeout(comToastHide, 4000);
+}
+
+/* ============ 初始化 ============ */
+(async function init(){
+  checkAdmin();
+  try{ await openDB(); }catch(e){ console.warn('DB open failed', e); }
+
+  // 1) 本地数据先行渲染（含游客本机待审核投稿）
+  window._postsCache = await getPostsLocal();
+  await loadMediaIntoCache(window._postsCache);
+  renderFeed();
+  updateModBar();
+
+  // 2) 云端拉取（游客免 Token 也可只读拉取）
+  (async () => {
+    try{
+      const meta = await pullCommunity();
+      if(meta){
+        const pulled = await downloadMissingPostMedia();
+        window._postsCache = await getPostsLocal();
+        await loadMediaIntoCache(window._postsCache);
+        renderFeed();
+        updateModBar();
+        if(pulled > 0) comToast('☁️ 已从云端同步 ' + pulled + ' 个社区内容');
+        setTimeout(comToastHide, 3000);
+        // 深链定位 #post-<id>
+        const h = location.hash || '';
+        if(h.indexOf('#post-') === 0){
+          const el = document.getElementById(h.slice(1));
+          if(el){ setTimeout(() => { el.scrollIntoView({ behavior:'smooth', block:'center' }); el.classList.add('highlight'); }, 300); }
+        }
+      }
+    }catch(e){ console.warn('社区云同步拉取失败:', e.message); }
+
+    // 3) 管理员：补传云端缺失的社区媒体
+    if(isAdmin && ghConfig() && ghConfig().token){
+      try{ await backfillPostMedia(); }catch(e){ console.warn('社区媒体补传失败:', e.message); }
+    }
+  })();
+})();
+</script>
+</body>
+</html>

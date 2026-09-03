@@ -84,6 +84,69 @@
   .top-nav .nav-search-input::placeholder{color:rgba(255,255,255,.55)}
   .top-nav .nav-search-btn{background:transparent;border:none;color:#C9A24A;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:12px;display:flex;align-items:center;justify-content:center}
   .top-nav .nav-search-btn:hover{background:rgba(201,162,74,.3)}
+  /* ==== 顶栏社区链接（桌面端显示，移动端用汉堡菜单） ==== */
+  .nav-community-link{
+    color:#FDE68A;font-size:13px;font-weight:600;letter-spacing:2px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(201,162,74,.55);
+    padding:6px 14px;border-radius:18px;transition:.25s;white-space:nowrap;
+  }
+  .nav-community-link:hover{background:rgba(201,162,74,.35);color:#fff}
+  @media(max-width:860px){.nav-community-link{display:none}}
+  /* ==== 全站搜索弹窗 ==== */
+  .gs-overlay{
+    position:fixed;inset:0;z-index:3000;display:none;
+    background:rgba(40,20,15,.55);backdrop-filter:blur(4px);
+  }
+  .gs-overlay.show{display:block}
+  .gs-panel{
+    max-width:640px;margin:9vh auto 0;background:#FFFDF8;
+    border-radius:16px;border:1.5px solid #C9A24A;
+    box-shadow:0 18px 60px rgba(80,20,10,.35);
+    overflow:hidden;max-height:82vh;display:flex;flex-direction:column;
+  }
+  .gs-head{display:flex;align-items:center;gap:8px;padding:12px 14px;background:linear-gradient(180deg,#9B2828,#6E1414)}
+  .gs-head input{
+    flex:1;background:rgba(255,255,255,.14);border:1px solid rgba(201,162,74,.6);
+    border-radius:10px;outline:none;color:#fff;font-size:14px;padding:9px 12px;
+  }
+  .gs-head input::placeholder{color:rgba(255,255,255,.6)}
+  .gs-head button{background:rgba(255,255,255,.14);border:none;color:#FDE68A;font-size:13px;padding:9px 12px;border-radius:10px;cursor:pointer}
+  .gs-body{overflow-y:auto;padding:10px 12px 16px}
+  .gs-empty{text-align:center;color:#a0764f;font-size:13px;padding:26px 0;letter-spacing:1px}
+  .gs-group{margin:10px 2px 4px;font-size:12px;font-weight:700;color:#8B1A1A;letter-spacing:2px}
+  .gs-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+    cursor:pointer;border:1px solid transparent;transition:.2s;background:#fff;
+  }
+  .gs-item:hover{border-color:#C9A24A;background:#FDF6EC;transform:translateX(2px)}
+  .gs-item .gs-ico{width:34px;height:34px;border-radius:9px;background:rgba(139,26,26,.08);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .gs-item .gs-t{font-size:14px;font-weight:600;color:#3C2F2F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gs-item .gs-d{font-size:12px;color:#a0764f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gs-item .gs-main{min-width:0;flex:1}
+  /* ==== 首页四卡片：分类全景入口配色 ==== */
+  .quick-entry-item .qe-count{
+    font-size:10px;letter-spacing:1px;padding:1px 8px;border-radius:8px;
+    background:rgba(139,26,26,.08);color:#8B1A1A;margin-top:-2px;
+  }
+  .quick-entry-item.qd-red .quick-entry-icon{background:rgba(139,26,26,.12)}
+  .quick-entry-item.qd-eco .quick-entry-icon{background:rgba(31,107,59,.13)}
+  .quick-entry-item.qd-int .quick-entry-icon{background:rgba(29,78,137,.13)}
+  .quick-entry-item.qd-civ .quick-entry-icon{background:rgba(139,106,26,.15)}
+  .quick-entry-item.qd-red .quick-entry-label{color:#8B1A1A}
+  .quick-entry-item.qd-eco .quick-entry-label{color:#1f6b3b}
+  .quick-entry-item.qd-int .quick-entry-label{color:#1d4e89}
+  .quick-entry-item.qd-civ .quick-entry-label{color:#8b6a1a}
+  /* ==== Hero 马踏印记全景按钮 ==== */
+  .hero-pano-btn{
+    position:absolute;right:16px;bottom:16px;z-index:6;
+    background:rgba(139,26,26,.92);color:#FDE68A;border:1.5px solid #C9A24A;
+    padding:8px 16px;border-radius:20px;font-size:13px;letter-spacing:1px;
+    cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:.25s;
+  }
+  .hero-pano-btn:hover{background:#6E1414;transform:translateY(-2px)}
+  .hero-pano-btn.edit-only{display:none}
+  body.admin-mode .hero-pano-btn.edit-only{display:inline-block}
+  .hero-pano-btn.top-shift{bottom:56px}
 
   /* ============ 主体容器 ============ */
   .container{max-width:1280px;margin:0 auto;padding:0 16px;padding-top:72px}
@@ -1216,6 +1279,8 @@
   <!-- 移动端才显示的下拉 nav-menu -->
   <span class="nav-row-spacer" id="navRowSpacer" aria-hidden="true"></span>
   <nav class="nav-menu" id="navMenu">
+    <a href="community.html" onclick="closeNav()" data-textkey="nav_community">💬 社区</a>
+    <a href="javascript:void(0)" onclick="closeNav();openGlobalSearch()">🔍 全站搜索</a>
     <a href="tour.html" onclick="closeNav()" data-textkey="nav1">云游导览</a>
     <a href="red.html" onclick="closeNav()" data-textkey="nav2">红色足迹</a>
     <a href="products.html" onclick="closeNav()" data-textkey="nav3">农特产品</a>
@@ -1225,10 +1290,13 @@
       <span data-textkey="admin_label">管理员</span>
     </div>
   </nav>
-  <!-- 右：搜索框 -->
-  <div class="nav-search">
-    <input type="text" class="nav-search-input" placeholder="搜索景点、建筑..." aria-label="搜索">
-    <button class="nav-search-btn" aria-label="搜索">🔍</button>
+  <!-- 右：社区链接（桌面端显示） + 搜索框 -->
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <a href="community.html" class="nav-community-link" data-textkey="nav_community">💬 社区</a>
+    <div class="nav-search">
+      <input type="text" class="nav-search-input" id="navSearchInput" placeholder="搜索景点、建筑..." aria-label="搜索">
+      <button class="nav-search-btn" aria-label="搜索" onclick="openGlobalSearch(document.getElementById('navSearchInput').value)">🔍</button>
+    </div>
   </div>
 </header>
 
@@ -1251,15 +1319,18 @@
     </div>
     <!-- 换图按钮（放在 hero-banner 直接子级，确保 z-index 最高不被遮挡） -->
     <button class="cover-replace-btn" onclick="replaceCover()" title="点击更换封面图">🖼️ 更换封面</button>
+    <!-- 马踏印记 3D 全景：管理员上传 / 游客查看 -->
+    <button class="hero-pano-btn edit-only top-shift" onclick="uploadHeroPano()">🌐 上传全景</button>
+    <button class="hero-pano-btn" id="heroPanoViewBtn" style="display:none" onclick="location.href='panorama.html?id=hero'">🌐 360°全景</button>
   </section>
 
-  <!-- ============ 快速入口（仅卡片，无标题） ============ -->
-  <section class="quick-entry" aria-label="快速入口">
+  <!-- ============ 快速入口：四大分类 3D 全景（仅卡片，无标题） ============ -->
+  <section class="quick-entry" aria-label="分类全景入口">
     <div class="quick-entry-grid">
-      <a href="tour.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">📖</div><div class="quick-entry-label" data-textkey="quick_label1">云游导览</div></a>
-      <a href="red.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🚩</div><div class="quick-entry-label" data-textkey="quick_label2">红色足迹</div></a>
-      <a href="products.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🍎</div><div class="quick-entry-label" data-textkey="quick_label3">农特产品</div></a>
-      <a href="custom.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🎋</div><div class="quick-entry-label" data-textkey="quick_label4">乡土风物</div></a>
+      <a href="panorama.html?cat=red" class="quick-entry-item qd-red" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🎗️</div><div class="quick-entry-label" data-textkey="pano_label1">红韵全景</div><div class="qe-count" id="qeCountRed">3D</div></a>
+      <a href="panorama.html?cat=eco" class="quick-entry-item qd-eco" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🌿</div><div class="quick-entry-label" data-textkey="pano_label2">生态全景</div><div class="qe-count" id="qeCountEco">3D</div></a>
+      <a href="panorama.html?cat=int" class="quick-entry-item qd-int" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">💻</div><div class="quick-entry-label" data-textkey="pano_label3">数智全景</div><div class="qe-count" id="qeCountInt">3D</div></a>
+      <a href="panorama.html?cat=civ" class="quick-entry-item qd-civ" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🌅</div><div class="quick-entry-label" data-textkey="pano_label4">文明全景</div><div class="qe-count" id="qeCountCiv">3D</div></a>
     </div>
   </section>
 
@@ -1518,7 +1589,7 @@
   </section>
 
   <!-- ============ 乡村动态 ============ -->
-  <section class="news-section" aria-label="乡村动态">
+  <section id="news" class="news-section" aria-label="乡村动态">
     <div class="news-header">
       <div class="news-title" data-textkey="news_heading">乡村动态</div>
       <a class="news-more" href="#about" data-textkey="news_more" onclick="if(event.target.isContentEditable){event.preventDefault();return}">更多 ›</a>
@@ -1615,6 +1686,20 @@
 
 <!-- ============ 隐藏文件选择器 ============ -->
 <input type="file" id="filePicker" accept="image/*" style="display:none" onchange="handleFilePick(event)">
+<input type="file" id="heroPanoImageInput" accept="image/*" style="display:none">
+<input type="file" id="heroPanoModelInput" accept=".glb,.gltf,model/gltf-binary" style="display:none">
+
+<!-- ============ 全站搜索弹窗 ============ -->
+<div class="gs-overlay" id="gsOverlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div class="gs-panel">
+    <div class="gs-head">
+      <input type="text" id="gsInput" placeholder="搜索建筑全景、景点、动态、社区话题…" onkeydown="if(event.key==='Enter')runGlobalSearch()">
+      <button onclick="runGlobalSearch()">搜索</button>
+      <button onclick="closeGlobalSearch()">✕</button>
+    </div>
+    <div class="gs-body" id="gsBody"><div class="gs-empty">输入关键词，搜索全站内容</div></div>
+  </div>
+</div>
 
 <footer data-textkey="footer" style="display:none">
 </footer>
@@ -1929,12 +2014,17 @@ const DEFAULT_TEXT_DATA = {
   hero_subtitle: '探寻红色足迹 · 品味岭南乡韵',
   hero_btn1: '开启云游 →',
   hero_btn2: '文创商城',
-  /* === 快速入口（已隐藏） === */
+  /* === 快速入口（四大分类 3D 全景） === */
   quick_title: '快速入口',
   quick_label1: '云游导览',
   quick_label2: '红色足迹',
   quick_label3: '农特产品',
   quick_label4: '乡土风物',
+  pano_label1: '红韵全景',
+  pano_label2: '生态全景',
+  pano_label3: '数智全景',
+  pano_label4: '文明全景',
+  nav_community: '💬 社区',
   /* === 精选景点 / 乡村动态 === */
   spotlight_heading: '马踏精选',
   news_heading: '马踏动态',
@@ -1942,6 +2032,7 @@ const DEFAULT_TEXT_DATA = {
   /* === 底部 Tab Bar === */
   tab_home: '首页',
   tab_tour: '云游',
+  tab_community: '社区',
   tab_shop: '商城',
   tab_me: '我的'
 };
@@ -3218,19 +3309,46 @@ function autoSyncMetaToGithub() {
   scheduleSyncToGithub();
 }
 // 编辑端启动补传：本地有、但从未成功上传到云端的媒体文件（修复旧版本
-// "只传清单不传文件"或路径不一致造成的缺口），队列去重且与日常改动共用调度
+// "只传清单不传文件"或路径不一致造成的缺口），队列去重且与日常改动共用调度。
+// 双重校验：① localStorage sxx_uploaded_media 标记；② GitHub media 目录真实存在性（若标记写了但 GitHub 实际缺文件，仍然补）
 async function backfillMediaToGithub(){
   const config = getGithubConfig();
   if(!config) return;
   try{
     const recs = await getAllMediaRecords();
+    const allMeta = await loadMetadataFromGithub().catch(() => null);
+    const mf = (allMeta && allMeta.mediaFiles) || {};
     let uploadedMap = {};
     try{ uploadedMap = JSON.parse(localStorage.getItem('sxx_uploaded_media') || '{}'); }catch(e){}
+    // 从 GitHub media 目录读取真实存在的文件名（免误判）
+    let namesOnGH = new Set();
+    try{
+      const r = await fetch(`https://api.github.com/repos/${config.repo}/contents/media`, {
+        headers: Object.assign({}, ghReadHeaders(), config.token ? { 'Authorization': 'token ' + config.token } : {})
+      });
+      if(r.ok){ const list = await r.json(); if(Array.isArray(list)) list.forEach(f => namesOnGH.add(f.name)); }
+    }catch(e){}
     const missing = recs.filter(r => {
+      // 社区媒体（post_*，.mp4 扩展名）由 community.html 自管补传，避免按 .glb 误判重传
+      if(/^(post_)/.test(r.key)) return false;
       const m = uploadedMap[r.key];
-      return m !== 'skip' && m !== (r.timestamp || 0);
+      const locallyMarked = (m === 'skip' || m === (r.timestamp || 0));
+      if(!locallyMarked) return true;
+      // 本地标记"已传"，但 GitHub 目录探测显示实际缺失 → 仍要补（修复旧版漏传或上传失败没打标记的缺口）
+      const filename = encodeURIComponent(r.key) + ((r.data instanceof Blob) ? '.glb' : '.img');
+      if(namesOnGH.size && namesOnGH.has(filename)) return false;
+      // 如果目录拿不到（rate limit 等），再退化按远端 metadata.mediaFiles 对比：key 不在清单或清单类型不符都要补
+      if(namesOnGH.size === 0){
+        if(!mf[r.key]) return true;
+        const expected = (r.data instanceof Blob) ? 'glb' : 'img';
+        if(mf[r.key] !== expected) return true;
+      }
+      return false;
     });
-    if(!missing.length) return;
+    if(!missing.length){
+      console.log('✅ 媒体文件 GitHub 端已齐全（' + recs.length + '/' + recs.length + '）');
+      return;
+    }
     console.log('🛠️ 检测到', missing.length, '个媒体文件未同步到云端，开始补传...');
     missing.forEach(r => _pendingMediaKeys.add(r.key));
     scheduleSyncToGithub();
@@ -3703,11 +3821,15 @@ async function downloadFromGithubRaw(path, asBinary){
 async function saveMetadataToGithub(){
   await saveMetadata(); // 先确保本地为最新（含其他页面写入的字段）
   const metaData = (await getMetaFromDB('allMetadata')) || {};
-  // 附加媒体清单（key → 类型），供对端下载所有图片与3D模型
+  // 附加媒体清单（key → 类型），供对端下载所有图片与3D模型（社区视频 post_* 记为 vid）
   try{
     const recs = await getAllMediaRecords();
     const mediaFiles = {};
-    recs.forEach(r => { mediaFiles[r.key] = mediaTypeOf(r.data); });
+    recs.forEach(r => {
+      mediaFiles[r.key] = (r.data instanceof Blob)
+        ? (/^(post_)/.test(r.key) ? 'vid' : 'glb')
+        : 'img';
+    });
     metaData.mediaFiles = mediaFiles;
   }catch(e){ console.warn('媒体清单生成失败', e); }
   metaData.version = 4;
@@ -3784,6 +3906,7 @@ async function syncFromGithub(){
     let got = 0;
     for(let i = 0; i < mediaKeys.length; i++){
       const key = mediaKeys[i];
+      if(mediaFiles[key] === 'vid') continue; // 社区视频走 .mp4 通道，由 community.html 自行下载
       statusEl.innerHTML = `⏳ 正在下载媒体 ${i+1}/${mediaKeys.length} ...`;
       try{
         const data = await downloadMediaRecord(key, mediaFiles[key]);
@@ -3915,6 +4038,7 @@ async function autoSyncFromGithub(){
     // 1) 新路径：从 mediaFiles 清单拉所有图片/模型（增量，已存在跳过）
     const autoMedia = metaData.mediaFiles || {};
     for(const key of Object.keys(autoMedia)){
+      if(autoMedia[key] === 'vid') continue; // 社区视频走 .mp4 通道，由 community.html 自行下载
       const exist = await getMediaRecord(key).catch(() => null);
       if(exist) continue;
       try{
@@ -4780,8 +4904,8 @@ document.addEventListener('keydown',(e)=>{
   <a href="index.html" class="bt-item active" data-tab="home">
     <span class="bt-icon">🏠</span><span data-textkey="tab_home">首页</span>
   </a>
-  <a href="tour.html" class="bt-item" data-tab="tour">
-    <span class="bt-icon">📖</span><span data-textkey="tab_tour">云游</span>
+  <a href="community.html" class="bt-item" data-tab="tour">
+    <span class="bt-icon">💬</span><span data-textkey="tab_community">社区</span>
   </a>
   <a href="products.html" class="bt-item" data-tab="shop">
     <span class="bt-icon">🛍️</span><span data-textkey="tab_shop">商城</span>
@@ -4957,6 +5081,206 @@ document.addEventListener('keydown',(e)=>{
   window.initSpotlight = initSpotlight;
   window._renderSpotlight = () => renderSpotlight(currentIdx);
 })();
+</script>
+
+<script>
+/* ============ 马踏印记 3D 全景（Hero Banner） ============ */
+// 全景照片压缩：2:1 全景压到 <1MB（与 panorama.html 同策略），保证跨端通道可拉取
+function compressHeroPano(dataUrl){
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      const MAX_W = 2400;
+      let w = im.width, h = im.height;
+      if(w > MAX_W){ h = Math.round(h * MAX_W / w); w = MAX_W; }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, w, h);
+      let out = cv.toDataURL('image/jpeg', 0.85);
+      const steps = [[2000, 0.75], [1600, 0.6], [1200, 0.5]];
+      let i = 0;
+      while(out.length > 1200000 && i < steps.length){
+        const [mw, q] = steps[i++];
+        const c2 = document.createElement('canvas');
+        let w2 = im.width, h2 = im.height;
+        if(w2 > mw){ h2 = Math.round(h2 * mw / w2); w2 = mw; }
+        c2.width = w2; c2.height = h2;
+        c2.getContext('2d').drawImage(im, 0, 0, w2, h2);
+        out = c2.toDataURL('image/jpeg', q);
+      }
+      resolve(out);
+    };
+    im.onerror = () => resolve(dataUrl);
+    im.src = dataUrl;
+  });
+}
+// 是否已有马踏印记全景 → 显示游客查看按钮
+async function updateHeroPanoBtn(){
+  try{
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    const has = !!(meta.panoBuildings && meta.panoBuildings.hero);
+    const btn = document.getElementById('heroPanoViewBtn');
+    if(btn) btn.style.display = has ? '' : 'none';
+  }catch(e){}
+}
+// 管理员上传入口：确定 = 360° 全景照片，取消 = 3D 模型
+function uploadHeroPano(){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。\n\n隐藏通道：\n1. 连续点击顶部 Logo 5 次\n2. 或使用快捷键 Ctrl+Shift+E');
+    return;
+  }
+  if(confirm('「马踏印记」3D 全景上传：\n\n点击【确定】上传 360° 全景照片（手机全景模式拍摄）\n点击【取消】上传 3D 模型（.glb 文件）')){
+    document.getElementById('heroPanoImageInput').click();
+  } else {
+    document.getElementById('heroPanoModelInput').click();
+  }
+}
+document.getElementById('heroPanoImageInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const compressed = await compressHeroPano(reader.result);
+      await saveMediaRecord('pano_img_hero', compressed);
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      meta.panoBuildings = meta.panoBuildings || {};
+      meta.panoBuildings.hero = 'image';
+      await saveMetaToDB('allMetadata', meta);
+      autoSyncMediaKeyToGithub('pano_img_hero');
+      autoSyncMetaToGithub();
+      updateHeroPanoBtn();
+      alert('✅「马踏印记」全景照片已保存！\n☁️ 正在自动同步到云端（电脑手机互通）。\n💡 建议 2:1 比例全景照片，环绕效果最佳。');
+    }catch(err){ alert('保存失败：' + err.message); }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+document.getElementById('heroPanoModelInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!/\.(glb|gltf)$/i.test(file.name)){ alert('请上传 .glb 或 .gltf 格式的 3D 模型（推荐 .glb 单文件格式）'); e.target.value=''; return; }
+  try{
+    if(file.size > 25 * 1024 * 1024){ alert('模型超过 25MB，无法同步到云端，请压缩后再上传'); e.target.value=''; return; }
+    await saveMediaRecord('pano_model_hero', file.slice(0));
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    meta.panoBuildings = meta.panoBuildings || {};
+    meta.panoBuildings.hero = 'model';
+    meta.panoNames = meta.panoNames || {};
+    meta.panoNames.hero = file.name;
+    await saveMetaToDB('allMetadata', meta);
+    autoSyncMediaKeyToGithub('pano_model_hero');
+    autoSyncMetaToGithub();
+    updateHeroPanoBtn();
+    alert('✅「马踏印记」3D 模型已保存！\n☁️ 正在自动同步到云端（电脑手机互通）。');
+  }catch(err){ alert('保存失败：' + err.message); }
+  e.target.value = '';
+});
+
+/* ============ 首页四卡片：分类全景数量徽标 ============ */
+async function renderPanoCounts(){
+  try{
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    const cats = meta.buildingCats || {};
+    const panoB = meta.panoBuildings || {};
+    const counts = { red:0, eco:0, int:0, civ:0 };
+    Object.keys(cats).forEach(id => {
+      const c = cats[id];
+      if(counts[c] !== undefined && (panoB[id] || /^b/.test(id) || /^[0-9]+$/.test(id))) counts[c]++;
+    });
+    const map = { red:'qeCountRed', eco:'qeCountEco', int:'qeCountInt', civ:'qeCountCiv' };
+    Object.keys(map).forEach(k => {
+      const el = document.getElementById(map[k]);
+      if(el) el.textContent = counts[k] > 0 ? (counts[k] + ' 个') : '3D';
+    });
+  }catch(e){ /* DB 未就绪时静默 */ }
+}
+
+/* ============ 全站搜索（建筑/景点/动态/文章/社区/版块） ============ */
+function gsEsc(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function openGlobalSearch(q){
+  document.getElementById('gsOverlay').classList.add('show');
+  const inp = document.getElementById('gsInput');
+  inp.value = q || '';
+  setTimeout(() => inp.focus(), 60);
+  renderGlobalResults(q || '');
+}
+function closeGlobalSearch(){ document.getElementById('gsOverlay').classList.remove('show'); }
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeGlobalSearch(); });
+function runGlobalSearch(){ renderGlobalResults(document.getElementById('gsInput').value); }
+
+async function renderGlobalResults(kw){
+  const body = document.getElementById('gsBody');
+  if(!body) return;
+  kw = (kw || '').trim().toLowerCase();
+  if(!kw){ body.innerHTML = '<div class="gs-empty">输入关键词，搜索全站内容</div>'; return; }
+  let meta = {};
+  try{ meta = (await getMetaFromDB('allMetadata')) || {}; }catch(e){}
+  const items = [];
+  // 1) 建筑全景（含分类名匹配）
+  const bInfos = meta.buildingInfos || {};
+  const bIds = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
+  const catNames = { red:'红韵马踏', eco:'生态马踏', int:'数智马踏', civ:'文明马踏' };
+  bIds.forEach(id => {
+    const name = bInfos[id + '_name'] || ('建筑 ' + id);
+    const intro = String(bInfos[id] || '');
+    const cat = catNames[(meta.buildingCats || {})[id]] || '';
+    if((name + ' ' + intro + ' ' + cat).toLowerCase().includes(kw)){
+      items.push({ g:'建筑全景', ico:'🏛️', t:name, d:cat ? '【' + cat + '】点击查看 3D 全景漫游' : '点击查看 3D 全景漫游', href:'panorama.html?id=' + encodeURIComponent(id) });
+    }
+  });
+  // 2) 精选景点
+  const spots = Array.isArray(meta.spots) && meta.spots.length ? meta.spots : (typeof DEFAULT_SPOTS !== 'undefined' ? DEFAULT_SPOTS : []);
+  spots.forEach(s => {
+    const hay = [s.title, s.desc, s.tag, (s.tags || []).join(' ')].join(' ').toLowerCase();
+    if(hay.includes(kw)) items.push({ g:'精选景点', ico:'📍', t:s.title, d:String(s.desc || '').slice(0, 40), href:'index.html#spotlight' });
+  });
+  // 3) 文章 / 乡村动态
+  if(Array.isArray(meta.articles)) meta.articles.forEach(a => {
+    const hay = [a.title, a.content, a.desc, a.excerpt].join(' ').toLowerCase();
+    if(hay.includes(kw)) items.push({ g:'乡村动态', ico:'📰', t:a.title, d:'点击阅读文章', href:'article.html?id=' + encodeURIComponent(a.id) });
+  });
+  if(Array.isArray(meta.newsList)) meta.newsList.forEach(n => {
+    if([n.title, n.desc].join(' ').toLowerCase().includes(kw)) items.push({ g:'乡村动态', ico:'📰', t:n.title, d:String(n.desc || '').slice(0, 40), href:'index.html#news' });
+  });
+  // 4) 社区话题 / AI漫剧
+  (meta.communityPosts || []).forEach(p => {
+    if([p.title, p.text, p.author].join(' ').toLowerCase().includes(kw)){
+      items.push({ g:(p.type === 'aidrama' ? 'AI漫剧' : '社区话题'), ico:(p.type === 'aidrama' ? '🎬' : '💬'), t:p.title, d:String(p.text || '').slice(0, 40), href:'community.html#post-' + encodeURIComponent(p.id) });
+    }
+  });
+  // 5) 版块页面
+  [['云游导览','tour.html','名胜古迹 建筑巡礼 分类'],
+   ['红色足迹','red.html','革命历史 红色文化 故居'],
+   ['农特产品','products.html','特产 商城 好物 荔枝 沉香'],
+   ['乡土风物','custom.html','民俗 文化 风物 非遗'],
+   ['3D全景参观','panorama.html','全景 漫游 3D 模型 环视'],
+   ['社区','community.html','话题 AI漫剧 交流 动态']
+  ].forEach(([name, href, hay]) => {
+    if((name + ' ' + hay).toLowerCase().includes(kw)){
+      items.push({ g:'版块', ico:'🔗', t:name, d:hay, href });
+    }
+  });
+  if(!items.length){ body.innerHTML = '<div class="gs-empty">未找到与「' + gsEsc(kw) + '」相关的内容</div>'; return; }
+  const groups = {};
+  items.forEach(it => { (groups[it.g] = groups[it.g] || []).push(it); });
+  body.innerHTML = Object.keys(groups).map(g =>
+    '<div class="gs-group">' + g + ' · ' + groups[g].length + '</div>' +
+    groups[g].map(it =>
+      '<div class="gs-item" onclick="location.href=\'' + it.href + '\'">' +
+        '<div class="gs-ico">' + it.ico + '</div>' +
+        '<div class="gs-main"><div class="gs-t">' + gsEsc(it.t) + '</div><div class="gs-d">' + gsEsc(it.d || '') + '</div></div>' +
+      '</div>'
+    ).join('')
+  ).join('');
+}
+
+// 初始化：等云端自动同步一轮后刷新按钮/徽标状态
+window.addEventListener('load', () => {
+  setTimeout(() => { updateHeroPanoBtn(); renderPanoCounts(); }, 1200);
+  setTimeout(() => { updateHeroPanoBtn(); renderPanoCounts(); }, 4500);
+});
 </script>
 
 </body>

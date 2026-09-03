@@ -405,6 +405,76 @@ async function ghDownloadMedia(key, type){
   const txt = await ghFetchRaw(panoMediaPath(key, 'img'), false);
   return txt || null; // dataURL
 }
+/* 完整性补传：登记在 mediaFiles 的 pano_* 媒体若 GitHub 实际缺失 → 从本地 DB 取出来补传
+ * （修复旧版只推清单不推文件导致手机端 404 的存量问题） */
+async function backfillPanoMediaToGithub(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return;
+  // 1) 拿远端 metadata（含最新 mediaFiles 登记）
+  const meta = await ghLoadMeta().catch(() => null);
+  if(!meta) return;
+  const mf = meta.mediaFiles || {};
+  const keys = Object.keys(mf).filter(k => /^pano_/.test(k));
+  if(!keys.length) return;
+  // 2) 拿 GitHub media 目录实际存在的文件列表（目录 API 匿名 60 次/小时限，但每页 1000 对这个项目够用）
+  let namesOnGH = new Set();
+  try{
+    const h = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + cfg.token };
+    const r = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media', { headers: h });
+    if(r.ok){
+      const list = await r.json();
+      if(Array.isArray(list)) list.forEach(f => namesOnGH.add(f.name));
+    }
+  }catch(e){ console.warn('backfill: 无法读取 media 目录，将用 HEAD 逐个探测'); }
+  // 3) 找出缺失的 key：GitHub 没文件 → 需要补传
+  const missing = [];
+  for(const k of keys){
+    const type = mf[k];
+    const filename = encodeURIComponent(k) + (type === 'glb' ? '.glb' : '.img');
+    if(namesOnGH.has(filename)) continue;
+    // 目录法失败时回退 HEAD（pages → api HEAD），避免误重传
+    if(!namesOnGH.size){
+      const base = panoPagesBase(cfg.repo);
+      let exists = false;
+      try{
+        if(base){ const hr = await fetch(base + '/media/' + filename, { method: 'HEAD', cache: 'no-cache' }); if(hr.ok) exists = true; }
+        if(!exists){
+          const h2 = { 'Accept': 'application/vnd.github.raw', 'Authorization': 'token ' + cfg.token, 'Cache-Control': 'no-cache' };
+          const hr = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/media/' + filename, { method: 'GET', headers: h2 });
+          if(hr.ok) exists = true;
+        }
+      }catch(e){}
+      if(exists) continue;
+    }
+    missing.push({ key: k, type, filename });
+  }
+  if(!missing.length){ console.log('✅ 3D全景媒体 GitHub 上已齐全（' + keys.length + '/' + keys.length + '）'); return; }
+  // 4) 从本地 IndexedDB 取记录，不存在就放弃；否则入媒体上传队列立即 flush
+  let uploaded = 0, skipped = 0;
+  panoToast('☁️ 补传缺失的3D全景 0/' + missing.length + ' …请勿关闭页面');
+  for(const { key, type, filename } of missing){
+    const rec = await getRecordFromDB(key).catch(() => null);
+    if(!rec || !(type === 'glb' ? (rec.data instanceof Blob) : typeof rec.data === 'string')){
+      skipped++;
+      continue; // 本地也没有，跳过（大概率是手机端传的，手机端自己会补）
+    }
+    if(type === 'img'){
+      // 全景若超 >1MB 再压一次（旧代码上传可能没压），保证 GitHub JSON 通道也能读到（虽然我们用 raw，但多一道保险）
+      let data = rec.data;
+      if(typeof data === 'string' && data.length > 1200000){
+        try{ data = await compressPanoImage(data); await putRecordToDB(key, data); rec.data = data; }catch(e){}
+      }
+      queuePanoMedia(key);
+    } else {
+      queuePanoMedia(key);
+    }
+    uploaded++;
+  }
+  // 立即 flush（媒体上传并发3 → 再推元数据清单），进度 Toast 已在 flushPanoPending 显示
+  await flushPanoPending();
+  panoToast('✅ 3D全景补传完成：上传 ' + uploaded + ' / 跳过 ' + skipped + '（本地缺失）');
+  setTimeout(panoToastHide, 5000);
+}
 
 // 上传当前建筑的全景内容到云（管理员）：统一接入新媒体队列+完整元数据清单
 async function cloudPushCurrent(){
@@ -513,6 +583,7 @@ function panoTypeFor(meta, bid){
 }
 function currentBuildingName(){
   if(currentBId === DEFAULT_BID) return '全景总览';
+  if(currentBId === 'hero') return '马踏印记';
   const b = buildings.find(x => x.id === currentBId);
   return b ? b.name : '当前建筑';
 }
@@ -534,15 +605,26 @@ function closeDir(){
 }
 
 // 读取云游导览中填写的建筑列表（与 tour.html / index.html 同源数据；无自定义数据时兜底默认6个）
+// 支持从首页四卡片带分类进入：?cat=red|eco|int|civ 只显示对应分类建筑
+const PANO_CAT_PARAM = (() => {
+  const c = new URLSearchParams(location.search).get('cat');
+  return ['red','eco','int','civ'].includes(c) ? c : null;
+})();
 function buildDir(meta){
   const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
   const infos = meta.buildingInfos || {};
   buildings = ids.map(id => ({ id, name: infos[id + '_name'] || ('建筑名称 ' + id) }));
+  if(PANO_CAT_PARAM){
+    const catOf = id => (meta.buildingCats || {})[id] || PanoBuildCatDefaults[id];
+    buildings = buildings.filter(b => catOf(b.id) === PANO_CAT_PARAM);
+  }
   renderDir(meta);
 }
 
 function renderDir(meta){
-  const items = [{ id: DEFAULT_BID, name: '🏞️ 全景总览' }].concat(buildings);
+  // 马踏印记全景（首页 Hero 上传，id=hero）排在总览之后
+  const heroItems = (meta.panoBuildings && meta.panoBuildings.hero) ? [{ id:'hero', name:'📍 马踏印记' }] : [];
+  const items = [{ id: DEFAULT_BID, name: '🏞️ 全景总览' }].concat(heroItems, buildings);
   const list = document.getElementById('dirList');
   if(!items.length){ list.innerHTML = '<div class="dir-empty">暂无建筑<br>请先在云游导览中添加</div>'; return; }
   list.innerHTML = items.map(b => {
@@ -912,7 +994,11 @@ async function flushPanoPending(){
         rq.onerror = () => reject(rq.error);
       }));
       meta.mediaFiles = meta.mediaFiles || {};
-      recs.forEach(r => { meta.mediaFiles[r.key] = (r.data instanceof Blob) ? 'glb' : 'img'; });
+      recs.forEach(r => {
+        meta.mediaFiles[r.key] = (r.data instanceof Blob)
+          ? (/^(post_)/.test(r.key) ? 'vid' : 'glb')   // 社区视频 post_* 保持 .mp4 通道类型
+          : 'img';
+      });
     }catch(e){}
     meta.timestamp = Date.now();
     await ghPutFile('sxx_metadata.json', btoa(unescape(encodeURIComponent(JSON.stringify(meta)))), 'sync panorama metadata + media');
@@ -1098,18 +1184,23 @@ async function clearPano(){
       try{
         const meta = (await getMetaFromDB('allMetadata')) || {};
         buildDir(meta);
-        // URL 直达 ?id=建筑ID（从云游导览各建筑卡片进入）
+        // URL 直达 ?id=建筑ID（从云游导览/首页搜索进入）；?id=hero 为「马踏印记」首页封面全景
         const urlId = new URLSearchParams(location.search).get('id');
         const allIds = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
-        if(urlId && (urlId === DEFAULT_BID || allIds.includes(urlId))){
+        const heroOk = urlId === 'hero' && meta.panoBuildings && meta.panoBuildings.hero;
+        if(urlId && (urlId === DEFAULT_BID || allIds.includes(urlId) || heroOk)){
           currentBId = urlId;
           renderDir(meta);
           await loadContentFor(urlId, meta);
           hint('正在参观：' + currentBuildingName() + ' · 点左下角「🗂️ 建筑目录」可切换', 6000);
           return;
         }
-        // 默认：全景总览
+        // 默认：全景总览；带分类进入时提示当前分类
         await loadContentFor(DEFAULT_BID, meta);
+        if(PANO_CAT_PARAM){
+          const catNames = { red:'红韵马踏', eco:'生态马踏', int:'数智马踏', civ:'文明马踏' };
+          hint('📂 正在浏览「' + (catNames[PANO_CAT_PARAM] || PANO_CAT_PARAM) + '」分类全景 · 点「🗂️ 建筑目录」切换', 6000);
+        }
         if(!panoTypeFor(meta, DEFAULT_BID) && !isAdmin){
           document.getElementById('emptyState').classList.add('show');
           setTimeout(() => document.getElementById('emptyState').classList.remove('show'), 5000);
@@ -1131,6 +1222,14 @@ async function clearPano(){
           if(r.pulled > 0) hint('☁️ 已从云端同步 ' + r.pulled + ' 个建筑全景内容', 5000);
         }
       }catch(e){ /* 离线或未配置时静默 */ }
+
+      // ★ 电脑端(管理员+Token)启动时的完整性修复：
+      // 旧版本可能只推了元数据清单，没有真正把媒体文件传到 GitHub。
+      // 对比"远端 metadata 登记的媒体清单"和"GitHub media 目录实际存在的文件"，
+      // 凡是登记了但 GitHub 缺失的 pano_* 媒体，从本地 IndexedDB 取出来补传。
+      if(isAdmin && ghConfig() && ghConfig().token){
+        try{ await backfillPanoMediaToGithub(); }catch(e){ console.warn('补传失败:', e.message); }
+      }
     })();
   }, 120);
 
