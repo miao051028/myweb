@@ -57,6 +57,54 @@
   .page-title::before,.page-title::after{content:"";display:inline-block;width:36px;height:2px;background:#C9A24A}
   .page-subtitle{text-align:center;font-size:12.5px;color:#a0764f;letter-spacing:2px;margin-bottom:24px}
 
+  /* ============ 4 大栏目分类（红韵·生态·数智·文明） ============ */
+  .category-tabs{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+    margin:18px 0 8px;
+  }
+  .category-tab{
+    border:none;cursor:pointer;
+    padding:9px 18px;border-radius:20px;letter-spacing:2px;
+    font-size:13.5px;font-weight:700;transition:.25s;
+    color:#6b4c3b;background:#fff;border:1.5px solid #f0dcc4;
+    box-shadow:0 2px 8px rgba(139,26,26,.06);
+  }
+  .category-tab:hover{transform:translateY(-2px)}
+  .category-tab.cat-red.active{background:#8B1A1A;color:#FDE68A;border-color:#8B1A1A}
+  .category-tab.cat-eco.active{background:#1f6b3b;color:#e3f5de;border-color:#1f6b3b}
+  .category-tab.cat-int.active{background:#1d4e89;color:#e0ecff;border-color:#1d4e89}
+  .category-tab.cat-civ.active{background:#8b6a1a;color:#fff7d7;border-color:#8b6a1a}
+
+  .tour-section{margin:34px 0 10px}
+  .tour-section .ts-head{
+    display:flex;align-items:center;gap:14px;margin-bottom:18px;
+    padding:0 4px;
+  }
+  .ts-head .ts-title{
+    font-size:20px;font-weight:700;letter-spacing:3px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .cat-red .ts-title{color:#8B1A1A}
+  .cat-eco .ts-title{color:#1f6b3b}
+  .cat-int .ts-title{color:#1d4e89}
+  .cat-civ .ts-title{color:#8b6a1a}
+  .ts-head .ts-title::before,.ts-head .ts-title::after{content:"";width:28px;height:2px;background:currentColor;opacity:.7}
+  .ts-head .ts-sub{color:#a0764f;font-size:12px;letter-spacing:2px;opacity:.9}
+  .ts-empty{
+    text-align:center;padding:30px 10px;color:#b89878;font-size:13px;letter-spacing:2px;
+    background:rgba(255,255,255,.5);border-radius:12px;border:1px dashed #f0dcc4;
+  }
+  /* 管理员：新增建筑选择分类下拉 */
+  .admin-cat-row{margin-top:10px;text-align:center;color:#6b4c3b;font-size:13px;letter-spacing:1px}
+  .admin-cat-row select{padding:6px 10px;border-radius:8px;border:1px solid #C9A24A;background:#fff}
+  /* 管理员：卡片顶部分类切换 */
+  .b-card .bc-cat-swap{
+    position:absolute;top:8px;left:8px;z-index:5;
+    display:none;background:#fffdf7;padding:4px 6px;border-radius:8px;border:1px solid #C9A24A;
+    font-size:11.5px;color:#6b4c3b;
+  }
+  body.admin-mode .b-card .bc-cat-swap{display:block}
+
   /* 3D 全景入口大按钮 */
   .pano-entry{
     display:flex;align-items:center;justify-content:center;gap:10px;
@@ -197,17 +245,53 @@
 </section>
 
 <main class="page-main">
-  <div class="page-title">红 韵 马 踏</div>
-  <div class="page-subtitle">革命遗址 · 文化体验 · 足不出户感受红色精神</div>
+  <div class="page-title">云 游 马 踏</div>
+  <div class="page-subtitle">红韵 · 生态 · 数智 · 文明  ·  四大栏目包揽全景</div>
 
   <a class="pano-entry" href="panorama.html">
-    <span class="pe-icon">🌐</span> 3D 全景参观
+    <span class="pe-icon">🌐</span> 总目录：3D 全景参观（包揽所有建筑）
   </a>
 
-  <div class="card-grid" id="buildingGrid"><!-- JS 渲染 --></div>
+  <!-- 顶部分类快速定位（手机友好） -->
+  <div class="category-tabs">
+    <button class="category-tab cat-red active"   onclick="scrollToSection('cat-red')">🎗️ 红韵马踏</button>
+    <button class="category-tab cat-eco"        onclick="scrollToSection('cat-eco')">🌿 生态马踏</button>
+    <button class="category-tab cat-int"        onclick="scrollToSection('cat-int')">💻 数智马踏</button>
+    <button class="category-tab cat-civ"        onclick="scrollToSection('cat-civ')">🌅 文明马踏</button>
+  </div>
+
+  <!-- 4 大栏目；卡片数据仍存 IndexedDB，建筑 id / 图 key / 3D key 与分类解耦 -->
+  <section class="tour-section cat-red" id="cat-red">
+    <div class="ts-head"><div class="ts-title">红 韵 马 踏</div><div class="ts-sub">红色足迹 · 革命遗址 · 党建文化</div></div>
+    <div class="card-grid" data-grid="red"><!-- JS 渲染 --></div>
+  </section>
+
+  <section class="tour-section cat-eco" id="cat-eco">
+    <div class="ts-head"><div class="ts-title">生 态 马 踏</div><div class="ts-sub">田园风光 · 生态种植 · 自然采摘</div></div>
+    <div class="card-grid" data-grid="eco"><!-- JS 渲染 --></div>
+  </section>
+
+  <section class="tour-section cat-int" id="cat-int">
+    <div class="ts-head"><div class="ts-title">数 智 马 踏</div><div class="ts-sub">电商销售 · 智能农业 · 数字产业</div></div>
+    <div class="card-grid" data-grid="int"><!-- JS 渲染 --></div>
+  </section>
+
+  <section class="tour-section cat-civ" id="cat-civ">
+    <div class="ts-head"><div class="ts-title">文 明 马 踏</div><div class="ts-sub">乡风文明 · 绿色能源 · 文化传承</div></div>
+    <div class="card-grid" data-grid="civ"><!-- JS 渲染 --></div>
+  </section>
 
   <div class="add-wrap">
     <button class="add-btn" onclick="addBuilding()">＋ 添加新建筑</button>
+    <div class="admin-cat-row edit-only" id="newCatRow" style="display:none">
+      放入栏目：
+      <select id="newBuildingCat">
+        <option value="red">🎗️ 红韵马踏</option>
+        <option value="eco">🌿 生态马踏</option>
+        <option value="int">💻 数智马踏</option>
+        <option value="civ">🌅 文明马踏</option>
+      </select>
+    </div>
   </div>
 </main>
 
@@ -288,39 +372,253 @@ async function saveAllMeta(mutator){
   const meta = (await getMetaFromDB('allMetadata')) || {};
   mutator(meta);
   await saveMetaToDB('allMetadata', meta);
-  // 云同步推送：管理员且已配置 Token 时自动推云端，让其他设备/页面（如 panorama）立即看到新建筑
+  // 云同步推送：管理员且已配置 Token 时自动推云端（先传媒体，再传清单），让其他设备/页面立即看到
   scheduleCloudPush(meta);
 }
 
-/* ============ 简易云同步推送（仅推送元数据到 sxx_metadata.json，媒体另行） ============ */
+/* ============ 4 栏目分类 ============ */
+const CATEGORY_LIST = [
+  { key: 'red', label: '红韵马踏', cls: 'cat-red' },
+  { key: 'eco', label: '生态马踏', cls: 'cat-eco' },
+  { key: 'int', label: '数智马踏', cls: 'cat-int' },
+  { key: 'civ', label: '文明马踏', cls: 'cat-civ' }
+];
+// 对历史 9 个建筑给默认分类（未在 buildingCats 中的新建筑默认归到「红韵马踏」）。
+// 依据用户要求：杨梅园→生态；香蜜早荔枝园（电商销售）→数智；其余按红色/生态/文明归属分配。
+const CATEGORY_DEFAULTS = {
+  '1': 'red',   // 杨瑞芬故居
+  '2': 'red',   // 马踏革命烈士纪念碑
+  '3': 'red',   // 黄东祠堂
+  '4': 'red',   // 党建广场
+  '5': 'eco',   // 坡连洞（坡连垌）生态园
+  '6': 'eco',   // 万亩良田
+  'b1788427073369': 'eco', // 杨梅园 （用户要求移出红韵→生态）
+  'b1788427187877': 'int', // 香蜜早荔枝园（电商销售；用户要求放入数智）
+  'b1788427335673': 'civ'  // 风车山（风力发电；绿色能源→文明）
+};
+function getCat(meta, bid){
+  meta.buildingCats = meta.buildingCats || {};
+  if(meta.buildingCats[bid]) return meta.buildingCats[bid];
+  if(CATEGORY_DEFAULTS[bid]){ meta.buildingCats[bid] = CATEGORY_DEFAULTS[bid]; return CATEGORY_DEFAULTS[bid]; }
+  meta.buildingCats[bid] = 'red'; return 'red';
+}
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el){ el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  // 高亮对应 tab
+  document.querySelectorAll('.category-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick') === "scrollToSection('" + id + "')"));
+}
+
+/* ============ 简易云同步推送（媒体 + 元数据统一排队） ============ */
+// 与 index.html 对齐：先传媒体文件，再传元数据清单，失败重试，进度提示
 const TOUR_GH_CFG_KEY = 'sxx_github_config';
 function tourGhConfig(){ try{ return JSON.parse(localStorage.getItem(TOUR_GH_CFG_KEY) || 'null'); }catch(e){ return null; } }
 let _tourCloudTimer = null;
-async function scheduleCloudPush(meta){
+const _tourPendingMedia = new Set();
+function scheduleCloudPush(meta){
   const cfg = tourGhConfig();
-  if(!(cfg && cfg.token && cfg.repo)) return; // 未配置 Token 跳过
+  if(!(cfg && cfg.token && cfg.repo)) return;
   clearTimeout(_tourCloudTimer);
-  _tourCloudTimer = setTimeout(async () => {
+  _tourCloudTimer = setTimeout(async () => await flushTourPending(meta), 900);
+}
+function queueTourMedia(key){ const cfg = tourGhConfig(); if(cfg && cfg.token && cfg.repo){ _tourPendingMedia.add(key); scheduleCloudPush({}); } }
+async function flushTourPending(meta){
+  const cfg = tourGhConfig();
+  if(!(cfg && cfg.token && cfg.repo)) return;
+  // 1) 上传待传媒体（并发 3，单文件 <25MB）
+  const keys = Array.from(_tourPendingMedia);
+  _tourPendingMedia.clear();
+  if(keys.length){
+    let done = 0;
+    showTourToast('☁️ 同步图片 ' + done + '/' + keys.length + ' …请勿关闭页面');
+    const worker = async () => {
+      while(keys.length){
+        const k = keys.shift();
+        try{
+          const rec = await (new Promise((resolve, reject) => {
+            const tx = db.transaction('images','readonly');
+            const rq = tx.objectStore('images').get(k);
+            rq.onsuccess = () => resolve(rq.result || null);
+            rq.onerror = () => reject(rq.error);
+          }));
+          if(rec){
+            if((rec.data instanceof Blob) && rec.data.size > 25 * 1024 * 1024){ throw new Error('超25MB'); }
+            await ghPutFileForTour('media/' + encodeURIComponent(k) + ((rec.data instanceof Blob) ? '.glb' : '.img'),
+              ((rec.data instanceof Blob) ? (async () => {
+                const buf = new Uint8Array(await rec.data.arrayBuffer());
+                let bin = ''; const CH = 0x8000;
+                for(let i = 0; i < buf.length; i += CH){ bin += String.fromCharCode.apply(null, buf.subarray(i, i + CH)); }
+                return btoa(bin);
+              })() : Promise.resolve(btoa(rec.data))),
+              'sync tour media ' + k);
+            markTourUploaded(k, rec.timestamp || 0);
+          }
+        }catch(e){ console.warn('媒体上传失败:', k, e.message); }
+        done++;
+        showTourToast('☁️ 同步图片 ' + done + '/' + keys.length + ' …请勿关闭页面');
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, keys.length) }, () => worker()));
+    hideTourToast();
+  }
+  // 2) 再传元数据清单（与 index.html 共用同一文件，不覆盖彼此其他字段）
+  try{
+    const finalMeta = (await getMetaFromDB('allMetadata')) || {};
+    // 补充 mediaFiles 清单（让 index/panorama 其他页面能看到这里的图）
     try{
-      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(meta))));
-      // 先查是否已有文件，拿 sha 用于更新
-      let sha = null;
-      try{
-        const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
-          headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if(r.ok){ const j = await r.json(); sha = j.sha; }
-      }catch(e){}
-      const body = { message: 'sync buildings from tour', content: b64 };
-      if(sha) body.sha = sha;
-      await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
-        method: 'PUT',
-        headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+      const recs = await (new Promise((resolve, reject) => {
+        const tx = db.transaction('images','readonly');
+        const rq = tx.objectStore('images').getAll();
+        rq.onsuccess = () => resolve(rq.result || []);
+        rq.onerror = () => reject(rq.error);
+      }));
+      finalMeta.mediaFiles = finalMeta.mediaFiles || {};
+      recs.forEach(r => { finalMeta.mediaFiles[r.key] = (r.data instanceof Blob) ? 'glb' : 'img'; });
+    }catch(e){}
+    finalMeta.timestamp = Date.now();
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(finalMeta))));
+    let sha = null;
+    try{
+      const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
+        headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
       });
-      console.log('☁️ tour.html 元数据已推云端');
-    }catch(e){ console.warn('tour 云同步失败:', e.message); }
-  }, 1200);
+      if(r.ok){ const j = await r.json(); sha = j.sha; }
+    }catch(e){}
+    const body = { message: 'sync tour metadata', content: b64 };
+    if(sha) body.sha = sha;
+    await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    console.log('☁️ tour.html 云端同步完成');
+  }catch(e){ console.warn('tour 元数据同步失败:', e.message); }
+}
+function ghPutFileForTour(path, contentOrPromise, msg){
+  return Promise.resolve(contentOrPromise).then(content => {
+    const cfg = tourGhConfig();
+    if(!cfg || !cfg.token) return Promise.resolve();
+    const url = `https://api.github.com/repos/${cfg.repo}/contents/${path}`;
+    const h = { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+    return fetch(url, { headers: h, method: 'GET' }).then(r => r.ok ? r.json() : null).then(ex => {
+      const body = { message: msg || 'sync', content };
+      if(ex && ex.sha) body.sha = ex.sha;
+      return fetch(url, { method: 'PUT', headers: h, body: JSON.stringify(body) });
+    }).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+  });
+}
+function markTourUploaded(key, ts){
+  try{
+    const m = JSON.parse(localStorage.getItem('sxx_uploaded_media') || '{}');
+    m[key] = ts;
+    localStorage.setItem('sxx_uploaded_media', JSON.stringify(m));
+  }catch(e){}
+}
+function showTourToast(txt){
+  let el = document.getElementById('tourSyncToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'tourSyncToast';
+    el.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;background:rgba(20,20,20,.88);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;transition:opacity .4s;opacity:0;';
+    document.body.appendChild(el);
+  }
+  el.style.opacity = '1'; el.textContent = txt;
+}
+function hideTourToast(){ const el = document.getElementById('tourSyncToast'); if(el) el.style.opacity = '0'; }
+
+/* 给定 <owner>/<repo>，返回 GitHub Pages 基础 URL。
+ * 兼容：(a) Pages site 自定义域名发布时（若 metadata 返回的 pagesBase 优先会用它，无则按默认拼）；
+ * (b) repo 路径被误配置时的健壮处理。
+ */
+function pagesBaseForRepo(repo){
+  const m = (repo || '').match(/^([^/]+)\/([^/]+)$/);
+  if(!m) return null;
+  return 'https://' + m[1] + '.github.io/' + m[2];
+}
+
+/* ============ 下载端：多级通道（Pages→API raw）增量拉缺失的建筑图，自动双平台互通 ============ */
+// （仅在 IndexedDB 本地没有图的才拉，不覆盖本地新编辑）
+async function cloudPullBuildingsImages(){
+  // 用 Pages 直读元数据（免限流），失败再回退 API raw
+  const repo = (tourGhConfig() && tourGhConfig().repo) || 'miao051028/myweb';
+  const base = pagesBaseForRepo(repo);
+  let meta = null;
+  const urls = [
+    base + '/sxx_metadata.json',
+    'https://api.github.com/repos/' + repo + '/contents/sxx_metadata.json?raw=' + Date.now()
+  ];
+  for(const u of urls){
+    try{
+      const headers = { 'Cache-Control': 'no-cache' };
+      if(u.indexOf('api.github.com') !== -1){
+        headers['Accept'] = 'application/vnd.github.raw';
+        const cfg = tourGhConfig(); if(cfg && cfg.token) headers['Authorization'] = 'token ' + cfg.token;
+      }
+      const r = await fetch(u, { headers });
+      if(r.ok){ meta = JSON.parse(await r.text()); break; }
+    }catch(e){}
+  }
+  if(!meta) return;
+  // 合并元数据到本地（本地值优先，避免覆盖本机编辑），同时补全 buildingCats 默认值
+  const merged = mergeMetaSafe(meta, (await getMetaFromDB('allMetadata')) || {});
+  await saveMetaToDB('allMetadata', merged);
+  // 管理员：远端拉来的合并结果中 buildingCats/建筑名 等字段变动，顺手推回远端（防止远端用户在旧 tour.html 下缺分类）
+  if(isAdmin && tourGhConfig() && tourGhConfig().token){ scheduleCloudPush(merged); }
+  // 增量拉取缺失的建筑图 / 3D 全景媒体
+  const mf = merged.mediaFiles || {};
+  const keys = Object.keys(mf).filter(k => /^(building_|pano_(image|img_|model))/.test(k));
+  let pulled = 0;
+  for(const key of keys){
+    try{
+      const exist = await (new Promise(resolve => {
+        const tx = db.transaction('images','readonly');
+        const rq = tx.objectStore('images').get(key);
+        rq.onsuccess = () => resolve(!!rq.result);
+        rq.onerror = () => resolve(false);
+      }));
+      if(exist) continue;
+      const data = await downloadTourMediaRaw(key, mf[key]);
+      if(data){
+        await saveImageToDB(key, data);
+        pulled++;
+      }
+    }catch(e){}
+  }
+  if(pulled > 0) showTourToast('☁️ 已同步 ' + pulled + ' 张图片/3D 内容');
+  return pulled;
+}
+function mergeMetaSafe(remote, local){
+  const out = Object.assign({}, remote, local);
+  out.buildingInfos = Object.assign({}, remote.buildingInfos || {}, local.buildingInfos || {});
+  out.buildingCats = Object.assign({}, remote.buildingCats || {}, local.buildingCats || {}, CATEGORY_DEFAULTS); // 保证所有历史建筑有默认分类
+  out.buildingIds = (local.buildingIds && local.buildingIds.length) ? local.buildingIds : (remote.buildingIds || []);
+  out.panoBuildings = Object.assign({}, remote.panoBuildings || {}, local.panoBuildings || {});
+  out.panoNames = Object.assign({}, remote.panoNames || {}, local.panoNames || {});
+  out.mediaFiles = Object.assign({}, remote.mediaFiles || {}, local.mediaFiles || {});
+  out.timestamp = Math.max(remote.timestamp || 0, local.timestamp || 0);
+  return out;
+}
+async function downloadTourMediaRaw(key, type){
+  const repo = (tourGhConfig() && tourGhConfig().repo) || 'miao051028/myweb';
+  const base = pagesBaseForRepo(repo);
+  const ext = type === 'glb' ? '.glb' : '.img';
+  const path = 'media/' + encodeURIComponent(key) + ext;
+  // 1) Pages
+  if(base){
+    try{
+      const r = await fetch(base + '/' + path, { cache: 'no-cache' });
+      if(r.ok) return type === 'glb' ? new Blob([new Uint8Array(await r.arrayBuffer())], { type: 'model/gltf-binary' }) : await r.text();
+    }catch(e){}
+  }
+  // 2) API raw 兜底
+  try{
+    const h = { 'Accept': 'application/vnd.github.raw', 'Cache-Control': 'no-cache' };
+    const cfg = tourGhConfig(); if(cfg && cfg.token) h['Authorization'] = 'token ' + cfg.token;
+    const r2 = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?raw=${Date.now()}`, { headers: h });
+    if(r2.status === 404) return null;
+    if(!r2.ok) throw new Error('HTTP ' + r2.status);
+    return type === 'glb' ? new Blob([new Uint8Array(await r2.arrayBuffer())], { type: 'model/gltf-binary' }) : await r2.text();
+  }catch(e){ return null; }
 }
 
 function checkAdmin(){
@@ -332,7 +630,7 @@ function checkAdmin(){
   }
 }
 
-/* ============ 云游导览：建筑数据 ============ */
+/* ============ 云游导览：建筑数据（跨分类共享同一套 id / 图片 key / 3D key） ============ */
 const DEFAULT_BUIDLINGS = [
   { id:'1', name:'杨瑞芬故居', intro:'杨瑞芬是广东省茂名市电白区马踏镇著名的革命烈士，其故居为岭南清代建筑风格，青砖灰瓦、庭院幽深。故居内陈列着烈士生前用过的生活用品、革命笔记和珍贵照片，2018年被列为茂名市爱国主义教育基地。每年都有大批党员干部和青少年前来瞻仰学习，感受革命先辈的崇高精神。' },
   { id:'2', name:'马踏革命烈士纪念碑', intro:'马踏镇革命烈士纪念碑建于1957年，位于镇中心公园内，碑高12米，正面镌刻"革命烈士永垂不朽"八个大字，背面铭刻着在历次革命斗争中英勇牺牲的马踏籍烈士姓名。周围松柏常青、庄严肃穆，是当地群众缅怀先烈、开展爱国主义教育的重要场所。' },
@@ -341,13 +639,18 @@ const DEFAULT_BUIDLINGS = [
   { id:'5', name:'沉香种植园', intro:'马踏镇的沉香种植历史悠久，是茂名市电白区重要的沉香产地之一。园内种植的奇楠沉香树已有20多年树龄，林中小径蜿蜒，空气里弥漫着淡淡的清香气。游客可跟随园主了解沉香的结香原理、品香文化，还能亲手体验沉香精油的简单制作过程。' },
   { id:'6', name:'千亩现代农业示范园', intro:'千亩现代农业示范园是马踏镇乡村振兴的标志性项目，采用"公司+农户"模式，连片种植荔枝、龙眼、百香果等岭南特色水果。园内道路平整、灌溉设施完善，四季瓜果飘香，是集农业生产、观光采摘、科普教育于一体的现代化农业园区。每年荔枝丰收季，都吸引大量游客前来采摘体验。' }
 ];
-let buildings = [];   // {id, name, intro, img}
-let currentId = null;
+let buildings = [];   // {id, name, intro, img, cat}
 
 async function loadBuildings(){
-  const meta = (await getMetaFromDB('allMetadata')) || {};
+  let meta = (await getMetaFromDB('allMetadata')) || {};
   const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : DEFAULT_BUIDLINGS.map(b => b.id);
   const infos = meta.buildingInfos || {};
+  // 保证 buildingCats 默认值已写入 metadata（即使远端 meta 还没分类字段 / 首次打开无网络时也不丢失分类分配）
+  const defaults = Object.assign({}, CATEGORY_DEFAULTS);
+  let dirty = false;
+  meta.buildingCats = meta.buildingCats || {};
+  ids.forEach(id => { if(!meta.buildingCats[id] && defaults[id]){ meta.buildingCats[id] = defaults[id]; dirty = true; } });
+  if(dirty) await saveMetaToDB('allMetadata', meta);
   const list = [];
   for(const id of ids){
     let img = null;
@@ -357,19 +660,58 @@ async function loadBuildings(){
       id,
       name: infos[id + '_name'] || def.name || ('建筑名称 ' + id),
       intro: infos[id] || def.intro || '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……',
+      cat: getCat(meta, id),
       img
     });
   }
   buildings = list;
 }
 
-function renderGrid(){
-  const grid = document.getElementById('buildingGrid');
-  grid.innerHTML = buildings.map(b => `
-    <div class="b-card" data-bid="${b.id}" onclick="if(!event.target.closest('.edit-only') && !event.target.closest('.bc-pano'))openDetail('${b.id}')">
+// 压缩上传图，保证新上传图 <1MB，避免 GitHub JSON 通道 >1MB 空 content 问题
+async function compressImage(dataUrl, maxWidth, quality, fallbackStep){
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      let w = im.width, h = im.height;
+      if(w > maxWidth || h > maxWidth){
+        if(w > h){ h = Math.round(h * maxWidth / w); w = maxWidth; }
+        else { w = Math.round(w * maxWidth / h); h = maxWidth; }
+      }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, w, h);
+      let out = cv.toDataURL('image/jpeg', quality);
+      // 兜底：仍大于 900KB（dataURL 约 120 万字符）则逐档缩小
+      const steps = fallbackStep && fallbackStep.length ? fallbackStep : [];
+      let i = 0;
+      while(out.length > 1200000 && i < steps.length){
+        const [mw, q] = steps[i++];
+        const c2 = document.createElement('canvas');
+        let w2 = im.width, h2 = im.height;
+        if(w2 > mw || h2 > mw){ if(w2 > h2){ h2 = Math.round(h2 * mw / w2); w2 = mw; } else { w2 = Math.round(w2 * mw / h2); h2 = mw; } }
+        c2.width = w2; c2.height = h2;
+        c2.getContext('2d').drawImage(im, 0, 0, w2, h2);
+        out = c2.toDataURL('image/jpeg', q);
+      }
+      resolve(out);
+    };
+    im.onerror = () => resolve(dataUrl);
+    im.src = dataUrl;
+  });
+}
+
+function catLabel(cat){ const x = CATEGORY_LIST.find(c => c.key === cat); return x ? x.label : ''; }
+function cardTemplate(b){
+  const catSel = CATEGORY_LIST.map(c => `<option value="${c.key}" ${c.key===b.cat?'selected':''}>${c.label}</option>`).join('');
+  return `
+    <div class="b-card" data-bid="${b.id}" onclick="if(!event.target.closest('.edit-only') && !event.target.closest('.bc-pano') && !event.target.closest('.bc-cat-swap'))openDetail('${b.id}')">
+      <select class="bc-cat-swap edit-only" onchange="event.stopPropagation();swapBuildingCat('${b.id}', this.value)" title="调整所属栏目">
+        ${catSel}
+      </select>
       <div class="edit-only">
-        <button class="mini-btn" onclick="replaceCardImage('${b.id}')" title="更换图片">🖼️</button>
-        <button class="mini-btn danger" onclick="deleteBuilding('${b.id}')" title="删除">🗑️</button>
+        <button class="mini-btn" onclick="event.stopPropagation();replaceCardImage('${b.id}')" title="更换图片">🖼️</button>
+        <button class="mini-btn danger" onclick="event.stopPropagation();deleteBuilding('${b.id}')" title="删除">🗑️</button>
       </div>
       <div class="bc-img">${b.img ? `<img src="${b.img}" alt="${b.name}">` : '暂无图片<br>点击查看详情'}</div>
       <div class="bc-body">
@@ -377,12 +719,39 @@ function renderGrid(){
         <div class="bc-intro" data-field="intro" data-bid="${b.id}">${b.intro}</div>
         <div class="bc-foot">
           <div class="bc-more">查看详情 ›</div>
-          <a class="bc-pano" href="panorama.html?id=${encodeURIComponent(b.id)}" title="进入该建筑3D全景">🌐 3D全景</a>
+          <a class="bc-pano" href="panorama.html?id=${encodeURIComponent(b.id)}" title="进入该建筑3D全景（总目录可看全部）">🌐 3D全景</a>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+}
+
+function renderGrid(){
+  // 按分类分别渲染到 4 个栏目；每个栏目空态显示提示
+  CATEGORY_LIST.forEach(cat => {
+    const grid = document.querySelector(`.card-grid[data-grid="${cat.key}"]`);
+    if(!grid) return;
+    const list = buildings.filter(b => b.cat === cat.key);
+    if(!list.length){
+      grid.innerHTML = `<div class="ts-empty">本栏目暂无建筑卡片（管理员可「添加新建筑」或在卡片左上角切换所属栏目）</div>`;
+    } else {
+      grid.innerHTML = list.map(cardTemplate).join('');
+    }
+  });
   bindCardEditable();
+  // 管理员：显示新增时的分类选择
+  const ncr = document.getElementById('newCatRow');
+  if(ncr) ncr.style.display = isAdmin ? 'block' : 'none';
+}
+
+async function swapBuildingCat(bid, newCat){
+  const item = buildings.find(x => x.id === bid);
+  if(!item || item.cat === newCat) return;
+  item.cat = newCat;
+  await saveAllMeta(m => {
+    m.buildingCats = m.buildingCats || {};
+    m.buildingCats[bid] = newCat;
+  });
+  renderGrid();
 }
 
 /* 管理员：卡片文字就地编辑（失焦保存） */
@@ -466,19 +835,22 @@ document.getElementById('filePicker').addEventListener('change', async (e) => {
   if(!file || !pickTarget) return;
   const reader = new FileReader();
   reader.onload = async () => {
-    const url = reader.result;
-    await saveImageToDB('building_' + pickTarget.id, url);
+    // 压缩（与 index.html 对齐：新上传图保证 <1MB，避免跨端 >1MB 空 content）
+    const compressed = await compressImage(reader.result, 1600, 0.82, [[1400, 0.7], [1200, 0.6], [1000, 0.5]]);
+    await saveImageToDB('building_' + pickTarget.id, compressed);
     const item = buildings.find(x => x.id === pickTarget.id);
-    if(item) item.img = url;
+    if(item) item.img = compressed;
+    // 把换图立即放入云同步队列（先传文件再传清单）
+    queueTourMedia('building_' + pickTarget.id);
     await saveAllMeta(m => {
       m.buildingKeys = m.buildingKeys || [];
       if(!m.buildingKeys.includes(pickTarget.id)) m.buildingKeys.push(pickTarget.id);
     });
     renderGrid();
     if(document.getElementById('detailModal').classList.contains('active') && currentId === pickTarget.id){
-      document.getElementById('mbImg').innerHTML = `<img src="${url}" alt="">`;
+      document.getElementById('mbImg').innerHTML = `<img src="${compressed}" alt="">`;
     }
-    alert('✅ 图片已更新并保存！');
+    alert('✅ 图片已自动压缩保存并同步到云端！（另一台设备打开页面会自动下载）');
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -489,13 +861,17 @@ async function addBuilding(){
   const newId = 'b' + Date.now();
   const newName = '新建筑';
   const defaultIntro = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
-  buildings.push({ id:newId, name:newName, intro:defaultIntro, img:null });
+  const catSel = document.getElementById('newBuildingCat');
+  const defaultCat = (catSel && catSel.value) || 'red';
+  buildings.push({ id:newId, name:newName, intro:defaultIntro, img:null, cat:defaultCat });
   await saveAllMeta(m => {
     m.buildingIds = m.buildingIds || [];
     m.buildingIds.push(newId);
     m.buildingInfos = m.buildingInfos || {};
     m.buildingInfos[newId + '_name'] = newName;
     m.buildingInfos[newId] = defaultIntro;
+    m.buildingCats = m.buildingCats || {};
+    m.buildingCats[newId] = defaultCat;
   });
   renderGrid();
   openDetail(newId);
@@ -506,20 +882,34 @@ async function deleteBuilding(id){
   await saveAllMeta(m => {
     m.buildingIds = (m.buildingIds || []).filter(x => x !== id);
     if(m.buildingInfos){ delete m.buildingInfos[id]; delete m.buildingInfos[id + '_name']; }
+    if(m.buildingCats){ delete m.buildingCats[id]; }
+    if(m.panoBuildings){ delete m.panoBuildings[id]; }
+    if(m.panoNames){ delete m.panoNames[id]; }
+    if(m.mediaFiles){ delete m.mediaFiles['building_' + id]; delete m.mediaFiles['pano_img_' + id]; delete m.mediaFiles['pano_model_' + id]; }
   });
   renderGrid();
 }
 
 /* ============ 初始化 ============ */
+let currentId = null;
 (async function init(){
   checkAdmin();
   try{
     await openDB();
+    // ① 读本地（不覆盖已有）
+    await loadBuildings();
+    renderGrid();
+    // ② 云端增量拉：自动把另一台设备上传的图片/3D全景同步到本机（游客也能拉）
+    try{ await cloudPullBuildingsImages(); }catch(e){ console.warn('云端拉取失败', e.message); }
+    // ③ 拉完新图重新渲染
     await loadBuildings();
     renderGrid();
   }catch(e){
-    document.getElementById('buildingGrid').innerHTML =
-      '<div style="text-align:center;color:#a0764f;padding:40px 0">数据加载失败，请刷新重试</div>';
+    console.warn('tour init err', e);
+    CATEGORY_LIST.forEach(c => {
+      const g = document.querySelector(`.card-grid[data-grid="${c.key}"]`);
+      if(g) g.innerHTML = '<div style="text-align:center;color:#a0764f;padding:40px 0">数据加载失败，请刷新重试</div>';
+    });
   }
 })();
 </script>

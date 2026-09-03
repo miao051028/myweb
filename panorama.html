@@ -317,21 +317,38 @@ async function ghFetchFile(path){
   if(!r.ok) throw new Error('云端读取失败 ' + r.status);
   return r.json();
 }
+// 9 个建筑的默认分类（同 tour.html CATEGORY_DEFAULTS 一份，保证从 panorama 写回 metadata 时分类字段不丢失）
+const PanoBuildCatDefaults = {
+  '1': 'red', '2': 'red', '3': 'red', '4': 'red',
+  '5': 'eco', '6': 'eco',
+  'b1788427073369': 'eco',
+  'b1788427187877': 'int',
+  'b1788427335673': 'civ'
+};
+/* Pages URL 生成（与 tour/index 一致，健壮） */
+function panoPagesBase(repo){
+  const m = (repo || '').match(/^([^/]+)\/([^/]+)$/);
+  if(!m) return null;
+  return 'https://' + m[1] + '.github.io/' + m[2];
+}
 // raw 直读（多级通道）：GitHub Pages 直读免 API 限流且无 1MB 上限（>1MB 全景图/模型
 // 走 Contents API JSON 方式会返回空 content），Pages 未部署到的新文件由 API raw 兜底
 async function ghFetchRaw(path, asBinary){
+  const repo = ghRepo();
+  const base = panoPagesBase(repo);
   // 1) GitHub Pages 直读
-  try{
-    const parts = ghRepo().split('/');
-    const res = await fetch('https://' + parts[0] + '.github.io/' + parts[1] + '/' + path, { cache: 'no-cache' });
-    if(res.ok){
-      return asBinary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
-    }
-  }catch(e){ console.warn('Pages 通道失败，改用 API:', e.message); }
+  if(base){
+    try{
+      const res = await fetch(base + '/' + path, { cache: 'no-cache' });
+      if(res.ok){
+        return asBinary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
+      }
+    }catch(e){ console.warn('Pages 通道失败，改用 API:', e.message); }
+  }
   // 2) API raw 兜底
   const headers = ghAuthHeaders();
   headers['Accept'] = 'application/vnd.github.raw';
-  const r = await fetch(`https://api.github.com/repos/${ghRepo()}/contents/${path}?raw=${Date.now()}`, { headers });
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?raw=${Date.now()}`, { headers });
   if(r.status === 404) return null;
   if(!r.ok) throw new Error('云端读取失败 ' + r.status);
   if(asBinary) return new Uint8Array(await r.arrayBuffer());
@@ -389,53 +406,60 @@ async function ghDownloadMedia(key, type){
   return txt || null; // dataURL
 }
 
-// 上传当前建筑的全景内容到云（管理员）
+// 上传当前建筑的全景内容到云（管理员）：统一接入新媒体队列+完整元数据清单
 async function cloudPushCurrent(){
-  const bid = currentBId;
+  // 把当前建筑（或默认总览）的全景图/3D 模型 key 加入统一媒体上传队列；
+  // 媒体传完后 flushPanoPending 会再推完整 sxx_metadata.json（含 mediaFiles 清单），
+  // 保证其他设备按清单一定能拉到文件（不再需要 ghPatchMeta 的局部更新）。
   const meta = (await getMetaFromDB('allMetadata')) || {};
-  const patch = {};
-  // 元数据标志
-  if(bid === DEFAULT_BID){ patch.panoType = meta.panoType || null; }
-  else { patch.panoBuildings = Object.assign({}, meta.panoBuildings || {}); patch.panoNames = Object.assign({}, meta.panoNames || {}); }
-  // 媒体文件
-  const t = panoTypeFor(meta, bid);
+  const t = panoTypeFor(meta, currentBId);
   if(t === 'image'){
-    const rec = await getRecordFromDB(keyImg(bid));
-    if(rec && typeof rec.data === 'string') await ghUploadMedia(keyImg(bid), rec.data);
+    const rec = await getRecordFromDB(keyImg(currentBId));
+    if(rec && typeof rec.data === 'string') queuePanoMedia(keyImg(currentBId));
   } else if(t === 'model'){
-    const rec = await getRecordFromDB(keyModel(bid));
-    if(rec && rec.data instanceof Blob) await ghUploadMedia(keyModel(bid), rec.data);
+    const rec = await getRecordFromDB(keyModel(currentBId));
+    if(rec && rec.data instanceof Blob) queuePanoMedia(keyModel(currentBId));
   }
-  await ghPatchMeta(patch);
+  // 立即 flush（手动同步按钮立即推，不等待防抖）
+  await flushPanoPending();
 }
 let _cloudPushTimer = null;
 function scheduleCloudPush(){
   if(!isAdmin || !ghConfig()) return;
   clearTimeout(_cloudPushTimer);
-  _cloudPushTimer = setTimeout(() => {
-    cloudPushCurrent().then(() => hint('☁️ 已同步到云端，其他设备可获取', 3500))
-      .catch(e => console.warn('云同步推送失败:', e.message));
-  }, 800);
+  _cloudPushTimer = setTimeout(async () => {
+    // 防抖：把当期建筑全景 key 入媒体队列 → 媒体+元数据清单一次性推完
+    try{
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      const t = panoTypeFor(meta, currentBId);
+      if(t === 'image') queuePanoMedia(keyImg(currentBId));
+      else if(t === 'model') queuePanoMedia(keyModel(currentBId));
+      await flushPanoPending();
+      hint('☁️ 已同步到云端，其他设备可获取', 3500);
+    }catch(e){ console.warn('云同步推送失败:', e.message); }
+  }, 900);
 }
 
 // 拉取云端 3D 内容（增量：本地缺失的才下载）。游客公开仓库也可拉取。
 async function cloudPull(){
   const meta = await ghLoadMeta();
   if(!meta) return { pulled: 0 };
-  // 合并元数据标志（本地已有值优先）
+  // 合并元数据标志（本地已有值优先）；同时把建筑分类默认值兜底补进 buildingCats，
+  // 防止从 panorama 写回 metadata 后 tour 侧分类分配被空字段覆盖
   await saveAllMeta(m => {
     if(meta.panoType && !m.panoType) m.panoType = meta.panoType;
     if(meta.panoBuildings){
       m.panoBuildings = Object.assign({}, meta.panoBuildings, m.panoBuildings || {});
       m.panoNames = Object.assign({}, meta.panoNames || {}, m.panoNames || {});
     }
+    m.buildingCats = Object.assign({}, m.buildingCats || {}, meta.buildingCats || {}, PanoBuildCatDefaults);
   });
   buildDir((await getMetaFromDB('allMetadata')) || meta);
-  // 下载缺失的 pano 媒体
+  // 下载缺失的媒体（包括全景图/3D模型 + 云游导览建筑缩略图，保证从任一页面进入都同步两端所有媒体）
   const mf = meta.mediaFiles || {};
   let pulled = 0;
   for(const key of Object.keys(mf)){
-    if(!/^pano_(image|img_|model)/.test(key)) continue;
+    if(!/^(pano_(image|img_|model)|building_)/.test(key)) continue;
     const exist = await getRecordFromDB(key).catch(() => null);
     if(exist) continue;
     try{
@@ -832,6 +856,100 @@ function pickModel(){
   document.getElementById('panoModelInput').click();
 }
 
+// 全景/3D 上传统一调度：先传媒体文件（并发3，进度提示+重试），再传元数据清单
+let _panoPendingMedia = new Set();
+let _panoFlushTimer = null;
+function panoToast(txt){
+  let el = document.getElementById('panoSyncToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'panoSyncToast';
+    el.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;background:rgba(20,20,20,.88);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;transition:opacity .4s;opacity:0;';
+    document.body.appendChild(el);
+  }
+  el.style.opacity = '1'; el.textContent = txt;
+}
+function panoToastHide(){ const el = document.getElementById('panoSyncToast'); if(el) el.style.opacity = '0'; }
+function queuePanoMedia(key){ if(!(ghConfig() && ghConfig().token)) return; _panoPendingMedia.add(key); clearTimeout(_panoFlushTimer); _panoFlushTimer = setTimeout(flushPanoPending, 900); }
+async function flushPanoPending(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return;
+  const keys = Array.from(_panoPendingMedia);
+  _panoPendingMedia.clear();
+  if(keys.length){
+    let done = 0;
+    panoToast('☁️ 同步3D/全景内容 ' + done + '/' + keys.length + ' …请勿关闭页面');
+    const worker = async () => {
+      while(keys.length){
+        const k = keys.shift();
+        try{
+          const rec = await getRecordFromDB(k);
+          if(rec){
+            if((rec.data instanceof Blob) && rec.data.size > 25 * 1024 * 1024){ throw new Error('超25MB'); }
+            await ghUploadMedia(k, rec.data instanceof Blob ? rec.data : rec.data); // 调用既有上传（ghPutFile）
+            try{
+              const m = JSON.parse(localStorage.getItem('sxx_uploaded_media') || '{}');
+              m[k] = rec.timestamp || 0;
+              localStorage.setItem('sxx_uploaded_media', JSON.stringify(m));
+            }catch(e){}
+          }
+        }catch(e){ console.warn('媒体上传失败:', k, e.message); }
+        done++;
+        panoToast('☁️ 同步3D/全景内容 ' + done + '/' + keys.length + ' …请勿关闭页面');
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, keys.length) }, () => worker()));
+    panoToastHide();
+  }
+  try{
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    // 带上 mediaFiles 清单（tour/index 其他页面也能感知新 3D）
+    try{
+      const recs = await (new Promise((resolve, reject) => {
+        const tx = db.transaction('images','readonly');
+        const rq = tx.objectStore('images').getAll();
+        rq.onsuccess = () => resolve(rq.result || []);
+        rq.onerror = () => reject(rq.error);
+      }));
+      meta.mediaFiles = meta.mediaFiles || {};
+      recs.forEach(r => { meta.mediaFiles[r.key] = (r.data instanceof Blob) ? 'glb' : 'img'; });
+    }catch(e){}
+    meta.timestamp = Date.now();
+    await ghPutFile('sxx_metadata.json', btoa(unescape(encodeURIComponent(JSON.stringify(meta)))), 'sync panorama metadata + media');
+    console.log('☁️ panorama.html 云端同步完成');
+  }catch(e){ console.warn('panorama 元数据同步失败:', e.message); }
+}
+// 全景照片上传前压缩：2:1 比例保证 <1MB，避免跨端 1MB 上限问题
+async function compressPanoImage(dataUrl){
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      const MAX_W = 2400; // 2:1 全景压到 2400x1200 基本够用且 <1MB（0.85 质量）
+      let w = im.width, h = im.height;
+      if(w > MAX_W){ h = Math.round(h * MAX_W / w); w = MAX_W; }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, w, h);
+      let out = cv.toDataURL('image/jpeg', 0.85);
+      const steps = [[2000, 0.75], [1600, 0.6], [1200, 0.5]];
+      let i = 0;
+      while(out.length > 1200000 && i < steps.length){
+        const [mw, q] = steps[i++];
+        const c2 = document.createElement('canvas');
+        let w2 = im.width, h2 = im.height;
+        if(w2 > mw){ h2 = Math.round(h2 * mw / w2); w2 = mw; }
+        c2.width = w2; c2.height = h2;
+        c2.getContext('2d').drawImage(im, 0, 0, w2, h2);
+        out = c2.toDataURL('image/jpeg', q);
+      }
+      resolve(out);
+    };
+    im.onerror = () => resolve(dataUrl);
+    im.src = dataUrl;
+  });
+}
+
 document.getElementById('panoImageInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -839,15 +957,17 @@ document.getElementById('panoImageInput').addEventListener('change', async (e) =
   const reader = new FileReader();
   reader.onload = async () => {
     try{
-      await putRecordToDB(keyImg(currentBId), reader.result);   // dataURL
+      const compressed = await compressPanoImage(reader.result);
+      await putRecordToDB(keyImg(currentBId), compressed);   // dataURL
+      queuePanoMedia(keyImg(currentBId));
       await saveAllMeta(m => {
         if(currentBId === DEFAULT_BID){ m.panoType = 'image'; }
         else { m.panoBuildings = m.panoBuildings || {}; m.panoBuildings[currentBId] = 'image'; }
       });
       const meta = (await getMetaFromDB('allMetadata')) || {};
       renderDir(meta);
-      loadPanoramaFromURL(reader.result, () => { hideLoading(); });
-      alert('✅「' + currentBuildingName() + '」全景照片已上传并永久保存！\n💡 提示：使用 2:1 比例的全景照片（手机全景/360相机拍摄）环绕效果最佳。');
+      loadPanoramaFromURL(compressed, () => { hideLoading(); });
+      alert('✅「' + currentBuildingName() + '」全景照片已自动压缩保存！\n☁️ 正在自动同步到云端（另一台设备打开页面即会自动下载）。\n💡 提示：使用 2:1 比例的全景照片（手机全景/360相机拍摄）环绕效果最佳。');
     }catch(err){
       hideLoading();
       alert('保存失败：' + err.message);
@@ -889,6 +1009,7 @@ document.getElementById('panoModelInput').addEventListener('change', async (e) =
   try{
     const blob = file.slice(0);
     await putRecordToDB(keyModel(currentBId), blob);
+    queuePanoMedia(keyModel(currentBId)); // 3D 模型也先入媒体上传队列，保证先传文件再传清单
     await saveAllMeta(m => {
       if(currentBId === DEFAULT_BID){ m.panoType = 'model'; m.panoName = file.name; }
       else {
@@ -900,8 +1021,7 @@ document.getElementById('panoModelInput').addEventListener('change', async (e) =
     renderDir(meta);
     loadModelFromBlob(blob, () => {
       hideLoading();
-      scheduleCloudPush();
-      alert('✅「' + currentBuildingName() + '」3D 模型加载成功并永久保存！' + (ghConfig() ? '\n☁️ 正在自动同步到云端…' : '\n（配置 GitHub 后可自动跨设备同步）'));
+      alert('✅「' + currentBuildingName() + '」3D 模型加载成功并永久保存！' + (ghConfig() ? '\n☁️ 正在自动同步到云端…（另一台设备打开页面即会自动下载）' : '\n（配置 GitHub 后可自动跨设备同步）'));
     });
   }catch(err){
     hideLoading();
