@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>三下乡 · 文化云游</title>
+<title>文化云游</title>
 <style>
   /* ============ 全局重置 ============ */
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -78,16 +78,12 @@
   /* 汉堡按钮 PC 端隐藏 */
   .menu-toggle{display:none}
   /* 顶栏右侧图标区（扫码 + 铃铛） */
-  .top-nav .nav-icons{display:flex;gap:10px;align-items:center;flex-shrink:0}
-  .top-nav .nav-icons .icon-btn{
-    width:34px;height:34px;
-    background:rgba(255,255,255,.1);
-    border:1px solid rgba(201,162,74,.5);
-    border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-size:18px;cursor:pointer;transition:all .25s;
-  }
-  .top-nav .nav-icons .icon-btn:hover{background:rgba(201,162,74,.3);border-color:#C9A24A}
+  .top-nav .nav-search{display:flex;align-items:center;gap:6px;flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(201,162,74,.5);border-radius:18px;padding:2px 4px 2px 12px;transition:all .25s}
+  .top-nav .nav-search:focus-within{background:rgba(255,255,255,.2);border-color:#C9A24A}
+  .top-nav .nav-search-input{background:transparent;border:none;outline:none;color:#fff;font-size:13px;width:120px}
+  .top-nav .nav-search-input::placeholder{color:rgba(255,255,255,.55)}
+  .top-nav .nav-search-btn{background:transparent;border:none;color:#C9A24A;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .top-nav .nav-search-btn:hover{background:rgba(201,162,74,.3)}
 
   /* ============ 主体容器 ============ */
   .container{max-width:1280px;margin:0 auto;padding:0 16px;padding-top:72px}
@@ -674,7 +670,7 @@
   .cover-replace-btn{
     position:absolute;right:14px;bottom:14px;z-index:10;
     background:rgba(139,26,26,.9);color:#FDE68A;border:1px solid #C9A24A;
-    border-radius:20px;padding:6px 14px;font-size:12px;
+    border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;
   }
 
   /* ============ 关于区管理员样式面板 ============ */
@@ -1127,7 +1123,7 @@
     .replace-btn,.img-replace-btn{opacity:1 !important}
     .info-replace-btn{width:100%;text-align:center}
     /* === 新设计移动端适配 === */
-    .top-nav .nav-icons{display:none} /* 手机端隐藏顶栏右图标，用底部Tab */
+    .top-nav .nav-search{display:none} /* 手机端隐藏搜索框，用底部Tab */
     .hero-banner{aspect-ratio:16/10;max-height:320px;margin-top:10px;border-radius:0 0 12px 12px}
     .hero-text-overlay{padding:20px 18px 22px}
     .hero-title{font-size:22px;letter-spacing:3px}
@@ -1209,30 +1205,30 @@
 <!-- ============ 顶部导航 ============ -->
 <header class="top-nav">
   <!-- 左：方块金边 Logo -->
-  <div class="logo" data-textkey="logo">三下乡 <span>·</span> 文化云游</div>
-  <!-- 中间：站点大标题（参考原图「云游马踏 + MATAWN TOURISM」） -->
+  <div class="logo" data-textkey="logo">云游马踏</div>
+  <!-- 中间：站点大标题 -->
   <div class="site-title-group">
-    <div class="site-title" data-textkey="logo_brand">云游三下乡</div>
-    <div class="site-subtitle" data-textkey="site_subtitle">✦  SXX  CULTURE  TOURISM  ✦</div>
+    <div class="site-title" data-textkey="logo_brand">云游马踏</div>
+    <div class="site-subtitle" data-textkey="site_subtitle">✦  MATA  CULTURE  TOURISM  ✦</div>
   </div>
   <!-- 汉堡按钮（移动端才显示） -->
   <button class="menu-toggle" id="menuToggle" aria-label="菜单">☰</button>
-  <!-- 移动端才显示的下拉 nav-menu（桌面端隐藏，不再占用顶栏空间） -->
+  <!-- 移动端才显示的下拉 nav-menu -->
   <span class="nav-row-spacer" id="navRowSpacer" aria-hidden="true"></span>
   <nav class="nav-menu" id="navMenu">
-    <a href="#featured" onclick="closeNav()" data-textkey="nav1">特色图片</a>
-    <a href="tour.html" onclick="closeNav()" data-textkey="nav2">建筑简介</a>
-    <a href="tour.html" onclick="closeNav()" data-textkey="nav3">360°漫游</a>
-    <a href="me.html" onclick="closeNav()" data-textkey="nav4">关于</a>
+    <a href="tour.html" onclick="closeNav()" data-textkey="nav1">云游导览</a>
+    <a href="red.html" onclick="closeNav()" data-textkey="nav2">红色足迹</a>
+    <a href="products.html" onclick="closeNav()" data-textkey="nav3">农特产品</a>
+    <a href="me.html" onclick="closeNav()" data-textkey="nav4">我的</a>
     <div class="admin-indicator" id="adminIndicator" onclick="openStorageModal()">
       <span class="dot"></span>
       <span data-textkey="admin_label">管理员</span>
     </div>
   </nav>
-  <!-- 右：扫码 + 铃铛 -->
-  <div class="nav-icons">
-    <button class="icon-btn" title="扫码" aria-label="扫码">⌖</button>
-    <button class="icon-btn" title="消息" aria-label="消息">🔔</button>
+  <!-- 右：搜索框 -->
+  <div class="nav-search">
+    <input type="text" class="nav-search-input" placeholder="搜索景点、建筑..." aria-label="搜索">
+    <button class="nav-search-btn" aria-label="搜索">🔍</button>
   </div>
 </header>
 
@@ -1242,9 +1238,7 @@
   <!-- ============ Hero Banner（特色封面区升级） ============ -->
   <section class="hero-banner cover-section" id="cover">
     <div class="cover-box hero-img-wrapper" id="coverBox">
-      <button class="delete-btn edit-only hero-cover-replace" onclick="removeCoverImage()">🗑️ 移除封面</button>
       <div id="coverContent"></div>
-      <button class="replace-btn edit-only hero-cover-replace-btn" onclick="replaceCover()">替换封面</button>
     </div>
     <!-- 四角金色 L 框装饰 -->
     <div class="corner-l tl"></div><div class="corner-l tr"></div>
@@ -1252,18 +1246,15 @@
     <!-- 文字叠层 -->
     <div class="hero-text-overlay">
     <div class="hero-location" data-textkey="hero_location">📍 广东 · 茂名 · 马踏镇</div>
-    <div class="hero-title" data-textkey="hero_title">探寻三下乡</div>
-    <div class="hero-subtitle" data-textkey="hero_subtitle">感受千年岭南乡韵 · 传承红色革命精神</div>
-    <div class="hero-btns">
-      <a href="tour.html" class="hero-btn hero-btn-primary" onclick="if(event.target.isContentEditable){event.preventDefault();return}closeNav()"><span data-textkey="hero_btn1">开启云游 →</span></a>
-      <a href="products.html" class="hero-btn hero-btn-secondary" onclick="if(event.target.isContentEditable){event.preventDefault();return}closeNav()"><span data-textkey="hero_btn2">文创商城</span></a>
+    <div class="hero-title" data-textkey="hero_title">云游马踏</div>
+    <div class="hero-subtitle" data-textkey="hero_subtitle">探寻红色足迹 · 品味岭南乡韵</div>
     </div>
-  </div>
+    <!-- 换图按钮（放在 hero-banner 直接子级，确保 z-index 最高不被遮挡） -->
+    <button class="cover-replace-btn" onclick="replaceCover()" title="点击更换封面图">🖼️ 更换封面</button>
   </section>
 
-  <!-- ============ 快速入口 ============ -->
+  <!-- ============ 快速入口（仅卡片，无标题） ============ -->
   <section class="quick-entry" aria-label="快速入口">
-    <div class="quick-entry-title" data-textkey="quick_title">快速入口</div>
     <div class="quick-entry-grid">
       <a href="tour.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">📖</div><div class="quick-entry-label" data-textkey="quick_label1">云游导览</div></a>
       <a href="red.html" class="quick-entry-item" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🚩</div><div class="quick-entry-label" data-textkey="quick_label2">红色足迹</div></a>
@@ -1276,7 +1267,7 @@
   <section id="spotlight" class="spotlight-section" style="margin:24px 16px 12px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="quick-entry-title" style="margin:0" data-textkey="spotlight_heading">精选景点</div>
-      <div id="spotlightPage" style="font-size:13px;color:#8B1A1A;font-weight:600;letter-spacing:1px">1 / 6</div>
+      <div id="spotlightPage" style="font-size:13px;color:#8B1A1A;font-weight:600;letter-spacing:1px">1 / 4</div>
     </div>
     <div class="featured-big-card" id="spotlightCard">
       <div class="fbc-tag">特色文化</div>
@@ -1625,8 +1616,7 @@
 <!-- ============ 隐藏文件选择器 ============ -->
 <input type="file" id="filePicker" accept="image/*" style="display:none" onchange="handleFilePick(event)">
 
-<footer data-textkey="footer">
-  © 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承
+<footer data-textkey="footer" style="display:none">
 </footer>
 
 <script>
@@ -1918,34 +1908,34 @@ const dataStore = {
 
 // 默认文字值（初始化用）
 const DEFAULT_TEXT_DATA = {
-  logo: '三下乡 · 文化云游',
-  logo_brand: '云游三下乡',
-  site_subtitle: '✦  SXX  CULTURE  TOURISM  ✦',
-  nav1: '特色图片',
-  nav2: '建筑简介',
-  nav3: '360°漫游',
-  nav4: '关于',
+  logo: '云游马踏',
+  logo_brand: '云游马踏',
+  site_subtitle: '✦  MATA  CULTURE  TOURISM  ✦',
+  nav1: '云游导览',
+  nav2: '红色足迹',
+  nav3: '农特产品',
+  nav4: '我的',
   admin_label: '管理员',
-  featured_title: '三下乡 · 特色风貌',
+  featured_title: '马踏镇 · 特色风貌',
   buildings_title: '名 胜 古 迹 · 建 筑 巡 礼',
-  about_title: '关 于 三 下 乡',
-  about_desc: '"三下乡"即文化、科技、卫生"三下乡"，是促进农村文化建设、推动城乡协调发展的重要社会实践活动。本网站汇集了三下乡地区的特色风貌与名胜古迹，通过图文介绍与 360° 全景漫游，让更多人领略乡村文化的独特魅力。',
-  footer: '© 2026 三下乡 · 文化云游 | 红色文化 · 乡土情怀 · 数字传承',
+  about_title: '关 于 马 踏',
+  about_desc: '马踏镇位于广东省茂名市电白区，是一片充满红色记忆与乡土风情的土地。这里有革命烈士故居、百年祠堂、沉香种植基地与千亩良田，我们通过图文介绍与 3D 全景漫游，邀您一同探寻红韵马踏的独特魅力。',
+  footer: '',
   /* === Hero Banner === */
   hero_location: '📍 广东 · 茂名 · 马踏镇',
-  hero_title: '探寻三下乡',
-  hero_subtitle: '感受千年岭南乡韵 · 传承红色革命精神',
+  hero_title: '云游马踏',
+  hero_subtitle: '探寻红色足迹 · 品味岭南乡韵',
   hero_btn1: '开启云游 →',
   hero_btn2: '文创商城',
-  /* === 快速入口 === */
+  /* === 快速入口（已隐藏） === */
   quick_title: '快速入口',
   quick_label1: '云游导览',
   quick_label2: '红色足迹',
   quick_label3: '农特产品',
   quick_label4: '乡土风物',
   /* === 精选景点 / 乡村动态 === */
-  spotlight_heading: '精选景点',
-  news_heading: '乡村动态',
+  spotlight_heading: '马踏精选',
+  news_heading: '马踏动态',
   news_more: '更多 ›',
   /* === 底部 Tab Bar === */
   tab_home: '首页',
@@ -1963,12 +1953,10 @@ const DEFAULT_NEWS = [
 
 /* 精选景点默认数据（与轮播 IIFE 内保持一致，编辑后存入 dataStore.spots） */
 const DEFAULT_SPOTS = [
-  { tag:'特色文化', title:'马踏革命遗址', desc:'见证革命历史的红色教育基地，保存有大量珍贵革命文物和史料，是开展爱国主义教育的重要场所。', tags:['红色教育','历史遗址','免费参观'] },
-  { tag:'自然风光', title:'龙湾森林公园', desc:'集自然风光、森林探险、休闲度假于一体的综合性公园，空气清新、四季如画。', tags:['自然生态','户外探险','亲子游'] },
-  { tag:'民俗文化', title:'岭南古村落', desc:'保存完好的明清古建筑群，展现了岭南乡村的独特风貌和深厚文化底蕴。', tags:['古建筑','民俗体验','摄影圣地'] },
-  { tag:'农业观光', title:'特色农产品基地', desc:'集种植、采摘、加工、销售于一体的现代化农业示范基地。', tags:['农业体验','土特产','休闲观光'] },
-  { tag:'红色教育', title:'革命烈士纪念馆', desc:'纪念为革命事业牺牲的烈士们，是重要的爱国主义教育阵地。', tags:['红色教育','历史纪念','免费参观'] },
-  { tag:'文化遗迹', title:'古井老街', desc:'历经百年沧桑的古老街道，青石板路、老店铺、传统手工艺，再现往昔繁华。', tags:['古街古巷','传统工艺','美食小吃'] }
+  { tag:'特色文化', title:'杨瑞芬故居', desc:'广东省革命烈士故居，保存完好的岭南清代建筑，室内陈列着烈士生前遗物和革命史料，是马踏镇重要的红色爱国主义教育基地。', tags:['红色遗迹','研学','展览'] },
+  { tag:'农文旅融合', title:'沉香种植基地', desc:'千亩沉香林下种植示范基地，集种植、加工、科研、旅游于一体，走进基地可聆听沉香故事、品鉴沉香文化，感受岭南特色药用植物的独特魅力。', tags:['农业观光','养生文化','亲子体验'] },
+  { tag:'乡村振兴', title:'生态果园', desc:'依山傍水的现代生态果园，种植荔枝、龙眼、百香果等多种岭南特色水果，四季皆可入园采摘体验，是城里人回归田园、放松身心的好去处。', tags:['采摘体验','周末游','田园风光'] },
+  { tag:'自然生态', title:'千亩良田', desc:'马踏镇连片的千亩高标准农田，稻浪金黄、阡陌纵横，清晨薄雾笼罩、傍晚炊烟袅袅，一幅岭南水乡田园画卷，是摄影爱好者和乡村旅游者的天堂。', tags:['田园风光','摄影圣地','农耕文化'] }
 ];
 
 async function saveImage(key, dataUrl) {
@@ -2699,10 +2687,6 @@ function renderCover(){
 }
 
 function replaceCover(){
-  if(!isAdmin){
-    alert('封面管理仅限管理员使用。');
-    return;
-  }
   dataStore.currentTarget = { type: 'cover', id: null };
   document.getElementById('filePicker').click();
 }
@@ -3557,22 +3541,17 @@ async function uploadToGithub(path, content){
   return res.json();
 }
 
-// 从 GitHub 下载文件
+// 从 GitHub 下载文件（公开仓库免 Token 也可只读拉取；未配置时用默认仓库）
+const GH_PUBLIC_REPO = 'miao051028/myweb';
+function ghReadRepo(){ const c = getGithubConfig(); return (c && c.repo) || GH_PUBLIC_REPO; }
+function ghReadHeaders(){ const c = getGithubConfig(); const h = { 'Accept': 'application/vnd.github.v3+json' }; if(c && c.token) h['Authorization'] = 'token ' + c.token; return h; }
 async function downloadFromGithub(path){
-  const config = getGithubConfig();
-  if(!config) throw new Error('未配置 GitHub');
-  
-  const apiUrl = `https://api.github.com/repos/${config.repo}/contents/${path}`;
-  const res = await fetch(apiUrl, {
-    headers: {
-      'Authorization': `token ${config.token}`,
-      'Accept': 'application/vnd.github.v3+json'
-    }
-  });
-  
+  const apiUrl = `https://api.github.com/repos/${ghReadRepo()}/contents/${path}`;
+  const res = await fetch(apiUrl, { headers: ghReadHeaders() });
+
   if(res.status === 404) return null;
   if(!res.ok) throw new Error(`下载失败: ${res.status}`);
-  
+
   const data = await res.json();
   return data.content; // Base64 内容
 }
@@ -3731,44 +3710,64 @@ let syncTimeout = null;
 function autoSyncToGithub(type, id, dataUrl){
   const config = getGithubConfig();
   if(!config) return; // 未配置 GitHub 则跳过
-  
-  // 使用防抖，避免频繁请求
+
+  // 通用媒体同步：统一走 media/xxx.img 路径（与 getAllMediaRecords 约定一致）
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(async () => {
     try {
-      const base64 = dataUrlToBase64(dataUrl);
-      const path = type === 'featured' ? `images/featured_${id}.jpg`
-                 : type === 'news' ? `images/news_${id}.jpg`
-                 : type === 'spot' ? `images/spot_${id}.jpg`
-                 : `images/building_${id}.jpg`;
-      await uploadToGithub(path, base64);
-      // 同时更新元数据
+      const base64 = btoa(dataUrl); // dataUrl 是 ascii，整体编码
+      const mediaKey = (type === 'spot' ? 'spot_' : (type === 'featured' ? 'featured_' : (type === 'news' ? 'news_' : 'building_'))) + id;
+      const mediaPath = 'media/' + encodeURIComponent(mediaKey) + '.img';
+      let sha = null;
+      try{
+        const r = await fetch(`https://api.github.com/repos/${config.repo}/contents/${mediaPath}`, {
+          headers: { 'Authorization': 'token ' + config.token, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if(r.ok){ const j = await r.json(); sha = j.sha; }
+      }catch(e){}
+      const body = { message: 'sync ' + type + ' ' + id, content: base64 };
+      if(sha) body.sha = sha;
+      await fetch(`https://api.github.com/repos/${config.repo}/contents/${mediaPath}`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + config.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
       await saveMetadataToGithub();
-      console.log(`✅ 已同步 ${path} 到 GitHub`);
-    } catch(e) {
-      console.error('❌ 自动同步失败:', e.message);
-    }
-  }, 500); // 延迟 500ms 防抖
+      console.log('✅ 已同步 ' + mediaPath);
+    } catch(err){ console.warn('autoSyncToGithub 失败:', err.message); }
+  }, 800);
 }
 
-// 页面加载时从 GitHub 自动同步（如果配置了）
+// 页面加载时从 GitHub 自动同步。
+// - 编辑端（已配置 Token）：本地有数据时弹窗询问
+// - 观众端（手机/未配置 Token，公开仓库）：免 Token 只读拉取，发现新内容自动静默应用
 async function autoSyncFromGithub(){
   const config = getGithubConfig();
-  if(!config) return; // 未配置 GitHub 则跳过
-  
+  const isViewer = !config; // 无 Token = 纯查看设备
+  let pulledMedia = 0;
+
   try {
     const metaData = await loadMetadataFromGithub();
-    if(!metaData) return; // GitHub 上暂无数据
-    
-    // 检查本地是否已有数据
-    const localFeaturedKeys = Object.keys(dataStore.featuredImages);
-    if(localFeaturedKeys.length > 0){
-      // 本地已有数据，提示用户选择
-      if(!confirm('检测到 GitHub 上有同步数据，是否从 GitHub 下载覆盖本地数据？\n\n点击"确定"：使用 GitHub 数据\n点击"取消"：保留本地数据')){
-        return;
+    if(!metaData) return false; // GitHub 上暂无数据
+
+    // 观众端：用云端时间戳判断是否有更新，避免无意义刷新
+    let lastTs = 0;
+    try{ lastTs = parseInt(localStorage.getItem('sxx_last_cloud_ts') || '0'); }catch(e){}
+    const remoteTs = metaData.timestamp || 0;
+    const hasNewMeta = remoteTs > lastTs;
+    // 观众端：已同步过且无更新则跳过；首次（lastTs=0）必定拉取
+    if(isViewer && !hasNewMeta && lastTs > 0) return false;
+
+    // 编辑端本地已有数据时询问是否覆盖；观众端直接应用
+    if(!isViewer){
+      const localFeaturedKeys = Object.keys(dataStore.featuredImages);
+      if(localFeaturedKeys.length > 0){
+        if(!confirm('检测到 GitHub 上有同步数据，是否从 GitHub 下载覆盖本地数据？\n\n点击"确定"：使用 GitHub 数据\n点击"取消"：保留本地数据')){
+          return false;
+        }
       }
     }
-    
+
     // 从 GitHub 下载数据
     if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
     if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
@@ -3822,7 +3821,7 @@ async function autoSyncFromGithub(){
       if(exist) continue;
       try{
         const data = await downloadMediaRecord(key, autoMedia[key]);
-        if(data) await saveMediaRecord(key, data);
+        if(data){ await saveMediaRecord(key, data); pulledMedia++; }
       }catch(e){}
     }
     // 下载背景图片并应用
@@ -3846,9 +3845,12 @@ async function autoSyncFromGithub(){
     applyBgConfig(dataStore.bgConfig);
 
     await saveMetadata();
-    console.log('✅ 已从 GitHub 同步数据');
+    try{ localStorage.setItem('sxx_last_cloud_ts', String(remoteTs || Date.now())); }catch(e){}
+    console.log('✅ 已从 GitHub 同步数据，媒体 ' + pulledMedia + ' 个');
+    return true;
   } catch(e) {
     console.error('自动同步失败:', e.message);
+    return false;
   }
 }
 
@@ -3863,12 +3865,16 @@ document.addEventListener('click', (e) => {
 // 页面加载时检查 GitHub 配置并自动同步
 window.addEventListener('load', async () => {
   updateGithubStatus();
-  // 从 GitHub 自动同步数据
-  await autoSyncFromGithub();
-  // 恢复数据后刷新页面显示
-  if(getGithubConfig()){
-    restoreData();
+  const isViewerDevice = !getGithubConfig();
+  // 从 GitHub 自动同步数据（观众端手机免 Token 也会自动拉取）
+  const changed = await autoSyncFromGithub();
+  // 观众端拉到新内容后刷新一次以完整呈现文字/图片/3D（刷新后时间戳一致，不会循环）；编辑端就地重渲染
+  if(changed && isViewerDevice){
+    location.reload();
+    return;
   }
+  // 恢复数据后刷新页面显示
+  restoreData();
 });
 
 /* ============ 恢复已保存的数据 ============ */
@@ -3876,7 +3882,7 @@ async function restoreData(){
   // 先加载元数据
   await loadMetadata();
 
-  // 先从 IndexedDB 把所有图片数据真正加载到内存
+  // 从 IndexedDB 把所有图片数据真正加载到内存
   for(let id in dataStore.featuredImages){
     const url = await getImageFromDB(`featured_${id}`);
     if(url) dataStore.featuredImages[id] = url;
@@ -3885,12 +3891,28 @@ async function restoreData(){
     const url = await getImageFromDB(`building_${id}`);
     if(url) dataStore.buildingImages[id] = url;
   }
+  // 精选景点封面（关键！之前漏了，导致换图刷新丢失）
+  for(let id in (dataStore.spotImages || {})){
+    const url = await getImageFromDB(`spot_${id}`);
+    if(url) dataStore.spotImages[id] = url;
+  }
+  // 乡村动态缩略图
+  for(let id in (dataStore.newsImages || {})){
+    const url = await getImageFromDB(`news_${id}`);
+    if(url) dataStore.newsImages[id] = url;
+  }
 
   // 使用渲染函数动态渲染建筑（带分页）
   renderBuildings();
 
   // 使用渲染函数动态渲染特色图片
   renderFeatured();
+
+  // 重新渲染精选景点（spotImages 恢复后再渲染）
+  if(window._renderSpotlight) window._renderSpotlight();
+
+  // 重新渲染乡村动态（newsImages 恢复后再渲染）
+  if(typeof renderNews === 'function') renderNews();
 }
 
 /* ============ 特色图片替换 ============ */

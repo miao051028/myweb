@@ -132,9 +132,8 @@
   .add-wrap{text-align:center;margin-top:26px}
   .add-btn{
     background:#fff;color:#8B1A1A;border:2px dashed #C9A24A;border-radius:24px;
-    padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:none;
+    padding:10px 26px;font-size:14px;cursor:pointer;letter-spacing:1px;display:inline-block;
   }
-  body.admin-mode .add-btn{display:inline-block}
   .add-btn:hover{background:#F5E6D3}
 
   /* ============ 详情弹窗 ============ */
@@ -185,7 +184,7 @@
 <body data-page="tour">
 
 <header class="top-nav">
-  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="logo" href="index.html">🏠 云游马踏</a>
   <a class="back-home" href="index.html">← 返回首页</a>
 </header>
 
@@ -193,13 +192,13 @@
 
 <section class="page-banner">
   <div class="pb-icon">📖</div>
-  <h1>云 游 导 览</h1>
-  <p>名胜古迹 · 建筑巡礼 · 足不出户畅游三下乡</p>
+  <h1>云 游 马 踏</h1>
+  <p>红韵马踏 · 革命遗址 · 文化体验 · 足不出户感受红色精神</p>
 </section>
 
 <main class="page-main">
-  <div class="page-title">名 胜 古 迹 · 建 筑 巡 礼</div>
-  <div class="page-subtitle">点击卡片查看详细介绍</div>
+  <div class="page-title">红 韵 马 踏</div>
+  <div class="page-subtitle">革命遗址 · 文化体验 · 足不出户感受红色精神</div>
 
   <a class="pano-entry" href="panorama.html">
     <span class="pe-icon">🌐</span> 3D 全景参观
@@ -289,6 +288,39 @@ async function saveAllMeta(mutator){
   const meta = (await getMetaFromDB('allMetadata')) || {};
   mutator(meta);
   await saveMetaToDB('allMetadata', meta);
+  // 云同步推送：管理员且已配置 Token 时自动推云端，让其他设备/页面（如 panorama）立即看到新建筑
+  scheduleCloudPush(meta);
+}
+
+/* ============ 简易云同步推送（仅推送元数据到 sxx_metadata.json，媒体另行） ============ */
+const TOUR_GH_CFG_KEY = 'sxx_github_config';
+function tourGhConfig(){ try{ return JSON.parse(localStorage.getItem(TOUR_GH_CFG_KEY) || 'null'); }catch(e){ return null; } }
+let _tourCloudTimer = null;
+async function scheduleCloudPush(meta){
+  const cfg = tourGhConfig();
+  if(!(cfg && cfg.token && cfg.repo)) return; // 未配置 Token 跳过
+  clearTimeout(_tourCloudTimer);
+  _tourCloudTimer = setTimeout(async () => {
+    try{
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(meta))));
+      // 先查是否已有文件，拿 sha 用于更新
+      let sha = null;
+      try{
+        const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
+          headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if(r.ok){ const j = await r.json(); sha = j.sha; }
+      }catch(e){}
+      const body = { message: 'sync buildings from tour', content: b64 };
+      if(sha) body.sha = sha;
+      await fetch(`https://api.github.com/repos/${cfg.repo}/contents/sxx_metadata.json`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      console.log('☁️ tour.html 元数据已推云端');
+    }catch(e){ console.warn('tour 云同步失败:', e.message); }
+  }, 1200);
 }
 
 function checkAdmin(){
@@ -299,22 +331,30 @@ function checkAdmin(){
 }
 
 /* ============ 云游导览：建筑数据 ============ */
-const DEFAULT_INTRO = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
+const DEFAULT_BUIDLINGS = [
+  { id:'1', name:'杨瑞芬故居', intro:'杨瑞芬是广东省茂名市电白区马踏镇著名的革命烈士，其故居为岭南清代建筑风格，青砖灰瓦、庭院幽深。故居内陈列着烈士生前用过的生活用品、革命笔记和珍贵照片，2018年被列为茂名市爱国主义教育基地。每年都有大批党员干部和青少年前来瞻仰学习，感受革命先辈的崇高精神。' },
+  { id:'2', name:'马踏革命烈士纪念碑', intro:'马踏镇革命烈士纪念碑建于1957年，位于镇中心公园内，碑高12米，正面镌刻"革命烈士永垂不朽"八个大字，背面铭刻着在历次革命斗争中英勇牺牲的马踏籍烈士姓名。周围松柏常青、庄严肃穆，是当地群众缅怀先烈、开展爱国主义教育的重要场所。' },
+  { id:'3', name:'黄东祠堂', intro:'黄东祠堂始建于明代嘉靖年间，是马踏镇黄氏宗族的祖祠，距今已有近500年历史。祠堂坐北朝南，三进三出布局，雕梁画栋、古色古香，保留了岭南祠堂建筑的典型形制和装饰艺术。2012年被列为茂名市文物保护单位，是研究岭南宗族文化和古建筑艺术的重要实物。' },
+  { id:'4', name:'古井老街', intro:'古井老街是马踏镇现存最完整的古街区，全长约300米，青石板路两旁是建于清末民初的骑楼式商铺和民居。老街上的"古井"开凿于明代，水质清冽、终年不涸，是古镇百年兴衰的见证。如今老街仍有不少老字号店铺在经营，修鞋、打铁、手工编织等传统手艺在这里代代相传。' },
+  { id:'5', name:'沉香种植园', intro:'马踏镇的沉香种植历史悠久，是茂名市电白区重要的沉香产地之一。园内种植的奇楠沉香树已有20多年树龄，林中小径蜿蜒，空气里弥漫着淡淡的清香气。游客可跟随园主了解沉香的结香原理、品香文化，还能亲手体验沉香精油的简单制作过程。' },
+  { id:'6', name:'千亩现代农业示范园', intro:'千亩现代农业示范园是马踏镇乡村振兴的标志性项目，采用"公司+农户"模式，连片种植荔枝、龙眼、百香果等岭南特色水果。园内道路平整、灌溉设施完善，四季瓜果飘香，是集农业生产、观光采摘、科普教育于一体的现代化农业园区。每年荔枝丰收季，都吸引大量游客前来采摘体验。' }
+];
 let buildings = [];   // {id, name, intro, img}
 let currentId = null;
 
 async function loadBuildings(){
   const meta = (await getMetaFromDB('allMetadata')) || {};
-  const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
+  const ids = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : DEFAULT_BUIDLINGS.map(b => b.id);
   const infos = meta.buildingInfos || {};
   const list = [];
   for(const id of ids){
     let img = null;
     try{ img = await getImageFromDB('building_' + id); }catch(e){}
+    const def = DEFAULT_BUIDLINGS.find(b => b.id === id) || {};
     list.push({
       id,
-      name: infos[id + '_name'] || ('建筑名称 ' + id),
-      intro: infos[id] || DEFAULT_INTRO,
+      name: infos[id + '_name'] || def.name || ('建筑名称 ' + id),
+      intro: infos[id] || def.intro || '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……',
       img
     });
   }
@@ -445,13 +485,15 @@ document.getElementById('filePicker').addEventListener('change', async (e) => {
 /* 添加 / 删除建筑 */
 async function addBuilding(){
   const newId = 'b' + Date.now();
-  buildings.push({ id:newId, name:'新建筑', intro:DEFAULT_INTRO, img:null });
+  const newName = '新建筑';
+  const defaultIntro = '在此处填写建筑的历史背景、文化价值、建筑特色等介绍内容……';
+  buildings.push({ id:newId, name:newName, intro:defaultIntro, img:null });
   await saveAllMeta(m => {
     m.buildingIds = m.buildingIds || [];
     m.buildingIds.push(newId);
     m.buildingInfos = m.buildingInfos || {};
-    m.buildingInfos[newId + '_name'] = '新建筑';
-    m.buildingInfos[newId] = DEFAULT_INTRO;
+    m.buildingInfos[newId + '_name'] = newName;
+    m.buildingInfos[newId] = defaultIntro;
   });
   renderGrid();
   openDetail(newId);
