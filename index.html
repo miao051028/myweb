@@ -3610,15 +3610,13 @@ async function uploadMediaRecord(rec){
   return uploadToGithub(mediaPath(rec.key, 'img'), btoa(rec.data));
 }
 async function downloadMediaRecord(key, type){
-  const b64 = await downloadFromGithub(mediaPath(key, type));
-  if(!b64) return null;
   if(type === 'glb'){
-    const bin = atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return new Blob([arr], { type: 'model/gltf-binary' });
+    const bin = await downloadFromGithubRaw(mediaPath(key, 'glb'), true);
+    if(!bin) return null;
+    return new Blob([bin], { type: 'model/gltf-binary' });
   }
-  return atob(b64); // 还原为 dataURL 字符串
+  const txt = await downloadFromGithubRaw(mediaPath(key, 'img'), false);
+  return txt || null; // dataURL 字符串
 }
 
 
@@ -3674,7 +3672,31 @@ async function downloadFromGithub(path){
   if(!res.ok) throw new Error(`下载失败: ${res.status}`);
 
   const data = await res.json();
-  return data.content; // Base64 内容
+  return data.content; // Base64 内容（注意：>1MB 文件 content 为空，大文件请用 downloadFromGithubRaw）
+}
+
+// 多级下载通道（修复手机端拉不到大文件/3D模型的问题）：
+//  1) GitHub Pages 直读：媒体文件随网站部署发布，与网站同域、免 API 限流、无 1MB 限制
+//     （实测 11MB 图片可完整拉回；CDN 缓存约 10 分钟，刚上传的文件可能短暂 404）
+//  2) api.github.com + Accept:raw 兜底：实时（新文件立即可拉），但匿名 60次/小时/IP 易限流
+//     且 JSON 通道对 >1MB 文件返回空 content，必须用 raw Accept
+async function downloadFromGithubRaw(path, asBinary){
+  // 1) GitHub Pages 直读
+  try{
+    const parts = ghReadRepo().split('/');
+    const res = await fetch('https://' + parts[0] + '.github.io/' + parts[1] + '/' + path, { cache: 'no-cache' });
+    if(res.ok){
+      return asBinary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
+    }
+  }catch(e){ console.warn('Pages 通道失败，改用 API:', e.message); }
+  // 2) API raw 兜底（?raw= 参数防止浏览器缓存返回错误类型）
+  const apiUrl = `https://api.github.com/repos/${ghReadRepo()}/contents/${path}?raw=${Date.now()}`;
+  const headers = ghReadHeaders();
+  headers['Accept'] = 'application/vnd.github.raw';
+  const res2 = await fetch(apiUrl, { headers });
+  if(res2.status === 404) return null;
+  if(!res2.ok) throw new Error(`下载失败: ${res2.status}`);
+  return asBinary ? new Uint8Array(await res2.arrayBuffer()) : await res2.text();
 }
 
 // 保存元数据到 GitHub（上传完整 allMetadata，确保文章/3D标志/文字等所有字段都跨设备同步）
@@ -3696,9 +3718,9 @@ async function saveMetadataToGithub(){
 
 // 从 GitHub 加载元数据
 async function loadMetadataFromGithub(){
-  const base64Content = await downloadFromGithub('sxx_metadata.json');
-  if(!base64Content) return null;
-  const jsonStr = decodeURIComponent(escape(atob(base64Content)));
+  // raw 直读：文件内容本身就是 JSON 文本（base64 解码由 GitHub 完成），且无 1MB 限制
+  const jsonStr = await downloadFromGithubRaw('sxx_metadata.json', false);
+  if(!jsonStr) return null;
   return JSON.parse(jsonStr);
 }
 
@@ -4131,18 +4153,20 @@ function handleFilePick(e){
         let finalUrl = url;
         const fileSize = file.size;
 
-        // 根据文件大小选择压缩策略
-        if(fileSize > 5 * 1024 * 1024){
-          // 大于 5MB：压缩到 1600px，质量 0.8
-          finalUrl = compressIfNeeded(img, 1600, 0.8);
-        } else if(fileSize > 2 * 1024 * 1024){
-          // 大于 2MB：压缩到 1200px，质量 0.85
-          finalUrl = compressIfNeeded(img, 1200, 0.85);
-        } else if(fileSize > 1 * 1024 * 1024){
-          // 大于 1MB：压缩到 1600px，质量 0.9
-          finalUrl = compressIfNeeded(img, 1600, 0.9);
+        // 统一压缩：超过 300KB 或尺寸超 1920px 时压到 1600px/0.82，
+        // 避免原照片直传产生 10MB+ 大文件（手机端拉取慢且易失败）
+        if(fileSize > 300 * 1024 || img.width > 1920 || img.height > 1920){
+          finalUrl = compressIfNeeded(img, 1600, 0.82);
         }
-        // 小于 1MB 保持原样
+
+        // 兜底：压缩后仍 >900KB（dataURL 约 120 万字符）则逐档降低尺寸与质量，
+        // 确保最终文件 < 1MB（GitHub JSON 通道对 >1MB 文件返回空内容）
+        const fallbackSteps = [[1400, 0.7], [1200, 0.6], [1000, 0.5]];
+        let step = 0;
+        while(typeof finalUrl === 'string' && finalUrl.length > 1200000 && step < fallbackSteps.length){
+          finalUrl = compressIfNeeded(img, fallbackSteps[step][0], fallbackSteps[step][1]);
+          step++;
+        }
 
         applyImageUrl(finalUrl, target).catch(console.error);
       };

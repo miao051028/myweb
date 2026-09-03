@@ -317,6 +317,26 @@ async function ghFetchFile(path){
   if(!r.ok) throw new Error('云端读取失败 ' + r.status);
   return r.json();
 }
+// raw 直读（多级通道）：GitHub Pages 直读免 API 限流且无 1MB 上限（>1MB 全景图/模型
+// 走 Contents API JSON 方式会返回空 content），Pages 未部署到的新文件由 API raw 兜底
+async function ghFetchRaw(path, asBinary){
+  // 1) GitHub Pages 直读
+  try{
+    const parts = ghRepo().split('/');
+    const res = await fetch('https://' + parts[0] + '.github.io/' + parts[1] + '/' + path, { cache: 'no-cache' });
+    if(res.ok){
+      return asBinary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
+    }
+  }catch(e){ console.warn('Pages 通道失败，改用 API:', e.message); }
+  // 2) API raw 兜底
+  const headers = ghAuthHeaders();
+  headers['Accept'] = 'application/vnd.github.raw';
+  const r = await fetch(`https://api.github.com/repos/${ghRepo()}/contents/${path}?raw=${Date.now()}`, { headers });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('云端读取失败 ' + r.status);
+  if(asBinary) return new Uint8Array(await r.arrayBuffer());
+  return await r.text(); // 文件内容本身：img 存的是 dataURL 文本，meta 是 JSON 文本
+}
 async function ghPutFile(path, content, message){
   const c = ghConfig();
   if(!c || !c.token) throw new Error('未配置 GitHub Token（请到首页「数据管理」配置后才能上传）');
@@ -360,14 +380,13 @@ async function ghUploadMedia(key, data){
   await ghPutFile(panoMediaPath(key, isBlob ? 'glb' : 'img'), content, 'sync panorama media ' + key);
 }
 async function ghDownloadMedia(key, type){
-  const f = await ghFetchFile(panoMediaPath(key, type));
-  if(!f || !f.content) return null;
   if(type === 'glb'){
-    const bin = atob(f.content); const arr = new Uint8Array(bin.length);
-    for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return new Blob([arr], { type: 'model/gltf-binary' });
+    const bin = await ghFetchRaw(panoMediaPath(key, 'glb'), true);
+    if(!bin) return null;
+    return new Blob([bin], { type: 'model/gltf-binary' });
   }
-  return atob(f.content); // dataURL
+  const txt = await ghFetchRaw(panoMediaPath(key, 'img'), false);
+  return txt || null; // dataURL
 }
 
 // 上传当前建筑的全景内容到云（管理员）
