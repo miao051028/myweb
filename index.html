@@ -1728,7 +1728,9 @@ function getAllMetaFromDB() {
 let isAdmin = false;
 
 function checkAuth(){
-  const auth = localStorage.getItem(STORAGE_KEYS.AUTH);
+  // 每次进入默认游客模式：登录状态仅保存在当前标签页（sessionStorage），并清除旧的持久化标记
+  try{ localStorage.removeItem(STORAGE_KEYS.AUTH); }catch(e){}
+  const auth = sessionStorage.getItem(STORAGE_KEYS.AUTH);
   if(auth === '1'){
     isAdmin = true;
     document.body.classList.add('admin-mode');
@@ -1757,11 +1759,11 @@ function doAdminLogin(){
   const pwd = document.getElementById('adminPwd').value;
   if(pwd === ADMIN_PASSWORD){
     isAdmin = true;
-    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+    sessionStorage.setItem(STORAGE_KEYS.AUTH, '1');
     document.body.classList.add('admin-mode');
     document.getElementById('adminModal').classList.remove('active');
     updateEditable();
-    alert('管理员登录成功！现在可以编辑内容了');
+    alert('管理员登录成功！现在可以编辑内容了（关闭页面后自动回到游客模式）');
   } else {
     document.getElementById('adminError').classList.add('show');
   }
@@ -1769,7 +1771,7 @@ function doAdminLogin(){
 
 function logoutAdmin(){
   isAdmin = false;
-  localStorage.removeItem(STORAGE_KEYS.AUTH);
+  sessionStorage.removeItem(STORAGE_KEYS.AUTH);
   document.body.classList.remove('admin-mode');
   updateEditable();
 }
@@ -2483,7 +2485,7 @@ function handleBgImageUpload(e){
         await saveMetadata();
         applyBgConfig(dataStore.bgConfig);
         updateBgImageUI();
-        autoSyncMetaToGithub();
+        autoSyncMediaKeyToGithub('bg_image'); // 图片文件也必须上传，否则手机端按清单拉不到
         alert('✅ 背景图片已应用并永久保存！（刷新页面不会丢失）');
       } catch(err){
         console.error(err);
@@ -3118,12 +3120,121 @@ function updateBgPresetActive() {
   });
 }
 
-function autoSyncMetaToGithub() {
+/* ============ 自动同步调度器（媒体文件 + 元数据清单统一排队） ============ */
+// 关键顺序：先上传媒体文件，全部完成后再上传元数据清单（mediaFiles）。
+// 否则手机端按清单拉取时文件还没传上去，会 404 导致"文字同步了、图片没同步"。
+const _pendingMediaKeys = new Set();
+let _syncTimer = null;
+function scheduleSyncToGithub(){
   const config = getGithubConfig();
-  if (!config) return;
-  setTimeout(async () => {
-    try { await saveMetadataToGithub(); } catch(e) { console.error(e); }
-  }, 300);
+  if(!config) return; // 未配置 GitHub 则跳过
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(async () => {
+    const keys = Array.from(_pendingMediaKeys);
+    _pendingMediaKeys.clear();
+    await flushPendingMediaToGithub(keys);
+  }, 800);
+}
+// 依次上传待传媒体（并发3加速），随后上传元数据清单；失败自动重试
+let _syncRetry = 0;
+async function flushPendingMediaToGithub(keys){
+  const config = getGithubConfig();
+  if(!config || !keys || !keys.length) return;
+  const list = keys.slice();
+  const failed = [];
+  const total = list.length;
+  let done = 0;
+  showSyncProgress(0, total);
+  const worker = async () => {
+    while(list.length){
+      const k = list.shift();
+      try{
+        const rec = await getMediaRecord(k);
+        if(rec){
+          if((rec.data instanceof Blob) && rec.data.size > MEDIA_MAX_BYTES){
+            console.warn('媒体超过25MB跳过:', k);
+            markMediaUploaded(rec, 'skip');
+          } else {
+            await uploadMediaRecord(rec);
+            markMediaUploaded(rec);
+            console.log('✅ 已同步媒体:', k);
+          }
+        }
+      }catch(err){
+        console.warn('媒体同步失败:', k, err.message);
+        failed.push(k);
+      }
+      done++;
+      showSyncProgress(done, total);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(3, list.length) }, () => worker()));
+  hideSyncProgress();
+  try { await saveMetadataToGithub(); } catch(e){ console.error(e); }
+  // 网络波动等原因失败时自动重试（最多2轮，间隔5秒），避免"一部分没传上"
+  if(failed.length && _syncRetry < 2){
+    _syncRetry++;
+    console.log('🔁 5秒后自动重试', failed.length, '个未成功的媒体文件');
+    setTimeout(() => {
+      failed.forEach(k => _pendingMediaKeys.add(k));
+      scheduleSyncToGithub();
+    }, 5000);
+  } else {
+    _syncRetry = 0;
+  }
+}
+// 同步进度提示（右下角），提醒用户在传完前不要关闭页面
+function showSyncProgress(done, total){
+  let el = document.getElementById('syncProgressToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'syncProgressToast';
+    el.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;background:rgba(20,20,20,.88);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;transition:opacity .4s;opacity:0;';
+    document.body.appendChild(el);
+  }
+  el.style.opacity = '1';
+  el.textContent = '☁️ 正在同步图片到云端 ' + done + '/' + total + ' …请勿关闭页面';
+}
+function hideSyncProgress(){
+  const el = document.getElementById('syncProgressToast');
+  if(el) el.style.opacity = '0';
+}
+// 记录"已成功上传"的媒体（key → 本地 timestamp；'skip' 表示超限跳过），用于启动时补传遗漏
+function markMediaUploaded(rec, value){
+  try{
+    const map = JSON.parse(localStorage.getItem('sxx_uploaded_media') || '{}');
+    map[rec.key] = (value === undefined) ? (rec.timestamp || 0) : value;
+    localStorage.setItem('sxx_uploaded_media', JSON.stringify(map));
+  }catch(e){}
+}
+// 直接按 IndexedDB 的媒体 key 排队上传（背景图/文章封面等）
+function autoSyncMediaKeyToGithub(key){
+  const config = getGithubConfig();
+  if(!config) return;
+  _pendingMediaKeys.add(key);
+  scheduleSyncToGithub();
+}
+function autoSyncMetaToGithub() {
+  scheduleSyncToGithub();
+}
+// 编辑端启动补传：本地有、但从未成功上传到云端的媒体文件（修复旧版本
+// "只传清单不传文件"或路径不一致造成的缺口），队列去重且与日常改动共用调度
+async function backfillMediaToGithub(){
+  const config = getGithubConfig();
+  if(!config) return;
+  try{
+    const recs = await getAllMediaRecords();
+    let uploadedMap = {};
+    try{ uploadedMap = JSON.parse(localStorage.getItem('sxx_uploaded_media') || '{}'); }catch(e){}
+    const missing = recs.filter(r => {
+      const m = uploadedMap[r.key];
+      return m !== 'skip' && m !== (r.timestamp || 0);
+    });
+    if(!missing.length) return;
+    console.log('🛠️ 检测到', missing.length, '个媒体文件未同步到云端，开始补传...');
+    missing.forEach(r => _pendingMediaKeys.add(r.key));
+    scheduleSyncToGithub();
+  }catch(e){ console.warn('媒体补传检查失败:', e.message); }
 }
 
 /* ============ 存储管理功能 ============ */
@@ -3287,17 +3398,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 导入图片
+        const importMediaKeys = [];
         if(data.images){
           if(data.images.featured){
             for(let id in data.images.featured){
               await saveImage(`featured_${id}`, data.images.featured[id]);
               dataStore.featuredImages[id] = data.images.featured[id];
+              importMediaKeys.push(`featured_${id}`);
             }
           }
           if(data.images.building){
             for(let id in data.images.building){
               await saveImage(`building_${id}`, data.images.building[id]);
               dataStore.buildingImages[id] = data.images.building[id];
+              importMediaKeys.push(`building_${id}`);
             }
           }
           // 背景图片
@@ -3305,17 +3419,24 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveImage('bg_image', data.images.bgImage);
             window._bgImageDataUrl = data.images.bgImage;
             if(dataStore.bgConfig) dataStore.bgConfig.bgImage = true;
+            importMediaKeys.push('bg_image');
           }
           // 特色封面
           if(data.images.coverImage){
             await saveImage('cover_image', data.images.coverImage);
             window._coverImageDataUrl = data.images.coverImage;
             dataStore.coverImage = true;
+            importMediaKeys.push('cover_image');
           }
         }
 
         // 保存元数据
         await saveMetadata();
+
+        // 已配置 GitHub 时，把导入的图片文件补传到云端再刷新，确保手机端能拉到
+        if(getGithubConfig() && importMediaKeys.length){
+          try { await flushPendingMediaToGithub(importMediaKeys); } catch(e){ console.warn('导入媒体同步失败:', e.message); }
+        }
 
         alert('✅ 数据导入成功！页面即将刷新...');
         location.reload();
@@ -3692,7 +3813,7 @@ async function syncToGithub(){
       const kind = (r.data instanceof Blob) ? '3D模型' : '图片';
       statusEl.innerHTML = `⏳ 正在同步${kind} ${i+1}/${recs.length} ...`;
       if((r.data instanceof Blob) && r.data.size > MEDIA_MAX_BYTES){ skipped.push(r.key); continue; }
-      try{ await uploadMediaRecord(r); okCount++; }
+      try{ await uploadMediaRecord(r); markMediaUploaded(r); okCount++; }
       catch(err){ console.warn('媒体上传失败:', r.key, err.message); }
     }
 
@@ -3705,37 +3826,11 @@ async function syncToGithub(){
   }
 }
 
-// 自动同步图片到 GitHub（如果配置了）
-let syncTimeout = null;
-function autoSyncToGithub(type, id, dataUrl){
-  const config = getGithubConfig();
-  if(!config) return; // 未配置 GitHub 则跳过
-
-  // 通用媒体同步：统一走 media/xxx.img 路径（与 getAllMediaRecords 约定一致）
-  clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(async () => {
-    try {
-      const base64 = btoa(dataUrl); // dataUrl 是 ascii，整体编码
-      const mediaKey = (type === 'spot' ? 'spot_' : (type === 'featured' ? 'featured_' : (type === 'news' ? 'news_' : 'building_'))) + id;
-      const mediaPath = 'media/' + encodeURIComponent(mediaKey) + '.img';
-      let sha = null;
-      try{
-        const r = await fetch(`https://api.github.com/repos/${config.repo}/contents/${mediaPath}`, {
-          headers: { 'Authorization': 'token ' + config.token, 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if(r.ok){ const j = await r.json(); sha = j.sha; }
-      }catch(e){}
-      const body = { message: 'sync ' + type + ' ' + id, content: base64 };
-      if(sha) body.sha = sha;
-      await fetch(`https://api.github.com/repos/${config.repo}/contents/${mediaPath}`, {
-        method: 'PUT',
-        headers: { 'Authorization': 'token ' + config.token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      await saveMetadataToGithub();
-      console.log('✅ 已同步 ' + mediaPath);
-    } catch(err){ console.warn('autoSyncToGithub 失败:', err.message); }
-  }, 800);
+// 自动同步图片到 GitHub（如果配置了）。type: featured/building/news/spot/cover
+// 统一通过调度器排队：文件走 media/<key>.img 路径（cover 对应 cover_image，与 IndexedDB key 一致）
+function autoSyncToGithub(type, id){
+  const key = (type === 'cover') ? 'cover_image' : (type + '_' + id);
+  autoSyncMediaKeyToGithub(key);
 }
 
 // 页面加载时从 GitHub 自动同步。
@@ -3768,30 +3863,9 @@ async function autoSyncFromGithub(){
       }
     }
 
-    // 从 GitHub 下载数据
+    // 从 GitHub 下载元数据字段
     if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
     if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
-    if(metaData.featuredKeys){
-      for(let id of metaData.featuredKeys){
-        const base64 = await downloadFromGithub(`images/featured_${id}.jpg`);
-        if(base64){
-          const dataUrl = base64ToDataUrl(base64);
-          await saveImage(`featured_${id}`, dataUrl);
-          dataStore.featuredImages[id] = dataUrl;
-        }
-      }
-    }
-    if(metaData.buildingKeys){
-      for(let id of metaData.buildingKeys){
-        const base64 = await downloadFromGithub(`images/building_${id}.jpg`);
-        if(base64){
-          const dataUrl = base64ToDataUrl(base64);
-          await saveImage(`building_${id}`, dataUrl);
-          dataStore.buildingImages[id] = dataUrl;
-        }
-      }
-    }
-    // v3 新字段
     if(metaData.buildingIds && metaData.buildingIds.length){
       dataStore.buildingIds = metaData.buildingIds;
     } else if(metaData.buildingKeys){
@@ -3804,44 +3878,83 @@ async function autoSyncFromGithub(){
     }
     if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
     if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
-    // v4 新增字段
     if(metaData.textData) dataStore.textData = metaData.textData;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
     if(metaData.coverImage) dataStore.coverImage = true;
-    // v5/文章/3D 字段
     if(metaData.spots) dataStore.spots = metaData.spots;
+    if(metaData.spotKeys) metaData.spotKeys.forEach(k => { dataStore.spotImages[k] = true; });
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
+    if(metaData.newsKeys) metaData.newsKeys.forEach(k => { dataStore.newsImages[k] = true; });
     if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
     // 完整元数据落库（保留 3D 全景等跨页面字段）
     await saveMetaToDB('allMetadata', metaData);
-    // 通用增量下载：本地缺失的媒体（图片/3D模型）自动拉取
+
+    // === 通用媒体下载（走 media/xxx.img 路径，与上传端统一） ===
+    // 1) 新路径：从 mediaFiles 清单拉所有图片/模型（增量，已存在跳过）
     const autoMedia = metaData.mediaFiles || {};
     for(const key of Object.keys(autoMedia)){
       const exist = await getMediaRecord(key).catch(() => null);
       if(exist) continue;
       try{
         const data = await downloadMediaRecord(key, autoMedia[key]);
-        if(data){ await saveMediaRecord(key, data); pulledMedia++; }
-      }catch(e){}
+        if(data){
+          await saveMediaRecord(key, data);
+          // 同步填充 dataStore 内存对象（图片=ascii dataURL，model=Blob）
+          if(autoMedia[key] === 'img'){
+            // key 格式: featured_X / building_X / spot_X / news_X / cover_image / bg_image
+            const m = key.match(/^(featured|building|spot|news)_(.+)$/);
+            if(m){
+              const [, type, id] = m;
+              const storeKey = type === 'spot' ? 'spotImages' : (type === 'news' ? 'newsImages' : type === 'featured' ? 'featuredImages' : 'buildingImages');
+              dataStore[storeKey] = dataStore[storeKey] || {};
+              dataStore[storeKey][id] = data;
+            } else if(key === 'cover_image'){
+              window._coverImageDataUrl = data;
+            } else if(key === 'bg_image'){
+              window._bgImageDataUrl = data;
+            }
+          }
+          pulledMedia++;
+        }
+      }catch(e){ console.warn('媒体下载失败:', key, e.message); }
     }
-    // 下载背景图片并应用
-    if(metaData.bgConfig && metaData.bgConfig.bgImage){
-      const bgBase64 = await downloadFromGithub('images/bg_image.jpg');
-      if(bgBase64){
-        const bgDataUrl = base64ToDataUrl(bgBase64);
-        await saveImage('bg_image', bgDataUrl);
-        window._bgImageDataUrl = bgDataUrl;
+
+    // 2) 兼容旧版本：mediaFiles 清单缺失时回退按旧路径下载
+    if(!Object.keys(autoMedia).length){
+      if(metaData.featuredKeys){
+        for(let id of metaData.featuredKeys){
+          const b64 = await downloadFromGithub(`images/featured_${id}.jpg`);
+          if(b64){ const u = base64ToDataUrl(b64); await saveImage(`featured_${id}`, u); dataStore.featuredImages[id] = u; }
+        }
+      }
+      if(metaData.buildingKeys){
+        for(let id of metaData.buildingKeys){
+          const b64 = await downloadFromGithub(`images/building_${id}.jpg`);
+          if(b64){ const u = base64ToDataUrl(b64); await saveImage(`building_${id}`, u); dataStore.buildingImages[id] = u; }
+        }
+      }
+      if(metaData.newsKeys){
+        for(let id of metaData.newsKeys){
+          const b64 = await downloadFromGithub(`images/news_${id}.jpg`);
+          if(b64){ const u = base64ToDataUrl(b64); await saveImage(`news_${id}`, u); dataStore.newsImages[id] = u; }
+        }
+      }
+      if(metaData.spotKeys){
+        for(let id of metaData.spotKeys){
+          const b64 = await downloadFromGithub(`images/spot_${id}.jpg`);
+          if(b64){ const u = base64ToDataUrl(b64); await saveImage(`spot_${id}`, u); dataStore.spotImages[id] = u; }
+        }
+      }
+      if(metaData.bgConfig && metaData.bgConfig.bgImage){
+        const bgB64 = await downloadFromGithub('images/bg_image.jpg');
+        if(bgB64){ const u = base64ToDataUrl(bgB64); await saveImage('bg_image', u); window._bgImageDataUrl = u; }
+      }
+      if(metaData.coverImage){
+        const cB64 = await downloadFromGithub('images/cover_image.jpg');
+        if(cB64){ const u = base64ToDataUrl(cB64); await saveImage('cover_image', u); window._coverImageDataUrl = u; }
       }
     }
-    // 下载特色封面
-    if(metaData.coverImage){
-      const coverBase64 = await downloadFromGithub('images/cover_image.jpg');
-      if(coverBase64){
-        const coverDataUrl = base64ToDataUrl(coverBase64);
-        await saveImage('cover_image', coverDataUrl);
-        window._coverImageDataUrl = coverDataUrl;
-      }
-    }
+
     applyBgConfig(dataStore.bgConfig);
 
     await saveMetadata();
@@ -3875,6 +3988,8 @@ window.addEventListener('load', async () => {
   }
   // 恢复数据后刷新页面显示
   restoreData();
+  // 编辑端（已配置 Token）：启动后自动补传本地有但云端缺失的媒体文件
+  if(!isViewerDevice){ backfillMediaToGithub(); }
 });
 
 /* ============ 恢复已保存的数据 ============ */
@@ -3900,6 +4015,18 @@ async function restoreData(){
   for(let id in (dataStore.newsImages || {})){
     const url = await getImageFromDB(`news_${id}`);
     if(url) dataStore.newsImages[id] = url;
+  }
+
+  // 文章封面（IndexedDB 恢复，游客端拉取媒体后也能显示封面缩略图）
+  if(Array.isArray(dataStore.articles)){
+    for(const a of dataStore.articles){
+      if(a.cover){
+        try{
+          const url = await getImageFromDB('article_cover_' + a.id);
+          if(url) dataStore.articleCovers[a.id] = url;
+        }catch(e){}
+      }
+    }
   }
 
   // 使用渲染函数动态渲染建筑（带分页）
@@ -4017,10 +4144,10 @@ function handleFilePick(e){
         }
         // 小于 1MB 保持原样
 
-        applyImageUrl(finalUrl, target);
+        applyImageUrl(finalUrl, target).catch(console.error);
       };
       img.onerror = function(){
-        applyImageUrl(url, target); // 加载失败则使用原图
+        applyImageUrl(url, target).catch(console.error);
       };
       img.src = url;
     };
@@ -4042,7 +4169,7 @@ function handleFilePick(e){
   reader.readAsDataURL(file);
 }
 
-function applyImageUrl(url, target){
+async function applyImageUrl(url, target){
   if(target.type === 'featured'){
     const item = document.querySelector(`.featured-item[data-fid="${target.id}"]`);
     if(!item) return;
@@ -4055,13 +4182,9 @@ function applyImageUrl(url, target){
     }
     img.src = url;
     dataStore.featuredImages[target.id] = url;
-    saveImage(`featured_${target.id}`, url);
-    // 自动同步到 GitHub（如果配置了）
+    await saveImage(`featured_${target.id}`, url); // await 确保进 IndexedDB
     autoSyncToGithub('featured', target.id, url);
-    // 同步克隆容器
-    if(window.syncCloneFeatured){
-      window.syncCloneFeatured();
-    }
+    if(window.syncCloneFeatured){ window.syncCloneFeatured(); }
   } else if(target.type === 'buildingImg'){
     const card = document.querySelector(`.building-card[data-bid="${target.id}"]`);
     if(!card) return;
@@ -4075,33 +4198,28 @@ function applyImageUrl(url, target){
     }
     img.src = url;
     dataStore.buildingImages[target.id] = url;
-    saveImage(`building_${target.id}`, url);
-    // 自动同步到 GitHub（如果配置了）
+    await saveImage(`building_${target.id}`, url);
     autoSyncToGithub('building', target.id, url);
   } else if(target.type === 'cover'){
-    // 特色封面
     window._coverImageDataUrl = url;
     dataStore.coverImage = true;
-    saveImage('cover_image', url);
+    await saveImage('cover_image', url);
     renderCover();
     saveMetadata();
-    autoSyncMetaToGithub();
+    autoSyncToGithub('cover', 'main', url); // 封面也必须走统一媒体上传
     alert('✅ 特色封面已更新并永久保存！');
   } else if(target.type === 'news'){
-    // 乡村动态缩略图
     dataStore.newsImages[target.id] = url;
-    saveImage(`news_${target.id}`, url);
+    await saveImage(`news_${target.id}`, url);
     renderNews();
     autoSyncToGithub('news', target.id, url);
   } else if(target.type === 'spotlight'){
-    // 精选景点封面图
     dataStore.spotImages[target.id] = url;
-    saveImage(`spot_${target.id}`, url);
+    await saveImage(`spot_${target.id}`, url);
     if(window._renderSpotlight) window._renderSpotlight();
     autoSyncToGithub('spot', target.id, url);
   }
-  // 保存图片 key 列表到元数据，以便刷新后恢复
-  saveMetadata();
+  await saveMetadata();
   document.getElementById('filePicker').value = '';
   dataStore.currentTarget = null;
 }
@@ -4138,6 +4256,7 @@ function migrateArticles(){
       saveImage('article_cover_' + a.id, oldImg);
       a.cover = true;
       dataStore.articleCovers[a.id] = oldImg;
+      autoSyncMediaKeyToGithub('article_cover_' + a.id);
     }
   });
   saveMetadata();
@@ -4320,13 +4439,14 @@ async function saveArticleFromModal(){
     await saveImage('article_cover_' + article.id, _pendingCoverUrl);
     article.cover = true;
     dataStore.articleCovers[article.id] = _pendingCoverUrl;
+    autoSyncMediaKeyToGithub('article_cover_' + article.id); // 封面文件也上传到云端
   }
 
   dataStore.articles = list;
   closeArticleModal();
   renderNews();
   saveMetadata();
-  autoSyncMetaToGithub();
+  if(!_pendingCoverUrl) autoSyncMetaToGithub();
   alert('✅ 文章已保存并永久生效！');
 }
 

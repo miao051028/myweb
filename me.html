@@ -244,7 +244,9 @@ function getMetaFromDB(key){
 
 /* ============ 管理员登录 ============ */
 function checkAdmin(){
-  if(localStorage.getItem('sxx_admin_auth') === '1'){
+  // 每次进入默认游客模式：登录状态仅保存在当前标签页（sessionStorage），并清除旧的持久化标记
+  try{ localStorage.removeItem('sxx_admin_auth'); }catch(e){}
+  if(sessionStorage.getItem('sxx_admin_auth') === '1'){
     isAdmin = true;
     document.body.classList.add('admin-mode');
   }
@@ -260,10 +262,10 @@ function doLogin(){
   const pwd = document.getElementById('adminPwd').value;
   if(pwd === ADMIN_PASSWORD){
     isAdmin = true;
-    localStorage.setItem('sxx_admin_auth', '1');
+    sessionStorage.setItem('sxx_admin_auth', '1');
     document.body.classList.add('admin-mode');
     closeLogin();
-    alert('✅ 管理员登录成功！所有页面均可编辑内容');
+    alert('✅ 管理员登录成功！所有页面均可编辑内容（关闭页面后自动回到游客模式）');
   } else {
     document.getElementById('loginErr').classList.add('show');
   }
@@ -271,7 +273,7 @@ function doLogin(){
 function logoutAdmin(){
   if(!confirm('确定退出管理员模式吗？')) return;
   isAdmin = false;
-  localStorage.removeItem('sxx_admin_auth');
+  sessionStorage.removeItem('sxx_admin_auth');
   document.body.classList.remove('admin-mode');
 }
 

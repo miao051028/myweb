@@ -222,7 +222,9 @@ async function saveAllMeta(mutator){
   await saveMetaToDB('allMetadata', meta);
 }
 function checkAdmin(){
-  if(localStorage.getItem('sxx_admin_auth') === '1'){
+  // 每次进入默认游客模式：登录状态仅保存在当前标签页（sessionStorage），并清除旧的持久化标记
+  try{ localStorage.removeItem('sxx_admin_auth'); }catch(e){}
+  if(sessionStorage.getItem('sxx_admin_auth') === '1'){
     isAdmin = true;
     document.body.classList.add('admin-mode');
   }
