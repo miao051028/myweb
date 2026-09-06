@@ -84,14 +84,6 @@
   .top-nav .nav-search-input::placeholder{color:rgba(255,255,255,.55)}
   .top-nav .nav-search-btn{background:transparent;border:none;color:#C9A24A;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:12px;display:flex;align-items:center;justify-content:center}
   .top-nav .nav-search-btn:hover{background:rgba(201,162,74,.3)}
-  /* ==== 顶栏社区链接（桌面端显示，移动端用汉堡菜单） ==== */
-  .nav-community-link{
-    color:#FDE68A;font-size:13px;font-weight:600;letter-spacing:2px;
-    background:rgba(255,255,255,.12);border:1px solid rgba(201,162,74,.55);
-    padding:6px 14px;border-radius:18px;transition:.25s;white-space:nowrap;
-  }
-  .nav-community-link:hover{background:rgba(201,162,74,.35);color:#fff}
-  @media(max-width:860px){.nav-community-link{display:none}}
   /* ==== 全站搜索弹窗 ==== */
   .gs-overlay{
     position:fixed;inset:0;z-index:3000;display:none;
@@ -123,11 +115,7 @@
   .gs-item .gs-t{font-size:14px;font-weight:600;color:#3C2F2F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .gs-item .gs-d{font-size:12px;color:#a0764f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .gs-item .gs-main{min-width:0;flex:1}
-  /* ==== 首页四卡片：分类全景入口配色 ==== */
-  .quick-entry-item .qe-count{
-    font-size:10px;letter-spacing:1px;padding:1px 8px;border-radius:8px;
-    background:rgba(139,26,26,.08);color:#8B1A1A;margin-top:-2px;
-  }
+  /* ==== 首页四卡片：云游栏目入口配色 ==== */
   .quick-entry-item.qd-red .quick-entry-icon{background:rgba(139,26,26,.12)}
   .quick-entry-item.qd-eco .quick-entry-icon{background:rgba(31,107,59,.13)}
   .quick-entry-item.qd-int .quick-entry-icon{background:rgba(29,78,137,.13)}
@@ -713,6 +701,22 @@
   .cover-box img{width:100%;height:100%;object-fit:cover;display:block;max-height:none}
   /* 封面内容容器必须有确定高度，img 的 height:100% 才能生效 */
   #coverContent{width:100%;height:100%}
+  /* 封面多图轮播（两张及以上自动滑动播放） */
+  .cover-track{
+    display:flex;width:100%;height:100%;position:relative;
+    transition:transform 1.2s ease-in-out;will-change:transform;
+  }
+  .cover-slide{
+    flex:0 0 100%;width:100%;height:100%;
+    background-size:cover;background-position:center;position:relative;
+  }
+  .cover-slide-del{
+    position:absolute;top:12px;right:12px;z-index:6;display:none;
+    background:rgba(139,26,26,.92);color:#fff;border:1px solid #C9A24A;
+    border-radius:8px;font-size:12px;padding:4px 9px;cursor:pointer;
+  }
+  body.admin-mode .cover-slide-del{display:block}
+  .cover-add-btn{right:126px} /* 添加封面按钮：位于更换封面左侧 */
   /* 桌面端管理员浮动入口（顶栏 nav 隐藏后管理员仍可打开存储管理） */
   .admin-fab{
     display:none;position:fixed;right:84px;bottom:76px;z-index:96; /* right 84：避开右侧回到顶部按钮 */
@@ -734,7 +738,9 @@
     position:absolute;right:14px;bottom:14px;z-index:10;
     background:rgba(139,26,26,.9);color:#FDE68A;border:1px solid #C9A24A;
     border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;
+    display:none; /* 默认隐藏，仅管理员模式显示 */
   }
+  body.admin-mode .cover-replace-btn{display:inline-block}
 
   /* ============ 关于区管理员样式面板 ============ */
   .admin-panel{
@@ -813,7 +819,8 @@
      ============================================================ */
   .hero-banner{
     position:relative;width:100%;
-    margin-top:12px; /* container 已有 72px 顶部内边距，这里只需少量间隙 */
+    /* aspect-ratio+max-height 会把高度上限转移为最大宽度（460*2=920px），宽度收缩后需水平居中 */
+    margin:12px auto 0;
     aspect-ratio:16/8;
     max-height:460px;min-height:220px;
     overflow:hidden;border-radius:0 0 18px 18px;
@@ -891,7 +898,7 @@
      ============ 快速入口（4 个米色圆角卡片） =================
      ============================================================ */
   .quick-entry{
-    background:#FFFFFF;margin:-18px 16px 0;border-radius:16px;
+    background:#FFFFFF;margin:14px 16px 0;border-radius:16px;
     border:1.5px solid #E8D5B0;
     padding:22px 14px 18px;
     box-shadow:0 6px 22px rgba(139,26,26,.08);
@@ -923,6 +930,52 @@
     background:rgba(201,162,74,.15);color:#8B1A1A;
   }
   .quick-entry-label{font-size:13px;font-weight:500;letter-spacing:1px}
+
+  /* ============================================================
+     ============ 文化马踏 · 马踏简介弹窗 ======================
+     ============================================================ */
+  .culture-overlay{
+    position:fixed;inset:0;z-index:3000;display:none;
+    background:rgba(40,20,15,.55);backdrop-filter:blur(4px);
+    align-items:flex-start;justify-content:center;padding:6vh 16px 40px;
+  }
+  .culture-overlay.show{display:flex}
+  .culture-box{
+    background:#FFFDF8;border-radius:16px;border:1.5px solid #C9A24A;
+    box-shadow:0 18px 60px rgba(80,20,10,.35);
+    width:100%;max-width:640px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;
+  }
+  .culture-head{
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+    background:linear-gradient(180deg,#9B2828,#6E1414);padding:13px 18px;
+  }
+  .culture-head h3{color:#FDE68A;font-size:16px;letter-spacing:2px;font-weight:700}
+  .culture-head button{
+    background:rgba(255,255,255,.14);border:1px solid rgba(201,162,74,.6);
+    color:#fff;font-size:14px;cursor:pointer;border-radius:8px;padding:4px 10px;
+  }
+  .culture-body{padding:20px 22px 18px;overflow-y:auto}
+  .culture-text{
+    color:#4a2c2c;font-size:14px;line-height:2;letter-spacing:.5px;
+    white-space:pre-line;text-align:justify;border-radius:8px;
+  }
+  .culture-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+  .culture-gallery:empty{display:none}
+  .culture-gallery .cg-item{position:relative;border-radius:10px;overflow:hidden;border:1px solid #E8D5B0;background:#F5E6D3}
+  .culture-gallery .cg-item img{width:100%;height:150px;object-fit:cover;display:block}
+  .culture-gallery .cg-del{
+    position:absolute;top:6px;right:6px;display:none;
+    background:rgba(139,26,26,.9);color:#fff;border:none;border-radius:8px;
+    font-size:12px;padding:3px 9px;cursor:pointer;
+  }
+  body.admin-mode .culture-gallery .cg-del{display:block}
+  .culture-admin-bar{display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+  body.admin-mode .culture-admin-bar{display:flex}
+  .culture-add-btn{
+    background:#8B1A1A;color:#FDE68A;border:1px solid #C9A24A;border-radius:20px;
+    padding:7px 16px;font-size:12.5px;cursor:pointer;white-space:nowrap;
+  }
+  .culture-add-btn:hover{background:#6E1414}
 
   /* ============================================================
      ============ 精选景点（特色图片大卡片样式） =================
@@ -975,6 +1028,9 @@
     z-index:3;cursor:pointer;transition:transform .25s;
   }
   .featured-big-card .fbc-arrow:hover{transform:translateX(4px);background:#6E1414}
+  /* 左翻转按钮（上一个）：镜像放左侧 */
+  .featured-big-card .fbc-arrow.fbc-prev{right:auto;left:18px}
+  .featured-big-card .fbc-arrow.fbc-prev:hover{transform:translateX(-4px);background:#6E1414}
   /* 精选景点：换图按钮（管理员模式） */
   .fbc-replace-btn{
     position:absolute;top:12px;right:12px;z-index:5;
@@ -982,6 +1038,22 @@
     background:#8B1A1A;color:#FDE68A;font-size:11px;cursor:pointer;
     box-shadow:0 2px 8px rgba(0,0,0,.35);
   }
+  /* 精选景点：删除条目按钮（管理员模式，位于换图按钮左侧） */
+  .fbc-delete-btn{
+    position:absolute;top:12px;right:76px;z-index:5;
+    padding:5px 10px;border-radius:8px;border:none;
+    background:#6E1414;color:#FDE68A;font-size:11px;cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+  }
+  .fbc-delete-btn:hover{background:#4A0D0D}
+  /* 精选景点：添加条目按钮（管理员模式，位于删除按钮左侧） */
+  .fbc-add-btn{
+    position:absolute;top:12px;right:140px;z-index:5;
+    padding:5px 10px;border-radius:8px;border:none;
+    background:#1f6b3b;color:#e3f5de;font-size:11px;cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+  }
+  .fbc-add-btn:hover{background:#14502a}
   /* 圆点指示器 */
   .featured-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
   .featured-dots .dot{
@@ -1193,7 +1265,7 @@
     .hero-subtitle{font-size:12px;letter-spacing:1.5px}
     .hero-btn{padding:9px 18px;font-size:13px;letter-spacing:1.5px}
     .hero-banner .corner-l{width:26px;height:26px}
-    .quick-entry{margin:-12px 12px 0;padding:16px 10px 14px}
+    .quick-entry{margin:10px 12px 0;padding:16px 10px 14px}
     .quick-entry-grid{grid-template-columns:repeat(4,1fr);gap:8px}
     .quick-entry-icon{width:36px;height:36px;font-size:18px;border-radius:10px}
     .quick-entry-label{font-size:11px}
@@ -1232,7 +1304,7 @@
     .hero-btns{gap:10px}
     .hero-btn{padding:8px 16px;font-size:12px;letter-spacing:1px}
     .hero-banner .corner-l{width:20px;height:20px;border-width:1.5px}
-    .quick-entry{margin:-10px 10px 0;padding:14px 8px 12px;border-radius:14px}
+    .quick-entry{margin:8px 10px 0;padding:14px 8px 12px;border-radius:14px}
     .quick-entry-title{font-size:15px;margin-bottom:12px}
     .quick-entry-grid{gap:6px}
     .quick-entry-item{padding:12px 4px 10px;border-radius:10px}
@@ -1279,7 +1351,6 @@
   <!-- 移动端才显示的下拉 nav-menu -->
   <span class="nav-row-spacer" id="navRowSpacer" aria-hidden="true"></span>
   <nav class="nav-menu" id="navMenu">
-    <a href="community.html" onclick="closeNav()" data-textkey="nav_community">💬 社区</a>
     <a href="javascript:void(0)" onclick="closeNav();openGlobalSearch()">🔍 全站搜索</a>
     <a href="tour.html" onclick="closeNav()" data-textkey="nav1">云游导览</a>
     <a href="red.html" onclick="closeNav()" data-textkey="nav2">红色足迹</a>
@@ -1290,9 +1361,8 @@
       <span data-textkey="admin_label">管理员</span>
     </div>
   </nav>
-  <!-- 右：社区链接（桌面端显示） + 搜索框 -->
+  <!-- 右：搜索框（社区入口统一放底部 Tab 栏） -->
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <a href="community.html" class="nav-community-link" data-textkey="nav_community">💬 社区</a>
     <div class="nav-search">
       <input type="text" class="nav-search-input" id="navSearchInput" placeholder="搜索景点、建筑..." aria-label="搜索">
       <button class="nav-search-btn" aria-label="搜索" onclick="openGlobalSearch(document.getElementById('navSearchInput').value)">🔍</button>
@@ -1318,19 +1388,20 @@
     <div class="hero-subtitle" data-textkey="hero_subtitle">探寻红色足迹 · 品味岭南乡韵</div>
     </div>
     <!-- 换图按钮（放在 hero-banner 直接子级，确保 z-index 最高不被遮挡） -->
-    <button class="cover-replace-btn" onclick="replaceCover()" title="点击更换封面图">🖼️ 更换封面</button>
+    <button class="cover-replace-btn" onclick="replaceCover()" title="点击更换第一张封面图">🖼️ 更换封面</button>
+    <button class="cover-replace-btn cover-add-btn" onclick="addCoverSlide()" title="添加封面轮播图（两张及以上自动播放）">➕ 添加封面</button>
     <!-- 马踏印记 3D 全景：管理员上传 / 游客查看 -->
     <button class="hero-pano-btn edit-only top-shift" onclick="uploadHeroPano()">🌐 上传全景</button>
     <button class="hero-pano-btn" id="heroPanoViewBtn" style="display:none" onclick="location.href='panorama.html?id=hero'">🌐 360°全景</button>
   </section>
 
-  <!-- ============ 快速入口：四大分类 3D 全景（仅卡片，无标题） ============ -->
-  <section class="quick-entry" aria-label="分类全景入口">
+  <!-- ============ 快速入口：四大栏目（文化马踏=独立文章页 culture.html，其余三个跳云游导览对应栏目） ============ -->
+  <section class="quick-entry" aria-label="云游栏目入口">
     <div class="quick-entry-grid">
-      <a href="panorama.html?cat=red" class="quick-entry-item qd-red" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🎗️</div><div class="quick-entry-label" data-textkey="pano_label1">红韵全景</div><div class="qe-count" id="qeCountRed">3D</div></a>
-      <a href="panorama.html?cat=eco" class="quick-entry-item qd-eco" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🌿</div><div class="quick-entry-label" data-textkey="pano_label2">生态全景</div><div class="qe-count" id="qeCountEco">3D</div></a>
-      <a href="panorama.html?cat=int" class="quick-entry-item qd-int" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">💻</div><div class="quick-entry-label" data-textkey="pano_label3">数智全景</div><div class="qe-count" id="qeCountInt">3D</div></a>
-      <a href="panorama.html?cat=civ" class="quick-entry-item qd-civ" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🌅</div><div class="quick-entry-label" data-textkey="pano_label4">文明全景</div><div class="qe-count" id="qeCountCiv">3D</div></a>
+      <a href="culture.html" class="quick-entry-item qd-civ" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🏛️</div><div class="quick-entry-label" data-textkey="qe_label1">文化马踏</div></a>
+      <a href="tour.html?cat=red" class="quick-entry-item qd-red" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🎗️</div><div class="quick-entry-label" data-textkey="qe_label2">红韵马踏</div></a>
+      <a href="tour.html?cat=eco" class="quick-entry-item qd-eco" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">🌿</div><div class="quick-entry-label" data-textkey="qe_label3">生态马踏</div></a>
+      <a href="tour.html?cat=int" class="quick-entry-item qd-int" onclick="if(event.target.isContentEditable){event.preventDefault();return}"><div class="quick-entry-icon">💻</div><div class="quick-entry-label" data-textkey="qe_label4">数智马踏</div></a>
     </div>
   </section>
 
@@ -1355,6 +1426,7 @@
           <span class="fbc-pill">免费参观</span>
         </div>
       </div>
+      <div class="fbc-arrow fbc-prev" title="上一个">‹</div>
       <div class="fbc-arrow" title="下一个">›</div>
     </div>
     <div class="featured-dots" id="spotlightDots"></div>
@@ -1701,6 +1773,24 @@
   </div>
 </div>
 
+<!-- ============ 文化马踏 · 马踏简介弹窗 ============ -->
+<div class="culture-overlay" id="cultureOverlay" onclick="if(event.target===this)closeCultureIntro()">
+  <div class="culture-box">
+    <div class="culture-head">
+      <h3>🏛️ 文化马踏 · 马踏简介</h3>
+      <button onclick="closeCultureIntro()" aria-label="关闭">✕</button>
+    </div>
+    <div class="culture-body">
+      <div class="culture-text" id="cultureText" data-textkey="culture_intro"></div>
+      <div class="culture-gallery" id="cultureGallery"></div>
+      <div class="culture-admin-bar">
+        <span class="drag-hint" style="margin-top:0">管理员模式下可点击简介文字直接编辑；失焦后自动保存并同步云端</span>
+        <button class="culture-add-btn edit-only" onclick="addCultureImage()">🖼️ 添加图片</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer data-textkey="footer" style="display:none">
 </footer>
 
@@ -1960,6 +2050,8 @@ const dataStore = {
   featuredImages: {},
   // 新增：动态建筑ID列表（保证顺序）
   buildingIds: ['1','2','3','4','5','6'],
+  // 建筑删除墓碑（已删建筑ID永久记录，防止跨设备同步时"复活"）
+  buildingDeleted: [],
   // 新增：特色图片ID列表
   featuredIds: ['1','2','3','4','5','6','7','8'],
   // 新增：精选景点文案（null=用默认 DEFAULT_SPOTS）+ 独立景点图片
@@ -1970,7 +2062,12 @@ const dataStore = {
   newsImages: {},
   // 新增：文章系统（乡村动态卡片点击跳转文章页；type: custom 自己撰写 / link 链接读取）
   articles: null,
+  articleDeleted: [],  // 文章删除墓碑（防云端旧列表合并时把已删文章带回）
   articleCovers: {},   // 运行时封面图缓存（id → dataURL），不持久化进 metadata
+  // 文化马踏 · 马踏简介配图（key: culture_<id>，文字走 textData.culture_intro）
+  cultureImages: {},
+  // 封面轮播附加图（key: cover_<id>，首张为 cover_image；两张及以上自动滑动播放）
+  coverSlideImages: {},
   // 新增：当前页码
   currentPage: 1,
   // 新增：页面底纹配置
@@ -2014,17 +2111,18 @@ const DEFAULT_TEXT_DATA = {
   hero_subtitle: '探寻红色足迹 · 品味岭南乡韵',
   hero_btn1: '开启云游 →',
   hero_btn2: '文创商城',
-  /* === 快速入口（四大分类 3D 全景） === */
+  /* === 快速入口（四大云游栏目） === */
   quick_title: '快速入口',
   quick_label1: '云游导览',
   quick_label2: '红色足迹',
   quick_label3: '农特产品',
   quick_label4: '乡土风物',
-  pano_label1: '红韵全景',
-  pano_label2: '生态全景',
-  pano_label3: '数智全景',
-  pano_label4: '文明全景',
-  nav_community: '💬 社区',
+  qe_label1: '文化马踏',
+  qe_label2: '红韵马踏',
+  qe_label3: '生态马踏',
+  qe_label4: '数智马踏',
+  /* === 文化马踏 · 马踏简介 === */
+  culture_intro: '马踏镇位于广东省茂名市电白区东南部，是一座历史悠久、人文荟萃的岭南古镇。这里红色文化底蕴深厚，杨瑞芬故居、马踏革命烈士纪念碑等革命遗址见证了峥嵘岁月；这里乡韵悠长，古祠堂、老民居青砖黛瓦，岭南建筑风格保存完好；这里物产丰饶，沉香、荔枝、龙眼等特色物产享誉四方。\n\n近年来，马踏镇以乡村振兴为契机，推动红色文化、生态农业与数字电商深度融合，走出了一条文化铸魂、生态塑形、产业赋能的高质量发展之路。走进马踏，感受红色热土的初心与岭南水乡的温度。',
   /* === 精选景点 / 乡村动态 === */
   spotlight_heading: '马踏精选',
   news_heading: '马踏动态',
@@ -2046,11 +2144,29 @@ const DEFAULT_NEWS = [
 
 /* 精选景点默认数据（与轮播 IIFE 内保持一致，编辑后存入 dataStore.spots） */
 const DEFAULT_SPOTS = [
-  { tag:'特色文化', title:'杨瑞芬故居', desc:'广东省革命烈士故居，保存完好的岭南清代建筑，室内陈列着烈士生前遗物和革命史料，是马踏镇重要的红色爱国主义教育基地。', tags:['红色遗迹','研学','展览'] },
-  { tag:'农文旅融合', title:'沉香种植基地', desc:'千亩沉香林下种植示范基地，集种植、加工、科研、旅游于一体，走进基地可聆听沉香故事、品鉴沉香文化，感受岭南特色药用植物的独特魅力。', tags:['农业观光','养生文化','亲子体验'] },
-  { tag:'乡村振兴', title:'生态果园', desc:'依山傍水的现代生态果园，种植荔枝、龙眼、百香果等多种岭南特色水果，四季皆可入园采摘体验，是城里人回归田园、放松身心的好去处。', tags:['采摘体验','周末游','田园风光'] },
-  { tag:'自然生态', title:'千亩良田', desc:'马踏镇连片的千亩高标准农田，稻浪金黄、阡陌纵横，清晨薄雾笼罩、傍晚炊烟袅袅，一幅岭南水乡田园画卷，是摄影爱好者和乡村旅游者的天堂。', tags:['田园风光','摄影圣地','农耕文化'] }
+  { id:'sp_d1', tag:'特色文化', title:'杨瑞芬故居', desc:'广东省革命烈士故居，保存完好的岭南清代建筑，室内陈列着烈士生前遗物和革命史料，是马踏镇重要的红色爱国主义教育基地。', tags:['红色遗迹','研学','展览'] },
+  { id:'sp_d2', tag:'农文旅融合', title:'沉香种植基地', desc:'千亩沉香林下种植示范基地，集种植、加工、科研、旅游于一体，走进基地可聆听沉香故事、品鉴沉香文化，感受岭南特色药用植物的独特魅力。', tags:['农业观光','养生文化','亲子体验'] },
+  { id:'sp_d3', tag:'乡村振兴', title:'生态果园', desc:'依山傍水的现代生态果园，种植荔枝、龙眼、百香果等多种岭南特色水果，四季皆可入园采摘体验，是城里人回归田园、放松身心的好去处。', tags:['采摘体验','周末游','田园风光'] },
+  { id:'sp_d4', tag:'自然生态', title:'千亩良田', desc:'马踏镇连片的千亩高标准农田，稻浪金黄、阡陌纵横，清晨薄雾笼罩、傍晚炊烟袅袅，一幅岭南水乡田园画卷，是摄影爱好者和乡村旅游者的天堂。', tags:['田园风光','摄影圣地','农耕文化'] }
 ];
+
+/* 精选条目稳定 id：默认数据预置 sp_d*；历史/自定义无 id 条目按 title 生成稳定 hash id（同名条目共享 id） */
+function spotStableId(title){
+  let h = 5381;
+  const s = String(title || '');
+  for(let i = 0; i < s.length; i++){ h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; }
+  return 'sp_' + h.toString(36);
+}
+function ensureSpotIds(spots){
+  (spots || []).forEach(s => { if(!s.id) s.id = spotStableId(s.title); });
+  return spots;
+}
+/* 按删除墓碑过滤精选条目（本地 DB / 云端拉取合并统一入口） */
+function filterSpotsByTombs(spots, tombs){
+  if(!Array.isArray(spots)) return spots;
+  const t = new Set(tombs || dataStore.spotDeleted || []);
+  return spots.filter(s => s && !t.has(s.id));
+}
 
 async function saveImage(key, dataUrl) {
   try {
@@ -2099,6 +2215,20 @@ async function loadAllImages() {
       const url = await getImageFromDB(`spot_${id}`);
       if(url) dataStore.spotImages[id] = url;
     }
+    // 加载文化马踏简介配图
+    const cultureKeys = Object.keys(dataStore.cultureImages || {});
+    for(const key of cultureKeys) {
+      if(typeof dataStore.cultureImages[key] === 'string') continue;
+      const url = await getImageFromDB(key);
+      if(url) dataStore.cultureImages[key] = url;
+    }
+    // 加载封面轮播附加图
+    const coverSlideKeys = Object.keys(dataStore.coverSlideImages || {});
+    for(const key of coverSlideKeys) {
+      if(typeof dataStore.coverSlideImages[key] === 'string') continue;
+      const url = await getImageFromDB('cover_' + key);
+      if(url) dataStore.coverSlideImages[key] = url;
+    }
   } catch(e) {
     console.error('加载图片失败:', e);
   }
@@ -2117,6 +2247,8 @@ async function saveMetadata() {
       buildingKeys: Object.keys(dataStore.buildingImages),
       // 新增字段
       buildingIds: dataStore.buildingIds,
+      // 删除墓碑（跨设备同步剔除已删建筑）
+      buildingDeleted: dataStore.buildingDeleted || [],
       featuredIds: dataStore.featuredIds,
       currentPage: dataStore.currentPage,
       bgConfig: dataStore.bgConfig,
@@ -2124,11 +2256,17 @@ async function saveMetadata() {
       textStyles: dataStore.textStyles || {},
       coverImage: dataStore.coverImage === true,
       spots: dataStore.spots || null,
+      spotDeleted: dataStore.spotDeleted || null,
       spotKeys: Object.keys(dataStore.spotImages || {}),
       newsList: dataStore.newsList || null,
       newsKeys: Object.keys(dataStore.newsImages || {}),
       // 文章系统（封面图单独存 images/article_cover_{id}，此处只存文章数据）
-      articles: dataStore.articles || null
+      articles: dataStore.articles || null,
+      articleDeleted: dataStore.articleDeleted || null,
+      // 文化马踏简介配图
+      cultureKeys: Object.keys(dataStore.cultureImages || {}),
+      // 封面轮播附加图
+      coverKeys: Object.keys(dataStore.coverSlideImages || {})
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -2156,7 +2294,11 @@ async function loadMetadata() {
         });
       }
       // 精选景点 / 乡村动态（新板块数据）
-      if(metaData.spots) dataStore.spots = metaData.spots;
+      if(metaData.spots){
+        // 精选删除墓碑：双端并集；应用列表前按墓碑过滤（防旧列表把已删条目带回来）
+        dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], metaData.spotDeleted || [])));
+        dataStore.spots = filterSpotsByTombs(ensureSpotIds(metaData.spots), dataStore.spotDeleted);
+      }
       if(metaData.spotKeys){
         metaData.spotKeys.forEach(key => { dataStore.spotImages[key] = true; });
       }
@@ -2164,8 +2306,16 @@ async function loadMetadata() {
       if(metaData.newsKeys){
         metaData.newsKeys.forEach(key => { dataStore.newsImages[key] = true; });
       }
-      // 文章系统恢复
-      if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
+      // 文章系统恢复（合并策略：本地 DB 也可能被其他页面落库的云端旧数据覆盖过）
+      if(metaData.articles || metaData.articleDeleted) mergeArticlesWithCloud(metaData.articles, metaData.articleDeleted);
+      // 文化马踏简介配图恢复（先用 key 占位，再在 restoreData 中加载实际图片）
+      if(metaData.cultureKeys){
+        metaData.cultureKeys.forEach(key => { dataStore.cultureImages[key] = true; });
+      }
+      // 封面轮播附加图恢复（先用 key 占位，再在 restoreData 中加载实际图片）
+      if(metaData.coverKeys){
+        metaData.coverKeys.forEach(key => { dataStore.coverSlideImages[key] = true; });
+      }
       // 新增恢复字段
       if(metaData.buildingIds && metaData.buildingIds.length) dataStore.buildingIds = metaData.buildingIds;
       if(metaData.featuredIds && metaData.featuredIds.length) dataStore.featuredIds = metaData.featuredIds;
@@ -2322,6 +2472,8 @@ function addBuildingCard() {
 function deleteBuilding(bid) {
   if (!isAdmin) return;
   if (!confirm('⚠️ 确定要删除这个建筑模块吗？此操作不可恢复！\n（相关图片和介绍都会被删除）')) return;
+  // 墓碑：永久记录已删建筑ID，随元数据同步到云端，其他设备/页面据此剔除，防止复活
+  dataStore.buildingDeleted = Array.from(new Set([].concat(dataStore.buildingDeleted || [], [bid])));
   const idx = dataStore.buildingIds.indexOf(bid);
   if (idx >= 0) dataStore.buildingIds.splice(idx, 1);
   // 删除关联图片和介绍
@@ -2331,6 +2483,8 @@ function deleteBuilding(bid) {
   delete dataStore.panoUrls[bid];
   deleteImageFromDB(`building_${bid}`).catch(()=>{});
   saveMetadata();
+  // ★ 墓碑立即上云：防止删除后关页导致其他设备收不到墓碑、旧数据把建筑推回
+  try{ if(getGithubConfig()) saveMetadataToGithub().catch(()=>{}); }catch(e){}
   const totalPages = Math.max(1, Math.ceil(dataStore.buildingIds.length / BUILDINGS_PER_PAGE));
   if (dataStore.currentPage > totalPages) dataStore.currentPage = totalPages;
   renderBuildings();
@@ -2769,14 +2923,61 @@ function applySwatchColor(hex){
   previewCustomBg();
 }
 
-/* ============ Hero Banner 封面（永远显示，无图时用默认占位图） ============ */
+/* ============ Hero Banner 封面（永远显示，无图时用默认占位图；两张及以上自动滑动播放） ============ */
 const HERO_DEFAULT_IMG = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=岭南乡村古建筑群青瓦白墙木檐飞檐&image_size=landscape_16_9';
 function renderCover(){
   const section = document.getElementById('cover');
   const content = document.getElementById('coverContent');
   if(!section || !content) return;
-  const imgSrc = window._coverImageDataUrl || HERO_DEFAULT_IMG;
-  content.innerHTML = `<img src="${imgSrc}" class="hero-img" alt="特色封面" onerror="this.src='${HERO_DEFAULT_IMG}'">`;
+  // 重置旧轮播定时器
+  if(window._coverTimer){ clearInterval(window._coverTimer); window._coverTimer = null; }
+  const first = window._coverImageDataUrl || HERO_DEFAULT_IMG;
+  // 附加轮播封面（cover_<id>），按 id 升序；仅使用已加载完成的图片
+  const extraIds = Object.keys(dataStore.coverSlideImages || {})
+    .sort((a,b) => (parseInt(a) || 0) - (parseInt(b) || 0))
+    .filter(id => typeof dataStore.coverSlideImages[id] === 'string');
+  const slides = [first, ...extraIds.map(id => dataStore.coverSlideImages[id])];
+  if(slides.length < 2){
+    content.innerHTML = `<img src="${first}" class="hero-img" alt="特色封面" onerror="this.src='${HERO_DEFAULT_IMG}'">`;
+    return;
+  }
+  // 多图轮播：横向滑动轨道，附加图上挂管理员删除按钮
+  content.innerHTML = `<div class="cover-track" id="coverTrack">` +
+    slides.map((u, i) => {
+      const del = i > 0 ? `<button class="cover-slide-del edit-only" onclick="event.stopPropagation();deleteCoverSlide('${extraIds[i-1]}')" title="删除此张封面">✕ 删除</button>` : '';
+      return `<div class="cover-slide" style="background-image:url('${String(u).replace(/'/g,'%27')}')">${del}</div>`;
+    }).join('') +
+    `</div>`;
+  // 自动滑动播放：每 4 秒切到下一张，页面隐藏时自动暂停
+  let idx = 0;
+  window._coverTimer = setInterval(() => {
+    const track = document.getElementById('coverTrack');
+    if(!track){ if(window._coverTimer){ clearInterval(window._coverTimer); window._coverTimer = null; } return; }
+    if(document.hidden) return;
+    idx = (idx + 1) % slides.length;
+    track.style.transform = `translateX(-${idx * 100}%)`;
+  }, 4000);
+}
+// 管理员：添加一张封面轮播图（复用全局压缩上传管线，自动同步云端）
+function addCoverSlide(){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。');
+    return;
+  }
+  let maxId = 1; // 首张为 cover_image，附加图从 2 开始编号
+  Object.keys(dataStore.coverSlideImages || {}).forEach(id => { maxId = Math.max(maxId, parseInt(id) || 1); });
+  dataStore.currentTarget = { type: 'coverSlide', id: String(maxId + 1) };
+  document.getElementById('filePicker').click();
+}
+// 管理员：删除一张附加封面
+async function deleteCoverSlide(id){
+  if(!isAdmin) return;
+  if(!confirm('确定删除这张封面轮播图吗？删除后将同步到所有设备。')) return;
+  delete dataStore.coverSlideImages[id];
+  try{ await deleteImageFromDB('cover_' + id); }catch(e){}
+  renderCover();
+  await saveMetadata();
+  autoSyncMetaToGithub();
 }
 
 function replaceCover(){
@@ -3161,7 +3362,9 @@ function bindTextEditable() {
     el.onblur = () => {
       if (!isAdmin) return;
       const key = el.getAttribute('data-textkey');
-      const val = el.textContent.trim();
+      // 多行元素用 innerText 保留编辑时的换行
+      const isMulti = (key === 'about_desc' || key === 'footer' || key === 'culture_intro');
+      const val = (isMulti ? el.innerText : el.textContent).trim();
       if (!dataStore.textData) dataStore.textData = {};
       if (val !== DEFAULT_TEXT_DATA[key]) {
         dataStore.textData[key] = val;
@@ -3176,7 +3379,7 @@ function bindTextEditable() {
     el.onkeydown = (e) => {
       if (!isAdmin) return;
       const key = el.getAttribute('data-textkey');
-      const isMultiline = (key === 'about_desc' || key === 'footer');
+      const isMultiline = (key === 'about_desc' || key === 'footer' || key === 'culture_intro');
       if (!isMultiline && e.key === 'Enter') {
         e.preventDefault();
         el.blur();
@@ -3187,6 +3390,60 @@ function bindTextEditable() {
       }
     };
   });
+}
+
+/* ============ 文化马踏 · 马踏简介弹窗 ============ */
+function openCultureIntro(){
+  renderCultureGallery();
+  document.getElementById('cultureOverlay').classList.add('show');
+}
+function closeCultureIntro(){
+  document.getElementById('cultureOverlay').classList.remove('show');
+}
+// 渲染简介配图（dataStore.cultureImages: id → dataURL 或 true 占位）
+function renderCultureGallery(){
+  const box = document.getElementById('cultureGallery');
+  if(!box) return;
+  const ids = Object.keys(dataStore.cultureImages || {}).sort((a,b)=>parseInt(a)-parseInt(b));
+  box.innerHTML = ids.map(id => `
+    <div class="cg-item">
+      <img src="${typeof dataStore.cultureImages[id] === 'string' ? dataStore.cultureImages[id] : ''}" alt="文化马踏配图" data-cgid="${id}" onerror="this.style.opacity=.15">
+      <button class="cg-del" onclick="deleteCultureImage('${id}')">🗑️ 删除</button>
+    </div>
+  `).join('');
+  // 占位项异步从 IndexedDB 补图
+  ids.forEach(async id => {
+    if(typeof dataStore.cultureImages[id] === 'string') return;
+    try{
+      const url = await getImageFromDB('culture_' + id);
+      if(url){
+        dataStore.cultureImages[id] = url;
+        const img = box.querySelector('img[data-cgid="' + id + '"]');
+        if(img){ img.src = url; img.style.opacity = ''; }
+      }
+    }catch(e){}
+  });
+}
+// 管理员：添加配图（复用全局 filePicker 压缩管线，自动同步云端）
+function addCultureImage(){
+  if(!isAdmin){
+    alert('此功能仅限管理员使用，请先登录管理员账号。');
+    return;
+  }
+  let maxId = 0;
+  Object.keys(dataStore.cultureImages || {}).forEach(id => { maxId = Math.max(maxId, parseInt(id) || 0); });
+  dataStore.currentTarget = { type: 'cultureIntro', id: String(maxId + 1) };
+  document.getElementById('filePicker').click();
+}
+// 管理员：删除配图
+async function deleteCultureImage(id){
+  if(!isAdmin) return;
+  if(!confirm('确定删除这张配图吗？删除后将同步到所有设备。')) return;
+  delete dataStore.cultureImages[id];
+  try{ await deleteImageFromDB('culture_' + id); }catch(e){}
+  renderCultureGallery();
+  await saveMetadata();
+  autoSyncMetaToGithub();
 }
 
 /* 全局守卫：管理员点击链接（<a>）内的可编辑文字时，捕获阶段阻止跳转，以便就地编辑文字。
@@ -3223,7 +3480,13 @@ function scheduleSyncToGithub(){
   _syncTimer = setTimeout(async () => {
     const keys = Array.from(_pendingMediaKeys);
     _pendingMediaKeys.clear();
-    await flushPendingMediaToGithub(keys);
+    if(keys.length){
+      await flushPendingMediaToGithub(keys);   // 有待传媒体：先传媒体文件，再传元数据清单
+    } else {
+      // 无待传媒体（纯文字/删除类元数据改动）：仍需推送元数据，
+      // 否则云端停留在旧数据，刷新时被云端拉取覆盖 → 编辑/删除内容"复活"
+      await saveMetadataToGithub().catch(err => console.warn('元数据同步失败:', err));
+    }
   }, 800);
 }
 // 依次上传待传媒体（并发3加速），随后上传元数据清单；失败自动重试
@@ -3403,6 +3666,7 @@ async function exportData(){
         featuredKeys: Object.keys(dataStore.featuredImages),
         buildingKeys: Object.keys(dataStore.buildingImages),
         buildingIds: dataStore.buildingIds,
+        buildingDeleted: dataStore.buildingDeleted || [],
         featuredIds: dataStore.featuredIds,
         currentPage: dataStore.currentPage,
         bgConfig: dataStore.bgConfig,
@@ -3502,6 +3766,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 兼容 v2：用 buildingKeys 排序
             dataStore.buildingIds = data.metadata.buildingKeys.slice().sort((a,b) => parseInt(a) - parseInt(b));
           }
+          // 删除墓碑：恢复备份时一并恢复墓碑记录，并剔除已删建筑（防止旧备份复活）
+          dataStore.buildingDeleted = Array.from(new Set([].concat(data.metadata.buildingDeleted || [], dataStore.buildingDeleted || [])));
+          if(dataStore.buildingDeleted.length){
+            const _tombs = new Set(dataStore.buildingDeleted);
+            dataStore.buildingIds = dataStore.buildingIds.filter(id => !_tombs.has(id));
+          }
           if(data.metadata.featuredIds && data.metadata.featuredIds.length){
             dataStore.featuredIds = data.metadata.featuredIds;
           } else if(data.metadata.featuredKeys){
@@ -3591,6 +3861,7 @@ async function clearAllData(silent = false){
     dataStore.buildingInfos = {};
     dataStore.panoUrls = {};
     dataStore.buildingIds = ['1','2','3','4','5','6'];
+    dataStore.buildingDeleted = []; // 墓碑同步清空，防止恢复默认后旧墓碑误过滤默认建筑
     dataStore.featuredIds = ['1','2','3','4','5','6','7','8'];
     dataStore.currentPage = 1;
     dataStore.bgConfig = keepBgConfig;
@@ -3739,43 +4010,109 @@ async function downloadMediaRecord(key, type){
 
 
 // 上传文件到 GitHub 仓库
+// Contents API 单文件硬限 1MB；超过阈值走 Git Database API（支持到 100MB，视频/大 GLB 必备）
+let _ghBranchCache = null, _ghGitDBChain = Promise.resolve();
+async function ghGitDefaultBranch(config){
+  if(_ghBranchCache) return _ghBranchCache;
+  const r = await fetch(`https://api.github.com/repos/${config.repo}`, {
+    headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if(!r.ok) throw new Error('获取仓库信息失败: ' + r.status);
+  _ghBranchCache = (await r.json()).default_branch || 'main';
+  return _ghBranchCache;
+}
+async function uploadToGithubGitDB(path, content, config){
+  const H = () => ({ 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' });
+  const run = async () => {
+    const branch = await ghGitDefaultBranch(config);
+    const refR = await fetch(`https://api.github.com/repos/${config.repo}/git/ref/heads/${branch}`, { headers: H() });
+    if(!refR.ok) throw new Error('读取分支失败 ' + refR.status);
+    const commitSha = (await refR.json()).object.sha;
+    const cmR = await fetch(`https://api.github.com/repos/${config.repo}/git/commits/${commitSha}`, { headers: H() });
+    if(!cmR.ok) throw new Error('读取提交失败 ' + cmR.status);
+    const treeSha = (await cmR.json()).tree.sha;
+    const blobR = await fetch(`https://api.github.com/repos/${config.repo}/git/blobs`, {
+      method: 'POST', headers: H(), body: JSON.stringify({ content, encoding: 'base64' })
+    });
+    if(!blobR.ok) throw new Error('上传文件块失败 ' + blobR.status);
+    const blobSha = (await blobR.json()).sha;
+    const treeR = await fetch(`https://api.github.com/repos/${config.repo}/git/trees`, {
+      method: 'POST', headers: H(),
+      body: JSON.stringify({ base_tree: treeSha, tree: [{ path, mode: '100644', type: 'blob', sha: blobSha }] })
+    });
+    if(!treeR.ok) throw new Error('创建目录树失败 ' + treeR.status);
+    const newTreeSha = (await treeR.json()).sha;
+    const ncR = await fetch(`https://api.github.com/repos/${config.repo}/git/commits`, {
+      method: 'POST', headers: H(),
+      body: JSON.stringify({ message: `Upload ${path} via sync`, tree: newTreeSha, parents: [commitSha] })
+    });
+    if(!ncR.ok) throw new Error('创建提交失败 ' + ncR.status);
+    const newCommitSha = (await ncR.json()).sha;
+    const upR = await fetch(`https://api.github.com/repos/${config.repo}/git/refs/heads/${branch}`, {
+      method: 'PATCH', headers: H(), body: JSON.stringify({ sha: newCommitSha, force: false })
+    });
+    if(!upR.ok) throw new Error('更新分支失败 ' + upR.status);
+    return { sha: newCommitSha };
+  };
+  // 串行化提交避免父提交竞争；失败自动重试一次
+  const task = _ghGitDBChain.then(() => run().catch(async (e) => {
+    console.warn('Git DB 提交失败，1 秒后重试:', e.message);
+    await new Promise(r => setTimeout(r, 1000));
+    return run();
+  }));
+  _ghGitDBChain = task.catch(() => {});
+  return task;
+}
 async function uploadToGithub(path, content){
   const config = getGithubConfig();
   if(!config) throw new Error('未配置 GitHub');
-  
+  // 大文件走 Git DB 通道
+  if(typeof content === 'string' && content.length > 900000){
+    return uploadToGithubGitDB(path, content, config);
+  }
   const apiUrl = `https://api.github.com/repos/${config.repo}/contents/${path}`;
   const headers = {
     'Authorization': `token ${config.token}`,
     'Accept': 'application/vnd.github.v3+json'
   };
-  
-  // 检查文件是否存在
-  let sha = null;
-  try {
-    const checkRes = await fetch(apiUrl, {headers});
-    if(checkRes.ok){
-      const data = await checkRes.json();
-      sha = data.sha;
+  const doPut = async () => {
+    // 检查文件是否存在
+    let sha = null;
+    try {
+      const checkRes = await fetch(apiUrl, {headers});
+      if(checkRes.ok){
+        const data = await checkRes.json();
+        sha = data.sha;
+      }
+    } catch(e) {}
+    const body = {
+      message: `Update ${path} via sync`,
+      content: content
+    };
+    if(sha) body.sha = sha;
+    const res = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {...headers, 'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){
+      const errData = await res.json().catch(() => ({}));
+      const err = new Error(errData.message || `上传失败: ${res.status}`);
+      err.status = res.status;
+      throw err;
     }
-  } catch(e) {}
-  
-  const body = {
-    message: `Update ${path} via sync`,
-    content: content
+    return res.json();
   };
-  if(sha) body.sha = sha;
-  
-  const res = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: {...headers, 'Content-Type': 'application/json'},
-    body: JSON.stringify(body)
-  });
-  
-  if(!res.ok){
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.message || `上传失败: ${res.status}`);
+  try{ return await doPut(); }
+  catch(e){
+    // 409/422 并发冲突或 sha 过期 → 重试一次
+    if(e.status === 409 || e.status === 422){
+      console.warn('Contents 上传冲突，重试一次:', path, e.message);
+      await new Promise(r => setTimeout(r, 1000));
+      return doPut();
+    }
+    throw e;
   }
-  return res.json();
 }
 
 // 从 GitHub 下载文件（公开仓库免 Token 也可只读拉取；未配置时用默认仓库）
@@ -3821,15 +4158,73 @@ async function downloadFromGithubRaw(path, asBinary){
 async function saveMetadataToGithub(){
   await saveMetadata(); // 先确保本地为最新（含其他页面写入的字段）
   const metaData = (await getMetaFromDB('allMetadata')) || {};
+  // 安全：待审核投稿不进公网清单（审核由 community.html 通过后才发布）
+  metaData.communityPosts = (Array.isArray(metaData.communityPosts) ? metaData.communityPosts : []).filter(p => !p.pending);
+  // 防覆盖：先取云端清单，本地缺失的媒体登记予以保留（避免旧设备整包推送把其他页面新上传的条目冲掉）
+  let cloudMeta = null;
+  try{
+    const cloud = await loadMetadataFromGithub().catch(() => null);
+    cloudMeta = cloud;
+    cloudMedia = cloud && cloud.mediaFiles ? cloud.mediaFiles : null;
+  }catch(e){}
+  // 建筑删除墓碑：双端并集；已删建筑从推送清单中剔除（防止旧列表把已删建筑推回云端）
+  if(cloudMeta && Array.isArray(cloudMeta.buildingDeleted) && cloudMeta.buildingDeleted.length){
+    metaData.buildingDeleted = Array.from(new Set([].concat(metaData.buildingDeleted || [], cloudMeta.buildingDeleted)));
+  }
+  // me 页可编辑文字（meText 由 me.html 独立维护）：整包推送时以云端为准保留，防止被本页旧数据冲掉
+  if(cloudMeta && cloudMeta.meText && !metaData.meText) metaData.meText = cloudMeta.meText;
+  // 文化马踏文章页（culture_intro / cultureKeys 由 culture.html 独立维护）：整包推送时强制以云端为准
+  if(cloudMeta){
+    if(cloudMeta.textData && cloudMeta.textData.culture_intro !== undefined && metaData.textData){
+      metaData.textData.culture_intro = cloudMeta.textData.culture_intro;
+    }
+    if(Array.isArray(cloudMeta.cultureKeys)) metaData.cultureKeys = cloudMeta.cultureKeys;
+  }
+  // 精选删除墓碑：双端并集；已删条目从推送清单剔除（防止旧设备旧列表把已删精选推回云端复活）
+  if(cloudMeta && Array.isArray(cloudMeta.spotDeleted) && cloudMeta.spotDeleted.length){
+    metaData.spotDeleted = Array.from(new Set([].concat(metaData.spotDeleted || [], cloudMeta.spotDeleted)));
+  }
+  if(Array.isArray(metaData.spotDeleted) && metaData.spotDeleted.length){
+    const _stombs = new Set(metaData.spotDeleted);
+    if(Array.isArray(metaData.spots)) metaData.spots = metaData.spots.filter(s => s && !_stombs.has(s.id));
+  }
+  // 文章删除墓碑：双端并集；已删文章从推送清单剔除（防止旧设备旧列表把已删文章推回云端）
+  if(cloudMeta && Array.isArray(cloudMeta.articleDeleted) && cloudMeta.articleDeleted.length){
+    metaData.articleDeleted = Array.from(new Set([].concat(metaData.articleDeleted || [], cloudMeta.articleDeleted)));
+  }
+  if(Array.isArray(metaData.articleDeleted) && metaData.articleDeleted.length){
+    const _atoms = new Set(metaData.articleDeleted);
+    if(Array.isArray(metaData.articles)) metaData.articles = metaData.articles.filter(a => a && !_atoms.has(a.id));
+  }
+  if(Array.isArray(metaData.buildingDeleted) && metaData.buildingDeleted.length){
+    const _tombs = new Set(metaData.buildingDeleted);
+    if(Array.isArray(metaData.buildingIds)) metaData.buildingIds = metaData.buildingIds.filter(id => !_tombs.has(id));
+    if(Array.isArray(metaData.buildingKeys)) metaData.buildingKeys = metaData.buildingKeys.filter(id => !_tombs.has(id));
+  }
   // 附加媒体清单（key → 类型），供对端下载所有图片与3D模型（社区视频 post_* 记为 vid）
   try{
     const recs = await getAllMediaRecords();
     const mediaFiles = {};
+    const approvedIds = new Set(metaData.communityPosts.map(p => p.id));
     recs.forEach(r => {
-      mediaFiles[r.key] = (r.data instanceof Blob)
-        ? (/^(post_)/.test(r.key) ? 'vid' : 'glb')
-        : 'img';
+      if(/^post/.test(r.key)){
+        // 社区媒体：仅已审核投稿进主清单（未审核媒体只在待审核队列里）
+        const cid = r.key.indexOf('postc_') === 0 ? r.key.slice(6) : r.key.slice(5);
+        if(!approvedIds.has(cid)) return;
+        mediaFiles[r.key] = (r.data instanceof Blob) ? 'vid' : 'img';
+        return;
+      }
+      mediaFiles[r.key] = (r.data instanceof Blob) ? 'glb' : 'img';
     });
+    if(cloudMedia){ Object.keys(cloudMedia).forEach(k => { if(!(k in mediaFiles)) mediaFiles[k] = cloudMedia[k]; }); }
+    // 墓碑建筑：其媒体登记一并剔除（与 tour.html mergeMetaSafe 清理逻辑一致，防止反复互推）
+    if(Array.isArray(metaData.buildingDeleted) && metaData.buildingDeleted.length){
+      const _tombKeys = new Set(metaData.buildingDeleted);
+      Object.keys(mediaFiles).forEach(k => {
+        const m = k.match(/^(?:building_|pano_[a-z]+_)(.+)$/);
+        if(m && _tombKeys.has(m[1])) delete mediaFiles[k];
+      });
+    }
     metaData.mediaFiles = mediaFiles;
   }catch(e){ console.warn('媒体清单生成失败', e); }
   metaData.version = 4;
@@ -3881,6 +4276,12 @@ async function syncFromGithub(){
     } else if(metaData.buildingKeys){
       dataStore.buildingIds = metaData.buildingKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
     }
+    // 删除墓碑：云端为准（本地已清空），剔除已删建筑防复活
+    dataStore.buildingDeleted = Array.from(new Set([].concat(metaData.buildingDeleted || [], dataStore.buildingDeleted || [])));
+    if(dataStore.buildingDeleted.length){
+      const _tombs = new Set(dataStore.buildingDeleted);
+      dataStore.buildingIds = dataStore.buildingIds.filter(id => !_tombs.has(id));
+    }
     if(metaData.featuredIds && metaData.featuredIds.length){
       dataStore.featuredIds = metaData.featuredIds;
     } else if(metaData.featuredKeys){
@@ -3891,11 +4292,21 @@ async function syncFromGithub(){
     // v4 新增字段
     if(metaData.textData) dataStore.textData = metaData.textData;
     // v5 新增字段：精选景点 / 乡村动态
-    if(metaData.spots) dataStore.spots = metaData.spots;
+    if(metaData.spots){
+      // 精选删除墓碑：云端墓碑并入；列表按墓碑过滤；本地新增（云端没有的 id）并集保留，防同步冲掉刚添加的条目
+      dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], metaData.spotDeleted || [])));
+      dataStore.spots = filterSpotsByTombs(ensureSpotIds(metaData.spots), dataStore.spotDeleted);
+      const _sids = new Set(dataStore.spots.map(s => s.id));
+      ensureSpotIds(dataStore.spots || []).forEach(s => { if(s.id && !_sids.has(s.id)){ dataStore.spots.push(s); _sids.add(s.id); } });
+    }
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
-    // 文章系统恢复（GitHub 同步）
-    if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
+    // 文章系统恢复（GitHub 同步）：合并策略，防 Pages 缓存窗口内旧云端列表覆盖掉本地新增文章
+    if(metaData.articles || metaData.articleDeleted) mergeArticlesWithCloud(metaData.articles, metaData.articleDeleted);
+    // 文化马踏简介配图恢复（GitHub 同步）
+    if(metaData.cultureKeys) metaData.cultureKeys.forEach(k => { dataStore.cultureImages[k] = true; });
+    // 封面轮播附加图恢复（GitHub 同步）
+    if(metaData.coverKeys) metaData.coverKeys.forEach(k => { dataStore.coverSlideImages[k] = true; });
 
     // 完整持久化远程元数据（含 3D 全景标志 panoBuildings 等跨页面字段），随后 saveMetadata 会合并保留
     await saveMetaToDB('allMetadata', metaData);
@@ -3974,7 +4385,7 @@ async function syncToGithub(){
 // 自动同步图片到 GitHub（如果配置了）。type: featured/building/news/spot/cover
 // 统一通过调度器排队：文件走 media/<key>.img 路径（cover 对应 cover_image，与 IndexedDB key 一致）
 function autoSyncToGithub(type, id){
-  const key = (type === 'cover') ? 'cover_image' : (type + '_' + id);
+  const key = (type === 'cover') ? 'cover_image' : (type === 'coverSlide' ? 'cover_' + id : (type + '_' + id));
   autoSyncMediaKeyToGithub(key);
 }
 
@@ -4008,6 +4419,11 @@ async function autoSyncFromGithub(){
       }
     }
 
+    // ★ 关键时序修复：本函数在页面启动时先于 restoreData 执行，此时 dataStore 还是空的。
+    //   若不先从 IndexedDB 预载本地数据，下方"文章合并 / 精选并集 / 墓碑过滤"就拿不到本地基准，
+    //   合并退化为"云端直接覆盖"→ 刚添加的动态/精选在 CDN 缓存窗口内刷新即消失。
+    try{ await loadMetadata(); }catch(e){}
+
     // 从 GitHub 下载元数据字段
     if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
     if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
@@ -4015,6 +4431,17 @@ async function autoSyncFromGithub(){
       dataStore.buildingIds = metaData.buildingIds;
     } else if(metaData.buildingKeys){
       dataStore.buildingIds = metaData.buildingKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
+    }
+    // 删除墓碑：双端并集（本地墓碑优先保留），剔除已删建筑防复活
+    dataStore.buildingDeleted = Array.from(new Set([].concat(metaData.buildingDeleted || [], dataStore.buildingDeleted || [])));
+    if(dataStore.buildingDeleted.length){
+      const _tombs = new Set(dataStore.buildingDeleted);
+      dataStore.buildingIds = dataStore.buildingIds.filter(id => !_tombs.has(id));
+      Object.keys(dataStore.buildingImages).forEach(k => { if(_tombs.has(k)) delete dataStore.buildingImages[k]; });
+      Object.keys(dataStore.buildingInfos).forEach(k => {
+        const bid = k.endsWith('_name') ? k.slice(0, -5) : k;
+        if(_tombs.has(bid)) delete dataStore.buildingInfos[k];
+      });
     }
     if(metaData.featuredIds && metaData.featuredIds.length){
       dataStore.featuredIds = metaData.featuredIds;
@@ -4026,11 +4453,20 @@ async function autoSyncFromGithub(){
     if(metaData.textData) dataStore.textData = metaData.textData;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
     if(metaData.coverImage) dataStore.coverImage = true;
-    if(metaData.spots) dataStore.spots = metaData.spots;
+    if(metaData.spots){
+      // 精选删除墓碑：云端墓碑并入；列表按墓碑过滤；本地新增（云端没有的 id）并集保留
+      dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], metaData.spotDeleted || [])));
+      dataStore.spots = filterSpotsByTombs(ensureSpotIds(metaData.spots), dataStore.spotDeleted);
+      const _sids2 = new Set(dataStore.spots.map(s => s.id));
+      ensureSpotIds(dataStore.spots || []).forEach(s => { if(s.id && !_sids2.has(s.id)){ dataStore.spots.push(s); _sids2.add(s.id); } });
+    }
     if(metaData.spotKeys) metaData.spotKeys.forEach(k => { dataStore.spotImages[k] = true; });
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
     if(metaData.newsKeys) metaData.newsKeys.forEach(k => { dataStore.newsImages[k] = true; });
-    if(Array.isArray(metaData.articles)) dataStore.articles = metaData.articles;
+    // 文章系统恢复（自动同步）：合并策略，防 Pages 缓存窗口内旧云端列表覆盖掉本地新增文章
+    if(metaData.articles || metaData.articleDeleted) mergeArticlesWithCloud(metaData.articles, metaData.articleDeleted);
+    if(metaData.cultureKeys) metaData.cultureKeys.forEach(k => { dataStore.cultureImages[k] = true; });
+    if(metaData.coverKeys) metaData.coverKeys.forEach(k => { dataStore.coverSlideImages[k] = true; });
     // 完整元数据落库（保留 3D 全景等跨页面字段）
     await saveMetaToDB('allMetadata', metaData);
 
@@ -4047,15 +4483,18 @@ async function autoSyncFromGithub(){
           await saveMediaRecord(key, data);
           // 同步填充 dataStore 内存对象（图片=ascii dataURL，model=Blob）
           if(autoMedia[key] === 'img'){
-            // key 格式: featured_X / building_X / spot_X / news_X / cover_image / bg_image
-            const m = key.match(/^(featured|building|spot|news)_(.+)$/);
+            // key 格式: featured_X / building_X / spot_X / news_X / culture_X / cover_image / bg_image
+            const m = key.match(/^(featured|building|spot|news|culture)_(.+)$/);
             if(m){
               const [, type, id] = m;
-              const storeKey = type === 'spot' ? 'spotImages' : (type === 'news' ? 'newsImages' : type === 'featured' ? 'featuredImages' : 'buildingImages');
+              const storeKey = type === 'spot' ? 'spotImages' : (type === 'news' ? 'newsImages' : type === 'featured' ? 'featuredImages' : type === 'culture' ? 'cultureImages' : 'buildingImages');
               dataStore[storeKey] = dataStore[storeKey] || {};
               dataStore[storeKey][id] = data;
             } else if(key === 'cover_image'){
               window._coverImageDataUrl = data;
+            } else if(/^cover_\d+$/.test(key)){
+              // 封面轮播附加图 cover_2 / cover_3 ...
+              dataStore.coverSlideImages[key.slice(6)] = data;
             } else if(key === 'bg_image'){
               window._bgImageDataUrl = data;
             }
@@ -4161,6 +4600,18 @@ async function restoreData(){
   for(let id in (dataStore.newsImages || {})){
     const url = await getImageFromDB(`news_${id}`);
     if(url) dataStore.newsImages[id] = url;
+  }
+  // 文化马踏简介配图
+  for(const key in (dataStore.cultureImages || {})){
+    if(typeof dataStore.cultureImages[key] === 'string') continue;
+    const url = await getImageFromDB(key);
+    if(url) dataStore.cultureImages[key] = url;
+  }
+  // 封面轮播附加图（key 规则：dataStore 存 id，IndexedDB 存 cover_<id>）
+  for(const key in (dataStore.coverSlideImages || {})){
+    if(typeof dataStore.coverSlideImages[key] === 'string') continue;
+    const url = await getImageFromDB('cover_' + key);
+    if(url) dataStore.coverSlideImages[key] = url;
   }
 
   // 文章封面（IndexedDB 恢复，游客端拉取媒体后也能显示封面缩略图）
@@ -4356,6 +4807,13 @@ async function applyImageUrl(url, target){
     saveMetadata();
     autoSyncToGithub('cover', 'main', url); // 封面也必须走统一媒体上传
     alert('✅ 特色封面已更新并永久保存！');
+  } else if(target.type === 'coverSlide'){
+    dataStore.coverSlideImages[target.id] = url;
+    await saveImage(`cover_${target.id}`, url);
+    renderCover();
+    saveMetadata();
+    autoSyncToGithub('coverSlide', target.id, url);
+    alert('✅ 封面轮播图已添加（两张及以上自动播放）！');
   } else if(target.type === 'news'){
     dataStore.newsImages[target.id] = url;
     await saveImage(`news_${target.id}`, url);
@@ -4366,6 +4824,11 @@ async function applyImageUrl(url, target){
     await saveImage(`spot_${target.id}`, url);
     if(window._renderSpotlight) window._renderSpotlight();
     autoSyncToGithub('spot', target.id, url);
+  } else if(target.type === 'cultureIntro'){
+    dataStore.cultureImages[target.id] = url;
+    await saveImage(`culture_${target.id}`, url);
+    renderCultureGallery();
+    autoSyncToGithub('culture', target.id, url);
   }
   await saveMetadata();
   document.getElementById('filePicker').value = '';
@@ -4373,6 +4836,21 @@ async function applyImageUrl(url, target){
 }
 
 /* ============ 乡村动态 · 文章系统（卡片点击跳转文章页，永久保存） ============ */
+// 文章列表合并：云端为底 + 本地独有文章保留（按 id 去重）+ 双端墓碑并集过滤
+// 解决：保存后 Pages CDN 缓存（约10分钟）内刷新，云端旧列表覆盖本地导致新文章消失
+function mergeArticlesWithCloud(cloudArticles, cloudTombs){
+  const tombs = new Set([].concat(dataStore.articleDeleted || [], cloudTombs || []));
+  dataStore.articleDeleted = Array.from(tombs);
+  const cloud = (Array.isArray(cloudArticles) ? cloudArticles : []).filter(a => a && !tombs.has(a.id));
+  if(!Array.isArray(dataStore.articles) || !dataStore.articles.length){
+    dataStore.articles = cloud;
+    return dataStore.articles;
+  }
+  const ids = new Set(cloud.map(a => a.id));
+  const localOnly = dataStore.articles.filter(a => a && !tombs.has(a.id) && !ids.has(a.id));
+  dataStore.articles = localOnly.concat(cloud); // 本地新增在前（新文章语义上排最前）
+  return dataStore.articles;
+}
 // 获取文章列表（首次自动从旧动态数据迁移）
 function getArticles(){
   if(!Array.isArray(dataStore.articles)){
@@ -4460,6 +4938,8 @@ async function deleteArticle(id){
   if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return;
   const list = getArticles();
   dataStore.articles = list.filter(a => a.id !== id);
+  // 删除墓碑：防云端旧列表合并时把已删文章带回
+  dataStore.articleDeleted = Array.from(new Set([].concat(dataStore.articleDeleted || [], [id])));
   delete dataStore.articleCovers[id];
   try{ await deleteImageFromDB('article_cover_' + id); }catch(e){}
   renderNews();
@@ -4514,7 +4994,8 @@ function switchArticleType(type, silent){
   const isLink = type === 'link';
   document.getElementById('artFieldUrl').style.display = isLink ? 'block' : 'none';
   document.getElementById('artFieldBody').style.display = isLink ? 'none' : 'block';
-  document.getElementById('artFieldCover').style.display = isLink ? 'none' : 'block';
+  // 封面对两种类型都开放（链接文章也可自定义封面，不设则卡片用自动配图）
+  document.getElementById('artFieldCover').style.display = 'block';
   document.getElementById('artForm').dataset.type = type;
   if(!silent){
     document.getElementById('artModalTitle').textContent = isLink ? '🔗 添加链接文章' : '✍️ 撰写原创文章';
@@ -4941,7 +5422,7 @@ document.addEventListener('keydown',(e)=>{
     if(!Array.isArray(dataStore.spots) || !dataStore.spots.length){
       dataStore.spots = JSON.parse(JSON.stringify(DEFAULT_SPOTS));
     }
-    return dataStore.spots;
+    return ensureSpotIds(dataStore.spots);
   }
 
   /* 管理员：绑定/解绑当前卡片的 contenteditable */
@@ -5001,7 +5482,7 @@ document.addEventListener('keydown',(e)=>{
   function renderSpotlight(idx){
     if(typeof dataStore === 'undefined') return;
     const spots = getSpots();
-    totalSpots = Math.min(Math.max(3, spots.length), 8);
+    totalSpots = Math.min(Math.max(1, spots.length), 8); // 最少 1 条：支持管理员删除到只剩 1 个
     idx = ((idx % totalSpots) + totalSpots) % totalSpots;
     currentIdx = idx;
 
@@ -5032,14 +5513,86 @@ document.addEventListener('keydown',(e)=>{
     bindSpotEditable();
   }
 
+  /* 管理员：删除当前精选条目（马踏精选数量可减，至少保留 1 个；独立配图整体左移重排） */
+  async function deleteSpotCurrent(){
+    if(!isAdmin){ alert('此功能仅限管理员使用'); return; }
+    const spots = getSpots();
+    if(spots.length <= 1){ alert('至少需要保留一个精选条目，无法继续删除'); return; }
+    const idx = currentIdx % spots.length;
+    const spot = spots[idx];
+    if(!confirm('确定删除精选「' + (spot.title || '未命名') + '」吗？\n（永久删除，任何设备刷新都不会恢复；自动同步云端）')) return;
+    spots.splice(idx, 1);
+    // 删除墓碑：记录条目 id，所有设备/页面的数据合并都会按墓碑过滤，旧列表推回也无法复活
+    const _delId = spot.id || spotStableId(spot.title);
+    dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], [_delId])));
+    // 独立景点图按索引（spot_<n>）存储：删除该项，后面的图整体左移一位
+    const imgs = dataStore.spotImages = dataStore.spotImages || {};
+    const moved = {};
+    for(let n = idx + 1; n <= 12; n++){
+      let data = imgs[n];
+      if(data === undefined || data === true){ data = await getImageFromDB('spot_' + n).catch(() => null); }
+      if(!data || data === true) continue;
+      await saveImage('spot_' + (n - 1), data).catch(()=>{});
+      moved[n - 1] = data;
+      await deleteImageFromDB('spot_' + n).catch(()=>{});
+      delete imgs[n];
+    }
+    await deleteImageFromDB('spot_' + idx).catch(()=>{});
+    delete imgs[idx];
+    Object.assign(imgs, moved);
+    saveMetadata();
+    // 必须立即安全推送：autoSyncMetaToGithub 依赖"待传媒体队列"，删除条目不产生媒体文件
+    // → 队列为空时调度器直接短路返回，云端永远收不到删除结果 → 刷新被云端旧数据覆盖复活
+    saveMetadataToGithub().catch(err => console.warn('精选删除同步云端失败:', err));
+    rebuildSpotDots();
+    renderSpotlight(idx % spots.length);
+    alert('🗑️ 已删除「' + (spot.title || '') + '」，当前精选还剩 ' + spots.length + ' 个');
+  }
+
+  /* 管理员：添加精选条目（默认模板，选中最后一条；点文字可编辑，点换图传配图） */
+  function addSpotCurrent(){
+    if(!isAdmin){ alert('此功能仅限管理员使用'); return; }
+    const spots = getSpots();
+    if(spots.length >= 8){ alert('最多支持 8 个精选条目'); return; }
+    spots.push({
+      id: 'sp_' + Date.now().toString(36),
+      tag: '新景点',
+      title: '新精选条目',
+      desc: '点击这段文字可直接编辑景点介绍；点击右上角「换图」上传本条目配图；删除请点「删除」按钮。',
+      tags: ['标签一', '标签二']
+    });
+    saveMetadata();
+    saveMetadataToGithub().catch(err => console.warn('精选添加同步云端失败:', err));
+    totalSpots = Math.min(Math.max(1, spots.length), 8);
+    rebuildSpotDots();
+    renderSpotlight(spots.length - 1);
+    alert('✅ 已添加新精选条目（第 ' + spots.length + ' 个）\n\n· 点击标题/介绍文字可直接编辑\n· 点击「🖼️ 换图」上传配图\n· 改动自动保存并同步云端');
+  }
+
+  /* 删除后重建圆点指示器（点绑定随 innerHTML 重建，无重复绑定的箭头保持原绑定即可） */
+  function rebuildSpotDots(){
+    const dotsContainer = document.getElementById('spotlightDots');
+    const pageNum = document.getElementById('spotlightPage');
+    if(!dotsContainer) return;
+    let html = '';
+    for(let i = 0; i < totalSpots; i++){
+      html += `<div class="dot ${i === currentIdx ? 'active' : ''}" data-spot="${i}"></div>`;
+    }
+    dotsContainer.innerHTML = html;
+    dotsContainer.querySelectorAll('.dot').forEach(d => {
+      d.addEventListener('click', () => renderSpotlight(parseInt(d.dataset.spot)));
+    });
+    if(pageNum) pageNum.textContent = `${currentIdx + 1} / ${totalSpots}`;
+  }
+
   function initSpotlight(){
     const dotsContainer = document.getElementById('spotlightDots');
     const pageNum = document.getElementById('spotlightPage');
-    const arrow = document.querySelector('.fbc-arrow');
+    const arrow = document.querySelector('.fbc-arrow:not(.fbc-prev)');
+    const prevArrow = document.querySelector('.fbc-arrow.fbc-prev');
     if(!dotsContainer) return;
-
     const spots = getSpots();
-    totalSpots = Math.min(Math.max(3, spots.length), 8);
+    totalSpots = Math.min(Math.max(1, spots.length), 8); // 最少 1 条：支持管理员删除到只剩 1 个
 
     let dotsHTML = '';
     for(let i = 0; i < totalSpots; i++){
@@ -5055,6 +5608,9 @@ document.addEventListener('keydown',(e)=>{
     if(arrow){
       arrow.addEventListener('click', () => renderSpotlight(currentIdx + 1));
     }
+    if(prevArrow){
+      prevArrow.addEventListener('click', () => renderSpotlight(currentIdx - 1));
+    }
 
     // 管理员换图按钮（挂在卡片右上角）
     let replaceBtn = document.querySelector('.fbc-replace-btn');
@@ -5068,6 +5624,28 @@ document.addEventListener('keydown',(e)=>{
       };
       const card = document.getElementById('spotlightCard');
       if(card) card.appendChild(replaceBtn);
+    }
+
+    // 管理员删除按钮（删除当前精选条目，位于换图按钮左侧）
+    let delBtn = document.querySelector('.fbc-delete-btn');
+    if(!delBtn){
+      delBtn = document.createElement('button');
+      delBtn.className = 'fbc-delete-btn edit-only';
+      delBtn.textContent = '🗑️ 删除';
+      delBtn.onclick = () => deleteSpotCurrent();
+      const card = document.getElementById('spotlightCard');
+      if(card) card.appendChild(delBtn);
+    }
+
+    // 管理员添加按钮（新增精选条目，位于删除按钮左侧）
+    let addBtn = document.querySelector('.fbc-add-btn');
+    if(!addBtn){
+      addBtn = document.createElement('button');
+      addBtn.className = 'fbc-add-btn edit-only';
+      addBtn.textContent = '➕ 添加';
+      addBtn.onclick = () => addSpotCurrent();
+      const card = document.getElementById('spotlightCard');
+      if(card) card.appendChild(addBtn);
     }
 
     renderSpotlight(0);
@@ -5178,25 +5756,6 @@ document.getElementById('heroPanoModelInput').addEventListener('change', async (
   e.target.value = '';
 });
 
-/* ============ 首页四卡片：分类全景数量徽标 ============ */
-async function renderPanoCounts(){
-  try{
-    const meta = (await getMetaFromDB('allMetadata')) || {};
-    const cats = meta.buildingCats || {};
-    const panoB = meta.panoBuildings || {};
-    const counts = { red:0, eco:0, int:0, civ:0 };
-    Object.keys(cats).forEach(id => {
-      const c = cats[id];
-      if(counts[c] !== undefined && (panoB[id] || /^b/.test(id) || /^[0-9]+$/.test(id))) counts[c]++;
-    });
-    const map = { red:'qeCountRed', eco:'qeCountEco', int:'qeCountInt', civ:'qeCountCiv' };
-    Object.keys(map).forEach(k => {
-      const el = document.getElementById(map[k]);
-      if(el) el.textContent = counts[k] > 0 ? (counts[k] + ' 个') : '3D';
-    });
-  }catch(e){ /* DB 未就绪时静默 */ }
-}
-
 /* ============ 全站搜索（建筑/景点/动态/文章/社区/版块） ============ */
 function gsEsc(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function openGlobalSearch(q){
@@ -5218,10 +5777,11 @@ async function renderGlobalResults(kw){
   let meta = {};
   try{ meta = (await getMetaFromDB('allMetadata')) || {}; }catch(e){}
   const items = [];
-  // 1) 建筑全景（含分类名匹配）
+  // 1) 建筑全景（含分类名匹配）；墓碑过滤：已删建筑不进搜索结果
   const bInfos = meta.buildingInfos || {};
-  const bIds = (meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6'];
-  const catNames = { red:'红韵马踏', eco:'生态马踏', int:'数智马踏', civ:'文明马踏' };
+  const _sTombs = new Set(meta.buildingDeleted || []);
+  const bIds = ((meta.buildingIds && meta.buildingIds.length) ? meta.buildingIds : ['1','2','3','4','5','6']).filter(id => !_sTombs.has(id));
+  const catNames = { red:'红韵马踏', eco:'生态马踏', int:'数智马踏', civ:'文化马踏' };
   bIds.forEach(id => {
     const name = bInfos[id + '_name'] || ('建筑 ' + id);
     const intro = String(bInfos[id] || '');
@@ -5276,10 +5836,10 @@ async function renderGlobalResults(kw){
   ).join('');
 }
 
-// 初始化：等云端自动同步一轮后刷新按钮/徽标状态
+// 初始化：等云端自动同步一轮后刷新全景按钮状态
 window.addEventListener('load', () => {
-  setTimeout(() => { updateHeroPanoBtn(); renderPanoCounts(); }, 1200);
-  setTimeout(() => { updateHeroPanoBtn(); renderPanoCounts(); }, 4500);
+  setTimeout(() => { updateHeroPanoBtn(); }, 1200);
+  setTimeout(() => { updateHeroPanoBtn(); }, 4500);
 });
 </script>
 

@@ -122,7 +122,7 @@
 <body>
 
 <header class="top-nav">
-  <a class="logo" href="index.html">🏠 云游三下乡</a>
+  <a class="logo" href="index.html">🏠 云游马踏</a>
   <a class="back-home" href="index.html">← 返回首页</a>
 </header>
 
@@ -383,6 +383,14 @@ async function deleteArticle(){
 }
 
 /* ============ 链接读取模式（iframe 自适应嵌入 + 新窗口兜底） ============ */
+// 已知禁止被 iframe 嵌入的平台（服务端 X-Frame-Options/CSP 拒绝，任何网页都无法内嵌）：
+// 对这些链接跳过 iframe，直接自动跳转原文，实现"点开即读"
+function isEmbedBlocked(url){
+  try{
+    const h = new URL(url).hostname.toLowerCase();
+    return /(^|\.)weixin\.qq\.com$/.test(h);   // 微信公众号文章（可按需扩展其他平台）
+  }catch(e){ return false; }
+}
 function renderLink(a){
   document.getElementById('linkView').style.display = 'block';
   const titleEl = document.getElementById('linkTitle');
@@ -391,6 +399,13 @@ function renderLink(a){
   descEl.textContent = a.desc || ('来源：' + safeDomain(a.url));
   document.getElementById('linkOpenBtn').href = a.url;
   document.getElementById('fallbackOpen').href = a.url;
+
+  // 微信等平台：无法在页面内嵌显示，直接跳转原文（直接访问）
+  if(isEmbedBlocked(a.url)){
+    titleEl.textContent = '正在为您打开原文…';
+    location.replace(a.url);
+    return;
+  }
 
   const frame = document.getElementById('linkFrame');
   const fallback = document.getElementById('frameFallback');

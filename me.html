@@ -133,9 +133,17 @@
 <body data-page="me">
 
 <header class="top-nav">
-  <a class="logo" href="index.html">🏠 云游三下乡</a>
-  <a class="back-home" href="index.html">← 返回首页</a>
+  <a class="logo" href="index.html">🏠 首页</a>
+  <button class="bell-btn" id="bellBtn" onclick="toggleNoticePop(event)" title="系统消息" aria-label="系统消息">
+    🔔<span class="bell-dot" id="bellDot"></span>
+  </button>
 </header>
+
+<!-- 系统消息面板 -->
+<div class="notice-pop" id="noticePop">
+  <div class="np-head"><h3>📣 系统消息</h3><button onclick="closeNoticePop()">✕</button></div>
+  <div class="np-list" id="noticeList"><div class="np-empty">加载中…</div></div>
+</div>
 
 <div class="admin-tip">🛡️ 管理员模式已开启</div>
 
@@ -144,8 +152,8 @@
   <div class="user-card">
     <div class="avatar">👤</div>
     <div class="user-info">
-      <div class="u-name">游客 · 欢迎回来</div>
-      <div class="u-desc">三下乡 · 文化云游 | 红色文化 · 乡土情怀</div>
+      <div class="u-name" data-mekey="greeting">游客 · 欢迎回来</div>
+      <div class="u-desc" data-mekey="subtitle">三下乡 · 文化云游 | 红色文化 · 乡土情怀</div>
     </div>
     <div class="admin-badge">🛡️ 管理员</div>
   </div>
@@ -167,24 +175,32 @@
     </a>
     <a class="func-item admin-only" href="javascript:void(0)" onclick="logoutAdmin()">
       <div class="fi-icon">🚪</div>
-      <div class="fi-body"><div class="fi-title">退出管理员模式</div><div class="fi-sub">退出后所有页面恢复访客只读状态</div></div>
+      <div class="fi-body"><div class="fi-title" data-mekey="logout_t">退出管理员模式</div><div class="fi-sub" data-mekey="logout_s">退出后所有页面恢复访客只读状态</div></div>
       <div class="fi-arrow">›</div>
     </a>
     <a class="func-item" href="index.html">
       <div class="fi-icon">🏠</div>
-      <div class="fi-body"><div class="fi-title">返回首页</div><div class="fi-sub">云游三下乡 · 精选景点与乡村动态</div></div>
+      <div class="fi-body"><div class="fi-title" data-mekey="home_t">返回首页</div><div class="fi-sub" data-mekey="home_s">云游马踏 · 精选景点与乡村动态</div></div>
       <div class="fi-arrow">›</div>
     </a>
     <a class="func-item admin-only" href="index.html">
       <div class="fi-icon">🗄️</div>
-      <div class="fi-body"><div class="fi-title">数据管理</div><div class="fi-sub">在首页底部的「存储管理」中导入 / 导出全站数据</div></div>
+      <div class="fi-body"><div class="fi-title" data-mekey="data_t">数据管理</div><div class="fi-sub" data-mekey="data_s">在首页底部的「存储管理」中导入 / 导出全站数据</div></div>
       <div class="fi-arrow">›</div>
     </a>
     <a class="func-item" href="javascript:void(0)" onclick="clearCart()">
       <div class="fi-icon">🛒</div>
-      <div class="fi-body"><div class="fi-title">清空购物车</div><div class="fi-sub" id="cartInfo">商城选购暂存</div></div>
+      <div class="fi-body"><div class="fi-title" data-mekey="cart_t">清空购物车</div><div class="fi-sub" id="cartInfo">商城选购暂存</div></div>
       <div class="fi-arrow">›</div>
     </a>
+  </div>
+
+  <!-- 系统通知发布（管理员） -->
+  <div class="notice-admin">
+    <h3>📣 发布系统消息</h3>
+    <input type="text" id="noticeTitle" placeholder="消息标题（如：网站更新通知）" maxlength="40">
+    <textarea id="noticeText" placeholder="输入要推送给所有访客的系统消息内容……" maxlength="500"></textarea>
+    <button onclick="publishNotice()">☁️ 发布并同步云端</button>
   </div>
 
   <!-- 反馈建议 -->
@@ -327,6 +343,220 @@ function delFeedback(i){
   renderFeedbacks();
 }
 
+/* ============ 系统消息（铃铛 · 云端同步 + 已读永久保存） ============ */
+const NOTICE_READ_KEY = 'sxx_notice_read_ts';
+const WELCOME_NOTICE = { id:'welcome', title:'欢迎使用三下乡 · 文化云游', content:'这里是系统消息栏，管理员发布的重要通知会第一时间推送到这里。', ts:0 };
+let _notices = [];           // 当前消息列表（ts 降序）
+let _noticePopOpen = false;
+
+function saveMetaToDB(key, value){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('metadata','readwrite');
+    tx.objectStore('metadata').put({ key, value });
+    tx.onsuccess = () => resolve(true);
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+function escapeHtml(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function noticeReadTs(){ return parseInt(localStorage.getItem(NOTICE_READ_KEY) || '0') || 0; }
+function ghCfg(){ try{ return JSON.parse(localStorage.getItem('sxx_github_config') || 'null'); }catch(e){ return null; } }
+
+// 拉取云端元数据：通道1 GitHub Pages（免限流），通道2 API raw 兜底
+async function fetchCloudMeta(){
+  const cfg = ghCfg();
+  if(!cfg || !cfg.repo) return null;
+  try{
+    const slash = cfg.repo.indexOf('/');
+    const owner = cfg.repo.slice(0, slash), repo = cfg.repo.slice(slash + 1);
+    const r = await fetch('https://' + owner + '.github.io/' + repo + '/sxx_metadata.json?buster=' + Date.now(), { cache:'no-store' });
+    if(r.ok){
+      const j = await r.json();
+      if(j && typeof j === 'object' && !Array.isArray(j)) return j;
+    }
+  }catch(e){}
+  try{
+    const h = { 'Accept':'application/vnd.github.raw' };
+    if(cfg.token) h['Authorization'] = 'token ' + cfg.token;
+    const r2 = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json?raw=' + Date.now(), { headers:h, cache:'no-store' });
+    if(r2.ok){
+      const j = JSON.parse(await r2.text());
+      if(j && typeof j === 'object' && !Array.isArray(j)) return j;
+    }
+  }catch(e){}
+  return null;
+}
+
+// 管理员：推送消息后的元数据上传（先拉云端最新为底，只改 systemNotices，防覆盖其他字段）
+async function pushNoticesToCloud(noticeList){
+  const cfg = ghCfg();
+  if(!cfg || !cfg.token){ throw new Error('未配置 GitHub Token，消息仅保存在本机'); }
+  const cloud = await fetchCloudMeta().catch(() => null) || {};
+  cloud.systemNotices = noticeList;
+  cloud.timestamp = Date.now();
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(cloud))));
+  const H = { 'Authorization':'token ' + cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' };
+  const doPut = async (sha) => {
+    const body = { message:'sync system notices', content:b64 };
+    if(sha) body.sha = sha;
+    const r = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { method:'PUT', headers:H, body:JSON.stringify(body) });
+    if(!r.ok && (r.status === 409 || r.status === 422)){
+      // sha 过期/并发冲突：重取 sha 重试一次
+      const g = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { headers:H });
+      if(g.ok){
+        const j = await g.json();
+        const body2 = { message:'sync system notices retry', content:b64, sha:j.sha };
+        const r2 = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { method:'PUT', headers:H, body:JSON.stringify(body2) });
+        if(!r2.ok) throw new Error('上传失败 ' + r2.status);
+        return;
+      }
+    }
+    if(!r.ok) throw new Error('上传失败 ' + r.status);
+  };
+  let sha = null;
+  try{
+    const g = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { headers:{ 'Authorization':'token ' + cfg.token, 'Accept':'application/vnd.github.v3+json' } });
+    if(g.ok) sha = (await g.json()).sha;
+  }catch(e){}
+  await doPut(sha);
+}
+
+// 加载消息：本地 IndexedDB → 叠加云端（云端有新消息时合并），并刷新红点
+async function refreshNotices(){
+  let list = [];
+  try{
+    const meta = (await getMetaFromDB('allMetadata')) || {};
+    if(Array.isArray(meta.systemNotices)) list = meta.systemNotices.slice();
+  }catch(e){}
+  let cloudChanged = false;
+  try{
+    const cloud = await fetchCloudMeta();
+    if(cloud && Array.isArray(cloud.systemNotices)){
+      const map = {};
+      list.forEach(n => { if(n && n.id) map[n.id] = n; });
+      cloud.systemNotices.forEach(n => {
+        if(n && n.id && (!map[n.id] || (n.ts || 0) > (map[n.id].ts || 0))){ map[n.id] = n; cloudChanged = true; }
+      });
+      list = Object.values(map);
+    }
+  }catch(e){}
+  list.sort((a,b) => (b.ts || 0) - (a.ts || 0));
+  _notices = list.slice(0, 30);
+  // 从未有消息时展示欢迎消息（ts=0，不会触发红点）
+  if(!_notices.length) _notices = [WELCOME_NOTICE];
+  if(cloudChanged){
+    try{
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      meta.systemNotices = _notices;
+      await saveMetaToDB('allMetadata', meta);
+    }catch(e){}
+  }
+  updateBellDot();
+}
+function updateBellDot(){
+  const hasUnread = _notices.some(n => (n.ts || 0) > noticeReadTs());
+  document.getElementById('bellDot').classList.toggle('show', hasUnread);
+  if(hasUnread){
+    const btn = document.getElementById('bellBtn');
+    btn.classList.remove('ringing'); void btn.offsetWidth; btn.classList.add('ringing');
+  }
+}
+function renderNoticeList(){
+  const box = document.getElementById('noticeList');
+  if(!_notices.length){
+    box.innerHTML = '<div class="np-empty">📭 暂无系统消息</div>';
+    return;
+  }
+  box.innerHTML = _notices.map(n => `
+    <div class="np-item">
+      <div class="np-t">${escapeHtml(n.title || '系统消息')}</div>
+      <div class="np-c">${escapeHtml(n.content || '')}</div>
+      ${n.ts ? `<div class="np-time">🕐 ${new Date(n.ts).toLocaleString('zh-CN')}</div>` : ''}
+      ${isAdmin ? `<button class="np-del" onclick="deleteNotice('${escapeHtml(n.id)}')" title="删除该消息">🗑️</button>` : ''}
+    </div>
+  `).join('');
+}
+// 查看消息：面板打开即标记全部已读（永久保存，刷新不复发红点）
+function toggleNoticePop(e){
+  if(e) e.stopPropagation();
+  _noticePopOpen = !_noticePopOpen;
+  const pop = document.getElementById('noticePop');
+  if(!_noticePopOpen){ pop.classList.remove('show'); return; }
+  pop.classList.add('show');
+  renderNoticeList();
+  const maxTs = _notices.reduce((m, n) => Math.max(m, n.ts || 0), 0);
+  if(maxTs > noticeReadTs()){
+    try{ localStorage.setItem(NOTICE_READ_KEY, String(maxTs)); }catch(err){}
+  }
+  updateBellDot();
+  // 打开时后台再拉一次云端，及时接收新消息
+  refreshNotices().then(() => { if(_noticePopOpen) renderNoticeList(); });
+}
+function closeNoticePop(){
+  _noticePopOpen = false;
+  document.getElementById('noticePop').classList.remove('show');
+}
+// 点击页面其他区域关闭面板
+document.addEventListener('click', (e) => {
+  if(!_noticePopOpen) return;
+  const pop = document.getElementById('noticePop');
+  if(pop && !pop.contains(e.target)) closeNoticePop();
+});
+// 管理员：发布系统消息（云端推送，所有设备可见）
+async function publishNotice(){
+  if(!isAdmin) return;
+  const title = document.getElementById('noticeTitle').value.trim();
+  const content = document.getElementById('noticeText').value.trim();
+  if(!title || !content){ alert('请填写消息标题和内容'); return; }
+  const btn = document.querySelector('.notice-admin button');
+  btn.disabled = true; btn.textContent = '⏳ 正在发布…';
+  try{
+    // 以云端最新列表为底追加，防多设备发布互相覆盖
+    const cloud = await fetchCloudMeta().catch(() => null);
+    let list = Array.isArray(cloud && cloud.systemNotices) ? cloud.systemNotices.slice() : _notices.slice();
+    list.unshift({ id:'n' + Date.now(), title, content, ts:Date.now() });
+    list.sort((a,b) => (b.ts || 0) - (a.ts || 0));
+    list = list.slice(0, 30);
+    await pushNoticesToCloud(list);
+    // 本地落库 + 立即生效
+    _notices = list;
+    try{
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      meta.systemNotices = list;
+      await saveMetaToDB('allMetadata', meta);
+    }catch(e){}
+    document.getElementById('noticeTitle').value = '';
+    document.getElementById('noticeText').value = '';
+    updateBellDot();
+    if(_noticePopOpen) renderNoticeList();
+    alert('✅ 系统消息已发布并同步云端，所有设备均可收到');
+  }catch(err){
+    alert('❌ 发布失败：' + err.message);
+  }finally{
+    btn.disabled = false; btn.textContent = '☁️ 发布并同步云端';
+  }
+}
+// 管理员：删除系统消息
+async function deleteNotice(id){
+  if(!isAdmin) return;
+  if(!confirm('确定删除这条系统消息吗？所有设备都将不再显示。')) return;
+  try{
+    const cloud = await fetchCloudMeta().catch(() => null);
+    let list = Array.isArray(cloud && cloud.systemNotices) ? cloud.systemNotices.slice() : _notices.slice();
+    list = list.filter(n => n.id !== id);
+    await pushNoticesToCloud(list);
+    _notices = list.slice(0, 30);
+    try{
+      const meta = (await getMetaFromDB('allMetadata')) || {};
+      meta.systemNotices = _notices;
+      await saveMetaToDB('allMetadata', meta);
+    }catch(e){}
+    updateBellDot();
+    renderNoticeList();
+  }catch(err){
+    alert('❌ 删除失败：' + err.message);
+  }
+}
+
 /* ============ 数据统计 ============ */
 async function loadStats(){
   try{
@@ -354,6 +584,79 @@ function animateNum(id, target){
   }, 40);
 }
 
+/* ============ 管理员可编辑文字（meText 存元数据，云端同步） ============ */
+// 应用已保存的文字（覆盖默认值）
+function applyMeText(mt){
+  if(!mt) return;
+  document.querySelectorAll('[data-mekey]').forEach(el => {
+    const v = mt[el.dataset.mekey];
+    if(typeof v === 'string' && v) el.textContent = v;
+  });
+}
+// 管理员态开放编辑；失焦保存（本地 IndexedDB + 云端 meText 字段）
+function bindMeEditable(){
+  document.querySelectorAll('[data-mekey]').forEach(el => {
+    if(!isAdmin){ el.removeAttribute('contenteditable'); el.onblur = null; return; }
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+    // 管理员点文字 = 进入编辑：拦截冒泡与默认导航（菜单行是 <a>，点文字不再触发跳转/logout/clearCart）；
+    // 点行内图标或右侧箭头仍正常执行功能
+    if(!el.__meClickBound){
+      el.__meClickBound = true;
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        el.focus();
+      });
+    }
+    el.onblur = async () => {
+      const key = el.dataset.mekey;
+      const val = el.textContent.trim();
+      let mt = {};
+      try{ mt = ((await getMetaFromDB('allMetadata')) || {}).meText || {}; }catch(e){}
+      if(mt[key] === val) return;
+      mt[key] = val;
+      try{
+        const meta = (await getMetaFromDB('allMetadata')) || {};
+        meta.meText = mt;
+        await saveMetaToDB('allMetadata', meta);
+      }catch(e){}
+      pushMeTextToCloud(mt).catch(() => {});
+    };
+  });
+}
+// 管理员：推送 meText（以云端最新为底只改 meText 字段，防覆盖其他字段；409/422 重取重试）
+async function pushMeTextToCloud(meText){
+  const cfg = ghCfg();
+  if(!cfg || !cfg.token) return; // 无 Token 仅保存在本机
+  const H = { 'Authorization':'token ' + cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' };
+  const put = async (body) => {
+    const r = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { method:'PUT', headers:H, body:JSON.stringify(body) });
+    if(!r.ok) throw new Error('上传失败 ' + r.status);
+  };
+  const buildBody = (cloud, sha) => {
+    cloud.meText = meText;
+    cloud.timestamp = Date.now();
+    const body = { message:'sync me text', content:btoa(unescape(encodeURIComponent(JSON.stringify(cloud)))) };
+    if(sha) body.sha = sha;
+    return body;
+  };
+  let sha = null;
+  try{
+    const g = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { headers:{ 'Authorization':'token ' + cfg.token, 'Accept':'application/vnd.github.v3+json' } });
+    if(g.ok) sha = (await g.json()).sha;
+  }catch(e){}
+  const first = await fetchCloudMeta().catch(() => null) || {};
+  try{
+    await put(buildBody(first, sha));
+  }catch(e){
+    // 并发冲突：重取云端为底重试一次
+    const g2 = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/sxx_metadata.json', { headers:H });
+    if(!g2.ok) throw e;
+    await put(buildBody(await fetchCloudMeta().catch(() => null) || {}, (await g2.json()).sha));
+  }
+}
+
 /* ============ 初始化 ============ */
 (async function init(){
   checkAdmin();
@@ -361,6 +664,13 @@ function animateNum(id, target){
   renderFeedbacks();
   await openDB();
   loadStats();
+  // 可编辑文字：先应用本机已保存的，再拉云端覆盖（管理员开放编辑）
+  try{ applyMeText(((await getMetaFromDB('allMetadata')) || {}).meText); }catch(e){}
+  bindMeEditable();
+  fetchCloudMeta().then(cloud => { if(cloud && cloud.meText) applyMeText(cloud.meText); }).catch(() => {});
+  // 系统消息：本地秒显 → 云端增量拉取（游客也能收）
+  await refreshNotices();
+  if(_noticePopOpen) renderNoticeList();
 })();
 </script>
 </body>

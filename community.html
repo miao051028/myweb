@@ -429,17 +429,83 @@ async function ghFetchFile(path){
 async function ghPutFile(path, content, message){
   const c = ghConfig();
   if(!c || !c.token) throw new Error('未配置 GitHub Token（请到首页「数据管理」配置）');
-  let sha = null;
-  try{ const ex = await ghFetchFile(path); if(ex) sha = ex.sha; }catch(e){}
-  const body = { message: message || 'sync community', content };
-  if(sha) body.sha = sha;
-  const r = await fetch('https://api.github.com/repos/' + c.repo + '/contents/' + path, {
-    method: 'PUT',
-    headers: { ...ghAuthHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if(!r.ok){ const ed = await r.json().catch(() => ({})); throw new Error(ed.message || ('上传失败 ' + r.status)); }
-  return r.json();
+  const doPut = async () => {
+    let sha = null;
+    try{ const ex = await ghFetchFile(path); if(ex) sha = ex.sha; }catch(e){}
+    const body = { message: message || 'sync community', content };
+    if(sha) body.sha = sha;
+    const r = await fetch('https://api.github.com/repos/' + c.repo + '/contents/' + path, {
+      method: 'PUT',
+      headers: { ...ghAuthHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if(!r.ok){ const ed = await r.json().catch(() => ({})); const err = new Error(ed.message || ('上传失败 ' + r.status)); err.status = r.status; throw err; }
+    return r.json();
+  };
+  try{ return await doPut(); }
+  catch(e){
+    // 409/422 多为并发提交冲突或 sha 过期 → 重取 sha 重试一次
+    if(e.status === 409 || e.status === 422){
+      console.warn('Contents 上传冲突，重试一次:', path, e.message);
+      await new Promise(r => setTimeout(r, 1000));
+      return doPut();
+    }
+    throw e;
+  }
+}
+/* ---- Git Database API 大文件通道（Contents API 单文件限 1MB，Git DB 支持到 100MB） ---- */
+let _ghBranch = null, _ghCommitChain = Promise.resolve();
+async function ghDefaultBranch(){
+  if(_ghBranch) return _ghBranch;
+  const r = await fetch('https://api.github.com/repos/' + ghRepo(), { headers: ghAuthHeaders() });
+  if(!r.ok) throw new Error('获取仓库信息失败 ' + r.status);
+  const j = await r.json();
+  _ghBranch = j.default_branch || 'main';
+  return _ghBranch;
+}
+async function ghPutFileGitDB(path, base64content, message){
+  const c = ghConfig();
+  if(!c || !c.token) throw new Error('未配置 GitHub Token');
+  const H = () => ({ ...ghAuthHeaders(), 'Content-Type': 'application/json' });
+  const run = async () => {
+    const branch = await ghDefaultBranch();
+    const refR = await fetch('https://api.github.com/repos/' + c.repo + '/git/ref/heads/' + branch, { headers: ghAuthHeaders() });
+    if(!refR.ok) throw new Error('读取分支失败 ' + refR.status);
+    const commitSha = (await refR.json()).object.sha;
+    const cmR = await fetch('https://api.github.com/repos/' + c.repo + '/git/commits/' + commitSha, { headers: ghAuthHeaders() });
+    if(!cmR.ok) throw new Error('读取提交失败 ' + cmR.status);
+    const treeSha = (await cmR.json()).tree.sha;
+    const blobR = await fetch('https://api.github.com/repos/' + c.repo + '/git/blobs', {
+      method: 'POST', headers: H(), body: JSON.stringify({ content: base64content, encoding: 'base64' })
+    });
+    if(!blobR.ok) throw new Error('上传文件块失败 ' + blobR.status);
+    const blobSha = (await blobR.json()).sha;
+    const treeR = await fetch('https://api.github.com/repos/' + c.repo + '/git/trees', {
+      method: 'POST', headers: H(),
+      body: JSON.stringify({ base_tree: treeSha, tree: [{ path, mode: '100644', type: 'blob', sha: blobSha }] })
+    });
+    if(!treeR.ok) throw new Error('创建目录树失败 ' + treeR.status);
+    const newTreeSha = (await treeR.json()).sha;
+    const ncR = await fetch('https://api.github.com/repos/' + c.repo + '/git/commits', {
+      method: 'POST', headers: H(),
+      body: JSON.stringify({ message: message || 'upload large file', tree: newTreeSha, parents: [commitSha] })
+    });
+    if(!ncR.ok) throw new Error('创建提交失败 ' + ncR.status);
+    const newCommitSha = (await ncR.json()).sha;
+    const upR = await fetch('https://api.github.com/repos/' + c.repo + '/git/refs/heads/' + branch, {
+      method: 'PATCH', headers: H(), body: JSON.stringify({ sha: newCommitSha, force: false })
+    });
+    if(!upR.ok) throw new Error('更新分支失败 ' + upR.status);
+    return { sha: newCommitSha };
+  };
+  // 串行化提交避免父提交竞争；失败自动重试一次
+  const task = _ghCommitChain.then(() => run().catch(async (e) => {
+    console.warn('Git DB 提交失败，1 秒后重试:', e.message);
+    await new Promise(r => setTimeout(r, 1000));
+    return run();
+  }));
+  _ghCommitChain = task.catch(() => {});
+  return task;
 }
 async function ghLoadMeta(){
   const txt = await ghFetchRaw('sxx_metadata.json', false);
@@ -460,7 +526,13 @@ async function ghUploadMedia(key, type, data){
   } else {
     content = btoa(data); // dataURL 整体编码
   }
-  await ghPutFile(mediaPath(key, type), content, 'sync community media ' + key);
+  const p = mediaPath(key, type);
+  // >约 680KB(base64) 的文件走 Git DB 通道（Contents API 硬限 1MB）
+  if(content.length > 900000){
+    await ghPutFileGitDB(p, content, 'sync community media ' + key);
+  } else {
+    await ghPutFile(p, content, 'sync community media ' + key);
+  }
 }
 async function ghDownloadMedia(key, type){
   const bin = await ghFetchRaw(mediaPath(key, type), true);
@@ -777,8 +849,30 @@ async function publishPost(){
       }
       setTimeout(comToastHide, 5000);
     } else if(!isAdmin){
-      comToast('📝 投稿已保存在本机（标记待审核），管理员在本机登录后点「通过同步」即可全站可见');
-      setTimeout(comToastHide, 6000);
+      // 游客投稿：有 Token 的团队设备 → 媒体+帖子进云端待审核队列，管理员任意设备可审；无 Token → 仅本机
+      if(ghConfig() && ghConfig().token){
+        try{
+          const keys = [];
+          if(post.media) keys.push(['post_' + id, post.media]);
+          if(post.type === 'aidrama' && mediaCache['postc_' + id]) keys.push(['postc_' + id, 'img']);
+          let done = 0;
+          for(const [k, t] of keys){
+            const rec = await getRecordFromDB(k);
+            if(rec){ await ghUploadMedia(k, t, rec.data); pendingMarkUploaded(k); }
+            done++;
+            comToast('☁️ 正在上传投稿 ' + done + '/' + keys.length + ' …请勿关闭页面');
+          }
+          await pushPendingQueue();
+          comToast('📤 投稿已上传云端进入待审核，管理员审核通过后全站可见');
+        }catch(err){
+          console.warn(err);
+          comToast('⚠️ 云端投稿失败：' + err.message + '（内容已保存在本机，网络恢复后会自动重试）');
+        }
+        setTimeout(comToastHide, 6000);
+      } else {
+        comToast('📝 投稿已保存在本机（待审核）；在配置过数据管理的设备上投稿可直接进入云端审核队列');
+        setTimeout(comToastHide, 6000);
+      }
     } else {
       comToast('✅ 已发布（未配置 GitHub Token，暂不跨设备同步）');
       setTimeout(comToastHide, 4000);
@@ -821,7 +915,7 @@ function cancelEdit(){
   document.getElementById('cpHead').textContent = '✍️ 发布新内容';
 }
 
-/* ============ 审核通过（管理员）：上传投稿媒体 + 推送清单 ============ */
+/* ============ 审核通过（管理员）：补齐媒体 + 上传 + 推送主清单 + 出队 ============ */
 async function approvePost(id){
   if(!isAdmin) return;
   const posts = await getPostsLocal();
@@ -835,8 +929,24 @@ async function approvePost(id){
     if(p.type === 'aidrama') keys.push(['postc_' + id, 'img']);
     let done = 0;
     for(const [k, t] of keys){
-      const rec = await getRecordFromDB(k);
-      if(rec) await ghUploadMedia(k, t, rec.data);
+      // 本机没有媒体时先从云端回源（游客在团队设备上投稿时媒体已随队列上传）
+      let rec = await getRecordFromDB(k).catch(() => null);
+      if(!rec){
+        try{
+          const data = await ghDownloadMedia(k, t);
+          if(data){
+            if(t === 'vid'){ await putRecordToDB(k, data); }
+            else { const txt = await data.text(); await putRecordToDB(k, txt); }
+            rec = await getRecordFromDB(k).catch(() => null);
+          }
+        }catch(e){ console.warn('回源下载失败:', k, e.message); }
+      }
+      if(!rec){
+        comToastHide();
+        alert('该投稿的媒体文件仅存在于投稿设备（投稿设备未配置同步），无法在本机通过审核。\n\n请在投稿设备上配置「数据管理」Token 后重新投稿，或请管理员在投稿设备上直接审核。');
+        return;
+      }
+      await ghUploadMedia(k, t, rec.data);
       done++;
       comToast('☁️ 同步投稿媒体 ' + done + '/' + keys.length + ' …');
     }
@@ -846,6 +956,8 @@ async function approvePost(id){
       if(i > -1){ arr[i].pending = 0; delete arr[i].local; arr[i].approvedTs = Date.now(); }
     });
     await pushCommunityMeta();
+    // 从待审核队列移除（墓碑到 sxx_pending.json，防止其他设备再次拉回）
+    try{ await pushPendingQueue([id]); }catch(e){ console.warn('队列清理失败:', e.message); }
     window._postsCache = await getPostsLocal();
     renderFeed();
     updateModBar();
@@ -853,7 +965,7 @@ async function approvePost(id){
     setTimeout(comToastHide, 4000);
   }catch(err){
     console.warn(err);
-    alert('同步失败：' + err.message + '\n（投稿仍保留在本机，可稍后重试）');
+    alert('同步失败：' + err.message + '\n（投稿仍保留在待审核区，可稍后重试）');
     comToastHide();
   }
 }
@@ -886,10 +998,12 @@ async function deletePost(id){
   const p = posts.find(x => x.id === id);
   if(!p) return;
   if(p.pending){
-    // 待审核投稿仅在本机：任何人可撤回（游客撤回自己的投稿 / 管理员清理）
-    if(!confirm('撤回这条本机投稿吗？（尚未同步到云端）')) return;
+    // 待审核投稿：任何人可撤回本机投稿；有 Token 时同步从云端待审核队列移除
+    if(!confirm('撤回这条投稿吗？（尚未公开发布）')) return;
     await saveAllMeta(m => {
       m.communityPosts = (m.communityPosts || []).filter(x => x.id !== id);
+      m.communityPendingDeleted = m.communityPendingDeleted || [];
+      if(!m.communityPendingDeleted.includes(id)) m.communityPendingDeleted.push(id);
     });
     await deleteRecordFromDB('post_' + id);
     await deleteRecordFromDB('postc_' + id);
@@ -898,6 +1012,9 @@ async function deletePost(id){
     window._postsCache = await getPostsLocal();
     renderFeed();
     updateModBar();
+    if(ghConfig() && ghConfig().token){
+      try{ await pushPendingQueue([id]); }catch(e){ console.warn('云端队列清理失败:', e.message); }
+    }
     return;
   }
   // 已发布内容：仅管理员撤帖（墓碑防复活，同步所有设备）
@@ -920,25 +1037,123 @@ async function deletePost(id){
   }
 }
 
-/* ============ 元数据推送（全量清单，与其他页面兼容；待审核投稿不上云端） ============ */
+/* ============ 元数据推送（云端最新清单为底，仅叠加社区字段；待审核投稿不上主清单） ============ */
 async function pushCommunityMeta(){
   const cfg = ghConfig();
   if(!cfg || !cfg.token) throw new Error('未配置 GitHub Token');
-  const meta = (await getMetaFromDB('allMetadata')) || {};
+  // 1) 以云端最新整份清单为权威底，避免本机旧数据覆盖其他页面/设备的新内容
+  const cloud = await ghLoadMeta().catch(() => null) || {};
+  const local = (await getMetaFromDB('allMetadata')) || {};
+  // 2) 社区帖子合并：云端已发布 + 本机已审核（不含 pending），新版本覆盖旧版本
+  const map = {};
+  (Array.isArray(cloud.communityPosts) ? cloud.communityPosts : []).forEach(p => { if(!p.pending) map[p.id] = p; });
+  (local.communityPosts || []).filter(p => !p.pending).forEach(p => {
+    const old = map[p.id];
+    if(!old || (p.ts || 0) >= (old.ts || 0) || (p.editTs && (!old.editTs || p.editTs >= old.editTs))) map[p.id] = p;
+  });
+  // 3) 墓碑（撤帖）双端并集
+  const dl = new Set([].concat(cloud.communityDeleted || [], local.communityDeleted || []));
+  const posts = Object.values(map).filter(p => !dl.has(p.id)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  // 4) mediaFiles：云端为底，仅叠加本机社区媒体登记
+  const mf = Object.assign({}, cloud.mediaFiles || {});
+  posts.forEach(p => {
+    if(p.media) mf['post_' + p.id] = p.media;
+    if(p.type === 'aidrama') mf['postc_' + p.id] = 'img';
+  });
+  cloud.communityPosts = posts;
+  cloud.communityDeleted = [...dl];
+  cloud.mediaFiles = mf;
+  cloud.timestamp = Date.now();
+  await ghPutFile('sxx_metadata.json', btoa(unescape(encodeURIComponent(JSON.stringify(cloud)))), 'sync community');
+  return cloud;
+}
+
+/* ============ 云端待审核队列 sxx_pending.json ============ */
+/* 有 Token 的设备（管理员电脑/手机，即使未登录管理）投稿后，媒体+帖子直接进入云端队列，
+   管理员在【任意设备】登录后即可拉取审核；无 Token 的陌生设备投稿仅留本机。 */
+// 待审核媒体上传标记（防重复上传大视频；上传成功打标，失败不标→下次启动自动补传）
+function pendingMarkUploaded(key){
   try{
-    const recs = await getAllRecords();
-    meta.mediaFiles = meta.mediaFiles || {};
-    recs.forEach(r => {
-      meta.mediaFiles[r.key] = (r.data instanceof Blob)
-        ? (/^post_/.test(r.key) ? 'vid' : 'glb')
-        : 'img';
-    });
+    const m = JSON.parse(localStorage.getItem('sxx_pending_uploaded') || '{}');
+    m[key] = Date.now();
+    localStorage.setItem('sxx_pending_uploaded', JSON.stringify(m));
   }catch(e){}
-  // 推送副本：过滤掉 pending（游客待审核）投稿，审核通过后才会进入云端清单
-  const cloudMeta = JSON.parse(JSON.stringify(meta));
-  cloudMeta.communityPosts = (meta.communityPosts || []).filter(p => !p.pending);
-  cloudMeta.timestamp = Date.now();
-  await ghPutFile('sxx_metadata.json', btoa(unescape(encodeURIComponent(JSON.stringify(cloudMeta)))), 'sync community');
+}
+function pendingWasUploaded(key){
+  try{ const m = JSON.parse(localStorage.getItem('sxx_pending_uploaded') || '{}'); return !!m[key]; }catch(e){ return false; }
+}
+async function fetchPendingQueue(){
+  const txt = await ghFetchRaw('sxx_pending.json', false).catch(() => null);
+  if(!txt) return { posts: [], deleted: [] };
+  try{
+    const q = JSON.parse(txt);
+    return { posts: Array.isArray(q.posts) ? q.posts : [], deleted: Array.isArray(q.deleted) ? q.deleted : [] };
+  }catch(e){ return { posts: [], deleted: [] }; }
+}
+// 推送队列：远端队列 + 本机待审核 合并去重，剔除已删/已通过
+async function pushPendingQueue(removedIds){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return false;
+  const q = await fetchPendingQueue();
+  const local = (await getMetaFromDB('allMetadata')) || {};
+  const localPending = (local.communityPosts || []).filter(p => p.pending);
+  const map = {};
+  q.posts.forEach(p => map[p.id] = p);
+  localPending.forEach(p => { const old = map[p.id]; if(!old || (p.ts || 0) >= (old.ts || 0)) map[p.id] = p; });
+  const deleted = new Set([].concat(q.deleted || [], local.communityPendingDeleted || [], removedIds || []));
+  const approvedIds = new Set((local.communityPosts || []).filter(p => !p.pending).map(p => p.id));
+  const posts = Object.values(map)
+    .filter(p => !deleted.has(p.id) && !approvedIds.has(p.id))
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const body = { posts, deleted: [...deleted], ts: Date.now() };
+  await ghPutFile('sxx_pending.json', btoa(unescape(encodeURIComponent(JSON.stringify(body)))), 'community pending queue');
+  return true;
+}
+// 拉取队列并入本机待审核区（仅配置过 Token 的团队设备；普通游客不看未审核内容）
+async function pullPendingQueue(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return 0;
+  const q = await fetchPendingQueue();
+  if(!q.posts.length && !q.deleted.length) return 0;
+  let added = 0;
+  await saveAllMeta(m => {
+    m.communityPosts = m.communityPosts || [];
+    const have = new Set(m.communityPosts.map(p => p.id));
+    const dl = new Set([].concat(m.communityPendingDeleted || [], q.deleted));
+    m.communityPendingDeleted = [...dl];
+    // 队列里被删的投稿若在本机待审核区，一并移除
+    m.communityPosts = m.communityPosts.filter(p => !(p.pending && dl.has(p.id)));
+    q.posts.forEach(p => {
+      if(dl.has(p.id) || have.has(p.id)) return;
+      m.communityPosts.unshift(Object.assign({}, p, { pending: 1 }));
+      added++;
+    });
+    m.communityPosts.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  });
+  return added;
+}
+// 本机待审核投稿上传到云端队列（有 Token 的设备启动时/投稿后调用）
+async function flushLocalPendingToCloud(){
+  const cfg = ghConfig();
+  if(!cfg || !cfg.token) return;
+  const posts = await getPostsLocal();
+  const pending = posts.filter(p => p.pending);
+  if(!pending.length) return;
+  // 先确保待审核媒体都已上传（成功过的打标跳过，避免大视频重复上传）
+  for(const p of pending){
+    const jobs = [];
+    if(p.media) jobs.push(['post_' + p.id, p.media]);
+    if(p.type === 'aidrama') jobs.push(['postc_' + p.id, 'img']);
+    for(const [k, t] of jobs){
+      if(pendingWasUploaded(k)) continue;
+      const rec = await getRecordFromDB(k).catch(() => null);
+      if(rec){
+        try{ await ghUploadMedia(k, t, rec.data); pendingMarkUploaded(k); }
+        catch(e){ console.warn('待审核媒体上传失败:', k, e.message); }
+      }
+    }
+  }
+  try{ await pushPendingQueue(); }catch(e){ console.warn('待审核队列推送失败:', e.message); }
 }
 
 /* ============ 云端拉取 + 缺失媒体下载 ============ */
@@ -1042,17 +1257,20 @@ async function backfillPostMedia(){
   renderFeed();
   updateModBar();
 
-  // 2) 云端拉取（游客免 Token 也可只读拉取）
+  // 2) 云端拉取（游客免 Token 也可只读拉取已发布内容）
   (async () => {
     try{
       const meta = await pullCommunity();
-      if(meta){
+      // 团队设备：拉取云端待审核队列（游客投稿）
+      let pendingAdded = 0;
+      try{ pendingAdded = await pullPendingQueue(); }catch(e){ console.warn('待审核队列拉取失败:', e.message); }
+      if(meta || pendingAdded > 0){
         const pulled = await downloadMissingPostMedia();
         window._postsCache = await getPostsLocal();
         await loadMediaIntoCache(window._postsCache);
         renderFeed();
         updateModBar();
-        if(pulled > 0) comToast('☁️ 已从云端同步 ' + pulled + ' 个社区内容');
+        if(pulled > 0 || pendingAdded > 0) comToast('☁️ 已从云端同步社区内容');
         setTimeout(comToastHide, 3000);
         // 深链定位 #post-<id>
         const h = location.hash || '';
@@ -1063,7 +1281,12 @@ async function backfillPostMedia(){
       }
     }catch(e){ console.warn('社区云同步拉取失败:', e.message); }
 
-    // 3) 管理员：补传云端缺失的社区媒体
+    // 3) 团队设备：本机待审核投稿自动补传到云端队列（覆盖离线投稿/后来才配 Token 的情况）
+    if(ghConfig() && ghConfig().token){
+      try{ await flushLocalPendingToCloud(); }catch(e){ console.warn('待审核补传失败:', e.message); }
+    }
+
+    // 4) 管理员：补传云端缺失的社区媒体
     if(isAdmin && ghConfig() && ghConfig().token){
       try{ await backfillPostMedia(); }catch(e){ console.warn('社区媒体补传失败:', e.message); }
     }
