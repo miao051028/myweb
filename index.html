@@ -2068,6 +2068,7 @@ const dataStore = {
   cultureImages: {},
   // 封面轮播附加图（key: cover_<id>，首张为 cover_image；两张及以上自动滑动播放）
   coverSlideImages: {},
+  coverDeleted: [],   // 封面删除墓碑（附加封面存 id；主封面用 'main'），防云端旧清单把已删封面带回
   // 新增：当前页码
   currentPage: 1,
   // 新增：页面底纹配置
@@ -2265,8 +2266,9 @@ async function saveMetadata() {
       articleDeleted: dataStore.articleDeleted || null,
       // 文化马踏简介配图
       cultureKeys: Object.keys(dataStore.cultureImages || {}),
-      // 封面轮播附加图
-      coverKeys: Object.keys(dataStore.coverSlideImages || {})
+      // 封面轮播附加图 + 删除墓碑
+      coverKeys: Object.keys(dataStore.coverSlideImages || {}),
+      coverDeleted: dataStore.coverDeleted || null
     };
     await saveMetaToDB('allMetadata', metaData);
     return true;
@@ -2313,8 +2315,11 @@ async function loadMetadata() {
         metaData.cultureKeys.forEach(key => { dataStore.cultureImages[key] = true; });
       }
       // 封面轮播附加图恢复（先用 key 占位，再在 restoreData 中加载实际图片）
+      // 封面删除墓碑：并集；已删附加封面 key 不恢复；主封面墓碑 'main' 强制关闭
+      dataStore.coverDeleted = Array.from(new Set([].concat(dataStore.coverDeleted || [], metaData.coverDeleted || [])));
+      const _ctombs = new Set(dataStore.coverDeleted);
       if(metaData.coverKeys){
-        metaData.coverKeys.forEach(key => { dataStore.coverSlideImages[key] = true; });
+        metaData.coverKeys.forEach(key => { if(!_ctombs.has(String(key))) dataStore.coverSlideImages[key] = true; });
       }
       // 新增恢复字段
       if(metaData.buildingIds && metaData.buildingIds.length) dataStore.buildingIds = metaData.buildingIds;
@@ -2323,7 +2328,8 @@ async function loadMetadata() {
       if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
       if(metaData.textData) dataStore.textData = metaData.textData;
       if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
-      if(metaData.coverImage) dataStore.coverImage = true;
+      if(metaData.coverImage && !_ctombs.has('main')) dataStore.coverImage = true;
+      if(_ctombs.has('main')) dataStore.coverImage = false;
     }
   } catch(e) {
     console.error('加载元数据失败:', e);
@@ -2974,6 +2980,8 @@ async function deleteCoverSlide(id){
   if(!isAdmin) return;
   if(!confirm('确定删除这张封面轮播图吗？删除后将同步到所有设备。')) return;
   delete dataStore.coverSlideImages[id];
+  // 删除墓碑：防云端旧 coverKeys/媒体清单把这张图拉回复活
+  dataStore.coverDeleted = Array.from(new Set([].concat(dataStore.coverDeleted || [], [String(id)])));
   try{ await deleteImageFromDB('cover_' + id); }catch(e){}
   renderCover();
   await saveMetadata();
@@ -2991,6 +2999,8 @@ async function removeCoverImage(){
   try { await deleteImageFromDB('cover_image'); } catch(e){}
   window._coverImageDataUrl = null;
   dataStore.coverImage = false;
+  // 主封面删除墓碑：防云端 coverImage=true 同步时复活
+  dataStore.coverDeleted = Array.from(new Set([].concat(dataStore.coverDeleted || [], ['main'])));
   await saveMetadata();
   renderCover();
   autoSyncMetaToGithub();
@@ -3336,8 +3346,9 @@ function renderTextData() {
   const nodes = document.querySelectorAll('[data-textkey]');
   nodes.forEach(el => {
     const key = el.getAttribute('data-textkey');
-    let value = dataStore.textData && dataStore.textData[key];
-    if (value === undefined || value === null || value === '') {
+    let value = dataStore.textData ? dataStore.textData[key] : undefined;
+    // 仅 undefined/null 视为未设置；'' 是用户显式删除后的合法状态，不再回退默认值
+    if (value === undefined || value === null) {
       value = DEFAULT_TEXT_DATA[key];
     }
     if (value !== undefined) {
@@ -4201,6 +4212,15 @@ async function saveMetadataToGithub(){
     if(Array.isArray(metaData.buildingIds)) metaData.buildingIds = metaData.buildingIds.filter(id => !_tombs.has(id));
     if(Array.isArray(metaData.buildingKeys)) metaData.buildingKeys = metaData.buildingKeys.filter(id => !_tombs.has(id));
   }
+  // 封面删除墓碑：双端并集；已删附加封面从 coverKeys 剔除；主封面墓碑 'main' 强制 coverImage=false
+  if(cloudMeta && Array.isArray(cloudMeta.coverDeleted) && cloudMeta.coverDeleted.length){
+    metaData.coverDeleted = Array.from(new Set([].concat(metaData.coverDeleted || [], cloudMeta.coverDeleted)));
+  }
+  if(Array.isArray(metaData.coverDeleted) && metaData.coverDeleted.length){
+    const _ctombs = new Set(metaData.coverDeleted.map(String));
+    if(Array.isArray(metaData.coverKeys)) metaData.coverKeys = metaData.coverKeys.filter(k => !_ctombs.has(String(k)));
+    if(_ctombs.has('main')) metaData.coverImage = false;
+  }
   // 附加媒体清单（key → 类型），供对端下载所有图片与3D模型（社区视频 post_* 记为 vid）
   try{
     const recs = await getAllMediaRecords();
@@ -4223,6 +4243,15 @@ async function saveMetadataToGithub(){
       Object.keys(mediaFiles).forEach(k => {
         const m = k.match(/^(?:building_|pano_[a-z]+_)(.+)$/);
         if(m && _tombKeys.has(m[1])) delete mediaFiles[k];
+      });
+    }
+    // 墓碑封面：cover_<id> 与 cover_image（main）媒体登记一并剔除
+    if(Array.isArray(metaData.coverDeleted) && metaData.coverDeleted.length){
+      const _ctombKeys = new Set(metaData.coverDeleted.map(String));
+      Object.keys(mediaFiles).forEach(k => {
+        if(k === 'cover_image' && _ctombKeys.has('main')){ delete mediaFiles[k]; return; }
+        const cm = k.match(/^cover_(.+)$/);
+        if(cm && _ctombKeys.has(cm[1])) delete mediaFiles[k];
       });
     }
     metaData.mediaFiles = mediaFiles;
@@ -4261,7 +4290,8 @@ async function syncFromGithub(){
     await clearAllData(true);
     dataStore.bgConfig = keepBg;
     
-    // 恢复元数据
+    // ★ syncFromGithub 是用户主动 confirm 后触发的"覆盖本地"同步，
+    //   这里 direct-assignment 是故意的（与 autoSyncFromGithub 的本地优先合并不同，不要改！）
     if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
     if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
     if(metaData.featuredKeys){
@@ -4295,9 +4325,11 @@ async function syncFromGithub(){
     if(metaData.spots){
       // 精选删除墓碑：云端墓碑并入；列表按墓碑过滤；本地新增（云端没有的 id）并集保留，防同步冲掉刚添加的条目
       dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], metaData.spotDeleted || [])));
+      const _localSpots = ensureSpotIds(dataStore.spots || []); // ★ 覆盖前先抓本地列表（旧代码遍历自己导致本地新增永不生效）
+      const _stombs = new Set(dataStore.spotDeleted);
       dataStore.spots = filterSpotsByTombs(ensureSpotIds(metaData.spots), dataStore.spotDeleted);
       const _sids = new Set(dataStore.spots.map(s => s.id));
-      ensureSpotIds(dataStore.spots || []).forEach(s => { if(s.id && !_sids.has(s.id)){ dataStore.spots.push(s); _sids.add(s.id); } });
+      _localSpots.forEach(s => { if(s.id && !_sids.has(s.id) && !_stombs.has(s.id)){ dataStore.spots.push(s); _sids.add(s.id); } });
     }
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
@@ -4305,8 +4337,13 @@ async function syncFromGithub(){
     if(metaData.articles || metaData.articleDeleted) mergeArticlesWithCloud(metaData.articles, metaData.articleDeleted);
     // 文化马踏简介配图恢复（GitHub 同步）
     if(metaData.cultureKeys) metaData.cultureKeys.forEach(k => { dataStore.cultureImages[k] = true; });
-    // 封面轮播附加图恢复（GitHub 同步）
-    if(metaData.coverKeys) metaData.coverKeys.forEach(k => { dataStore.coverSlideImages[k] = true; });
+    // 封面轮播附加图恢复（GitHub 同步）：封面墓碑并集，已删封面不恢复
+    dataStore.coverDeleted = Array.from(new Set([].concat(dataStore.coverDeleted || [], metaData.coverDeleted || []).map(String)));
+    metaData.coverDeleted = dataStore.coverDeleted;
+    const _ctombsSync = new Set(dataStore.coverDeleted);
+    if(metaData.coverKeys) metaData.coverKeys.filter(k => !_ctombsSync.has(String(k))).forEach(k => { dataStore.coverSlideImages[k] = true; });
+    metaData.coverKeys = (metaData.coverKeys || []).filter(k => !_ctombsSync.has(String(k)));
+    if(_ctombsSync.has('main')){ dataStore.coverImage = false; metaData.coverImage = false; }
 
     // 完整持久化远程元数据（含 3D 全景标志 panoBuildings 等跨页面字段），随后 saveMetadata 会合并保留
     await saveMetaToDB('allMetadata', metaData);
@@ -4318,6 +4355,10 @@ async function syncFromGithub(){
     for(let i = 0; i < mediaKeys.length; i++){
       const key = mediaKeys[i];
       if(mediaFiles[key] === 'vid') continue; // 社区视频走 .mp4 通道，由 community.html 自行下载
+      // 墓碑封面不下载（手动同步也不把已删封面拉回）
+      if(key === 'cover_image' && _ctombsSync.has('main')) continue;
+      const _cmSync = key.match(/^cover_(.+)$/);
+      if(_cmSync && _ctombsSync.has(_cmSync[1])) continue;
       statusEl.innerHTML = `⏳ 正在下载媒体 ${i+1}/${mediaKeys.length} ...`;
       try{
         const data = await downloadMediaRecord(key, mediaFiles[key]);
@@ -4425,13 +4466,11 @@ async function autoSyncFromGithub(){
     try{ await loadMetadata(); }catch(e){}
 
     // 从 GitHub 下载元数据字段
-    if(metaData.buildingInfos) dataStore.buildingInfos = metaData.buildingInfos;
-    if(metaData.panoUrls) dataStore.panoUrls = metaData.panoUrls;
-    if(metaData.buildingIds && metaData.buildingIds.length){
-      dataStore.buildingIds = metaData.buildingIds;
-    } else if(metaData.buildingKeys){
-      dataStore.buildingIds = metaData.buildingKeys.slice().sort((a,b)=>parseInt(a)-parseInt(b));
-    }
+    // ★ buildingInfos：本地优先合并（tour.html/panorama.html 用户编辑的文字不能被云端旧值覆盖）
+    dataStore.buildingInfos = Object.assign({}, metaData.buildingInfos || {}, dataStore.buildingInfos || {});
+    if(metaData.panoUrls) dataStore.panoUrls = Object.assign({}, metaData.panoUrls || {}, dataStore.panoUrls || {});
+    // ★ buildingIds：本地优先（本地新增建筑如 tour.html addBuilding 创建的，云端没有，不能被冲掉）
+    dataStore.buildingIds = ((dataStore.buildingIds && dataStore.buildingIds.length) ? dataStore.buildingIds : ((metaData.buildingIds && metaData.buildingIds.length) ? metaData.buildingIds : (metaData.buildingKeys || [])));
     // 删除墓碑：双端并集（本地墓碑优先保留），剔除已删建筑防复活
     dataStore.buildingDeleted = Array.from(new Set([].concat(metaData.buildingDeleted || [], dataStore.buildingDeleted || [])));
     if(dataStore.buildingDeleted.length){
@@ -4450,15 +4489,22 @@ async function autoSyncFromGithub(){
     }
     if(metaData.currentPage) dataStore.currentPage = metaData.currentPage;
     if(metaData.bgConfig) dataStore.bgConfig = metaData.bgConfig;
-    if(metaData.textData) dataStore.textData = metaData.textData;
+    // ★ textData：本地优先合并（文化马踏等独立页面编辑的文字不能被云端旧值覆盖）
+    dataStore.textData = Object.assign({}, metaData.textData || {}, dataStore.textData || {});
     if(metaData.textStyles) dataStore.textStyles = metaData.textStyles;
-    if(metaData.coverImage) dataStore.coverImage = true;
+    // 封面墓碑：双端并集；主封面墓碑 'main' 时云端 coverImage 不能复活
+    dataStore.coverDeleted = Array.from(new Set([].concat(dataStore.coverDeleted || [], metaData.coverDeleted || []).map(String)));
+    const _ctombs = new Set(dataStore.coverDeleted);
+    if(metaData.coverImage && !_ctombs.has('main')) dataStore.coverImage = true;
+    if(_ctombs.has('main')) dataStore.coverImage = false;
     if(metaData.spots){
       // 精选删除墓碑：云端墓碑并入；列表按墓碑过滤；本地新增（云端没有的 id）并集保留
       dataStore.spotDeleted = Array.from(new Set([].concat(dataStore.spotDeleted || [], metaData.spotDeleted || [])));
+      const _localSpots2 = ensureSpotIds(dataStore.spots || []); // ★ 覆盖前先抓本地列表（旧代码遍历自己导致知青馆类新增永不生效）
+      const _stombs2 = new Set(dataStore.spotDeleted);
       dataStore.spots = filterSpotsByTombs(ensureSpotIds(metaData.spots), dataStore.spotDeleted);
       const _sids2 = new Set(dataStore.spots.map(s => s.id));
-      ensureSpotIds(dataStore.spots || []).forEach(s => { if(s.id && !_sids2.has(s.id)){ dataStore.spots.push(s); _sids2.add(s.id); } });
+      _localSpots2.forEach(s => { if(s.id && !_sids2.has(s.id) && !_stombs2.has(s.id)){ dataStore.spots.push(s); _sids2.add(s.id); } });
     }
     if(metaData.spotKeys) metaData.spotKeys.forEach(k => { dataStore.spotImages[k] = true; });
     if(metaData.newsList) dataStore.newsList = metaData.newsList;
@@ -4466,15 +4512,33 @@ async function autoSyncFromGithub(){
     // 文章系统恢复（自动同步）：合并策略，防 Pages 缓存窗口内旧云端列表覆盖掉本地新增文章
     if(metaData.articles || metaData.articleDeleted) mergeArticlesWithCloud(metaData.articles, metaData.articleDeleted);
     if(metaData.cultureKeys) metaData.cultureKeys.forEach(k => { dataStore.cultureImages[k] = true; });
-    if(metaData.coverKeys) metaData.coverKeys.forEach(k => { dataStore.coverSlideImages[k] = true; });
-    // 完整元数据落库（保留 3D 全景等跨页面字段）
-    await saveMetaToDB('allMetadata', metaData);
+    // 封面轮播附加图恢复（自动同步）：墓碑过滤，已删封面不拉回
+    const _coverKeysKept = (metaData.coverKeys || []).filter(k => !_ctombs.has(String(k)));
+    _coverKeysKept.forEach(k => { dataStore.coverSlideImages[k] = true; });
+    // ★ 完整元数据落库（用合并结果，保留云端特有字段如 panoType/panoBuildings，同时用本地优先字段覆盖）
+    const mergedMeta4sync = Object.assign({}, metaData, {
+      buildingInfos: dataStore.buildingInfos,
+      buildingIds: dataStore.buildingIds,
+      buildingDeleted: dataStore.buildingDeleted,
+      textData: dataStore.textData,
+      spots: dataStore.spots,
+      spotDeleted: dataStore.spotDeleted,
+      articleDeleted: dataStore.articleDeleted,
+      coverDeleted: dataStore.coverDeleted,
+      coverKeys: _coverKeysKept,
+      coverImage: dataStore.coverImage === true
+    });
+    await saveMetaToDB('allMetadata', mergedMeta4sync);
 
     // === 通用媒体下载（走 media/xxx.img 路径，与上传端统一） ===
     // 1) 新路径：从 mediaFiles 清单拉所有图片/模型（增量，已存在跳过）
     const autoMedia = metaData.mediaFiles || {};
     for(const key of Object.keys(autoMedia)){
       if(autoMedia[key] === 'vid') continue; // 社区视频走 .mp4 通道，由 community.html 自行下载
+      // 墓碑封面不拉取（cover_<id> 附加图 / cover_image 主封面）
+      if(key === 'cover_image' && _ctombs.has('main')) continue;
+      const _cm = key.match(/^cover_(.+)$/);
+      if(_cm && _ctombs.has(_cm[1])) continue;
       const exist = await getMediaRecord(key).catch(() => null);
       if(exist) continue;
       try{
@@ -4534,7 +4598,7 @@ async function autoSyncFromGithub(){
         const bgB64 = await downloadFromGithub('images/bg_image.jpg');
         if(bgB64){ const u = base64ToDataUrl(bgB64); await saveImage('bg_image', u); window._bgImageDataUrl = u; }
       }
-      if(metaData.coverImage){
+      if(metaData.coverImage && !_ctombs.has('main')){
         const cB64 = await downloadFromGithub('images/cover_image.jpg');
         if(cB64){ const u = base64ToDataUrl(cB64); await saveImage('cover_image', u); window._coverImageDataUrl = u; }
       }
@@ -4802,6 +4866,8 @@ async function applyImageUrl(url, target){
   } else if(target.type === 'cover'){
     window._coverImageDataUrl = url;
     dataStore.coverImage = true;
+    // 重新上传主封面 = 复活：从墓碑移除 'main'
+    dataStore.coverDeleted = (dataStore.coverDeleted || []).filter(x => x !== 'main');
     await saveImage('cover_image', url);
     renderCover();
     saveMetadata();
@@ -4809,6 +4875,8 @@ async function applyImageUrl(url, target){
     alert('✅ 特色封面已更新并永久保存！');
   } else if(target.type === 'coverSlide'){
     dataStore.coverSlideImages[target.id] = url;
+    // 复用了曾删除的 id（删除最大 id 后再添加会复用）= 复活：从墓碑移除
+    dataStore.coverDeleted = (dataStore.coverDeleted || []).filter(x => x !== String(target.id));
     await saveImage(`cover_${target.id}`, url);
     renderCover();
     saveMetadata();

@@ -80,8 +80,8 @@
     padding:0 4px;
   }
   .ts-head .ts-title{
-    font-size:20px;font-weight:700;letter-spacing:3px;
-    display:flex;align-items:center;gap:10px;
+    font-size:20px;font-weight:700;letter-spacing:1px;
+    display:flex;align-items:center;gap:6px;white-space:nowrap;
   }
   .cat-red .ts-title{color:#8B1A1A}
   .cat-eco .ts-title{color:#1f6b3b}
@@ -513,6 +513,15 @@ async function flushTourPending(meta){
       if(cloudMeta && Array.isArray(cloudMeta.articleDeleted)){
         finalMeta.articleDeleted = Array.from(new Set([].concat(cloudMeta.articleDeleted, finalMeta.articleDeleted || [])));
       }
+      // 封面删除墓碑（coverDeleted 由 index 维护）：并入云端墓碑，剔除已删封面 key/主封面标志
+      if(cloudMeta && Array.isArray(cloudMeta.coverDeleted)){
+        finalMeta.coverDeleted = Array.from(new Set([].concat(cloudMeta.coverDeleted, finalMeta.coverDeleted || []).map(String)));
+      }
+      if(Array.isArray(finalMeta.coverDeleted) && finalMeta.coverDeleted.length){
+        const _ct = new Set(finalMeta.coverDeleted.map(String));
+        if(Array.isArray(finalMeta.coverKeys)) finalMeta.coverKeys = finalMeta.coverKeys.filter(k => !_ct.has(String(k)));
+        if(_ct.has('main')) finalMeta.coverImage = false;
+      }
     }catch(e){}
     // 补充 mediaFiles 清单（让 index/panorama 其他页面能看到这里的图）
     try{
@@ -541,6 +550,15 @@ async function flushTourPending(meta){
         Object.keys(mediaFiles).forEach(k => {
           const km = k.match(/^(?:building_|pano_[a-z]+_)(.+)$/);
           if(km && _tombSet.has(km[1])) delete mediaFiles[k];
+        });
+      }
+      // 墓碑封面媒体登记剔除（cover_<id> / cover_image）
+      if(Array.isArray(finalMeta.coverDeleted) && finalMeta.coverDeleted.length){
+        const _ctSet = new Set(finalMeta.coverDeleted.map(String));
+        Object.keys(mediaFiles).forEach(k => {
+          if(k === 'cover_image' && _ctSet.has('main')){ delete mediaFiles[k]; return; }
+          const cm = k.match(/^cover_(.+)$/);
+          if(cm && _ctSet.has(cm[1])) delete mediaFiles[k];
         });
       }
       finalMeta.mediaFiles = mediaFiles;

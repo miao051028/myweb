@@ -611,6 +611,13 @@ async function cloudPull(){
         delete m.buildingInfos[id]; delete m.buildingInfos[id + '_name'];
       });
     }
+    // 封面删除墓碑（coverDeleted 由 index 维护）：双端并集，已删封面 key 剔除，主封面墓碑强制关闭
+    m.coverDeleted = Array.from(new Set([].concat(meta.coverDeleted || [], m.coverDeleted || []).map(String)));
+    if(m.coverDeleted.length){
+      const _ct = new Set(m.coverDeleted);
+      if(Array.isArray(m.coverKeys)) m.coverKeys = m.coverKeys.filter(k => !_ct.has(String(k)));
+      if(_ct.has('main')) m.coverImage = false;
+    }
   });
   buildDir((await getMetaFromDB('allMetadata')) || meta);
   // 下载缺失的媒体（包括全景图/3D模型 + 云游导览建筑缩略图，保证从任一页面进入都同步两端所有媒体）
@@ -1107,6 +1114,15 @@ async function flushPanoPending(){
       if(cloud && Array.isArray(cloud.articleDeleted)){
         meta.articleDeleted = Array.from(new Set([].concat(cloud.articleDeleted, meta.articleDeleted || [])));
       }
+      // 封面删除墓碑（coverDeleted 由 index 维护）：并入云端墓碑，剔除已删封面 key/主封面标志
+      if(cloud && Array.isArray(cloud.coverDeleted)){
+        meta.coverDeleted = Array.from(new Set([].concat(cloud.coverDeleted, meta.coverDeleted || []).map(String)));
+      }
+      if(Array.isArray(meta.coverDeleted) && meta.coverDeleted.length){
+        const _ct = new Set(meta.coverDeleted.map(String));
+        if(Array.isArray(meta.coverKeys)) meta.coverKeys = meta.coverKeys.filter(k => !_ct.has(String(k)));
+        if(_ct.has('main')) meta.coverImage = false;
+      }
     }catch(e){}
     if(cloudTombs){
       meta.buildingDeleted = cloudTombs;
@@ -1142,6 +1158,15 @@ async function flushPanoPending(){
         Object.keys(mediaFiles).forEach(k => {
           const km = k.match(/^(?:building_|pano_[a-z]+_)(.+)$/);
           if(km && _tombSet.has(km[1])) delete mediaFiles[k];
+        });
+      }
+      // 墓碑封面媒体登记剔除（cover_<id> / cover_image）
+      if(Array.isArray(meta.coverDeleted) && meta.coverDeleted.length){
+        const _ctSet = new Set(meta.coverDeleted.map(String));
+        Object.keys(mediaFiles).forEach(k => {
+          if(k === 'cover_image' && _ctSet.has('main')){ delete mediaFiles[k]; return; }
+          const cm = k.match(/^cover_(.+)$/);
+          if(cm && _ctSet.has(cm[1])) delete mediaFiles[k];
         });
       }
       meta.mediaFiles = mediaFiles;
